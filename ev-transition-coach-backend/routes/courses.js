@@ -44,7 +44,7 @@ const sampleCourses = [
         title: "Lockout/Tagout Procedures",
         description: "LOTO procedures for EV systems",
         duration: 540, // 9 minutes
-        videoUrl: "https://youtu.be/9oLMH6pBOpo?si=9juQkqGlXNU8nLii",
+        videoUrl: "https://youtu.be/kVrO3nvOZXk",
         sequenceOrder: 4,
         courseId: "1"
       },
@@ -53,7 +53,7 @@ const sampleCourses = [
         title: "Emergency Response Protocols",
         description: "What to do in emergency situations",
         duration: 600, // 10 minutes
-        videoUrl: "https://youtu.be/zc1z_AzGRps?si=_WYoXBguq-zpXWwF",
+        videoUrl: "https://youtu.be/1l8mFNV8GHI",
         sequenceOrder: 5,
         courseId: "1"
       },
@@ -62,7 +62,7 @@ const sampleCourses = [
         title: "Testing and Verification",
         description: "Verifying safe conditions before work",
         duration: 480, // 8 minutes
-        videoUrl: "https://youtu.be/1BULO-WwCmQ?si=ReDRpEX6J1WkfjiJ",
+        videoUrl: "https://youtu.be/LlmbSDnSDoA",
         sequenceOrder: 6,
         courseId: "1"
       },
@@ -71,7 +71,7 @@ const sampleCourses = [
         title: "Safety Review and Best Practices",
         description: "Review of safety protocols and best practices",
         duration: 600, // 10 minutes
-        videoUrl: "https://youtu.be/zc1z_AzGRps?si=nWBZ_78BM2kAu0gw",
+        videoUrl: "https://youtu.be/CbVm-Ey91p4",
         sequenceOrder: 7,
         courseId: "1"
       }

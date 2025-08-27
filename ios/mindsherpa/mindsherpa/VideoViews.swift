@@ -364,8 +364,8 @@ struct VideoListView: View {
                 .font(.headline)
                 .fontWeight(.semibold)
             
-            LazyVStack(spacing: 12) {
-                ForEach(videos) { video in
+            VStack(spacing: 12) {
+                ForEach(videos, id: \.id) { video in
                     NavigationLink(destination: VideoDetailView(video: video, viewModel: viewModel)) {
                         VideoRowView(video: video, viewModel: viewModel)
                     }
@@ -389,18 +389,37 @@ struct VideoRowView: View {
     var body: some View {
         HStack(spacing: 12) {
             // Video Thumbnail
-            AsyncImage(url: video.thumbnailUrl.flatMap { URL(string: $0) }) { image in
-                image
-                    .resizable()
-                    .aspectRatio(16/9, contentMode: .fill)
-            } placeholder: {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(.tertiary)
-                    .overlay(
-                        Image(systemName: "play.circle.fill")
-                            .font(.title)
-                            .foregroundStyle(.secondary)
-                    )
+            AsyncImage(url: video.thumbnailUrl.flatMap { URL(string: $0) }) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(16/9, contentMode: .fill)
+                case .failure(_):
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.red.opacity(0.3))
+                        .overlay(
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.title)
+                                .foregroundStyle(.red)
+                        )
+                case .empty:
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.tertiary)
+                        .overlay(
+                            Image(systemName: "play.circle.fill")
+                                .font(.title)
+                                .foregroundStyle(.secondary)
+                        )
+                @unknown default:
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.tertiary)
+                        .overlay(
+                            Image(systemName: "play.circle.fill")
+                                .font(.title)
+                                .foregroundStyle(.secondary)
+                        )
+                }
             }
             .frame(width: 120, height: 68)
             .clipShape(RoundedRectangle(cornerRadius: 8))

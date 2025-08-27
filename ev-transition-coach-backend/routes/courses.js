@@ -16,7 +16,7 @@ const sampleCourses = [
         id: "1-1",
         title: "1.1 EV Safety Pyramid - Who's Allowed to Touch",
         description: "Understanding personnel qualifications for HV work",
-        duration: 360, // 6 minutes in seconds
+        duration: 370, // 6:10 in seconds
         videoUrl: "https://youtu.be/4KiaE9KPu1g",
         sequenceOrder: 1,
         courseId: "1"
@@ -25,52 +25,52 @@ const sampleCourses = [
         id: "1-2", 
         title: "1.2 High Voltage Hazards Overview",
         description: "Understanding electrical dangers in EVs",
-        duration: 420, // 7 minutes
+        duration: 417, // 6:57 in seconds
         videoUrl: "https://youtu.be/YL8zgLZ096U",
         sequenceOrder: 2,
         courseId: "1"
       },
       {
         id: "1-3",
-        title: "1.3 Personal Protective Equipment",
+        title: "1.3 Navigating Electrical Shock Protection Boundaries",
         description: "Required PPE for EV high voltage work",
-        duration: 480, // 8 minutes
+        duration: 406, // 6:46 in seconds
         videoUrl: "https://youtu.be/N1dLWS57e2s",
         sequenceOrder: 3,
         courseId: "1"
       },
       {
         id: "1-4",
-        title: "1.4 Lockout/Tagout Procedures",
+        title: "1.4 High Voltage PPE  Your First Line of Defense",
         description: "LOTO procedures for EV systems",
-        duration: 540, // 9 minutes
+        duration: 413, // 6:53 in seconds
         videoUrl: "https://youtu.be/kVrO3nvOZXk",
         sequenceOrder: 4,
         courseId: "1"
       },
       {
         id: "1-5",
-        title: "1.5 Emergency Response Protocols",
+        title: "1.5 Inside an Electric Car - The Journey of Energy",
         description: "What to do in emergency situations",
-        duration: 600, // 10 minutes
-        videoUrl: "https://youtu.be/1l8mFNV8GHI",
+        duration: 406, // 6:46 in seconds
+        videoUrl: "https://youtu.be/b8W0H5-qRLM",
         sequenceOrder: 5,
         courseId: "1"
       },
       {
         id: "1-6",
-        title: "1.6 Testing and Verification",
+        title: "1.6 Taming the Current - EV High Voltage Safety",
         description: "Verifying safe conditions before work",
-        duration: 480, // 8 minutes
+        duration: 462, // 7:42 in seconds
         videoUrl: "https://youtu.be/LlmbSDnSDoA",
         sequenceOrder: 6,
         courseId: "1"
       },
       {
         id: "1-7",
-        title: "1.7 Safety Review and Best Practices",
+        title: "1.7 How to Spot High Voltage Danger on an Electric Bus",
         description: "Review of safety protocols and best practices",
-        duration: 600, // 10 minutes
+        duration: 307, // 5:07 in seconds
         videoUrl: "https://youtu.be/CbVm-Ey91p4",
         sequenceOrder: 7,
         courseId: "1"

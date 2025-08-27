@@ -1,0 +1,79 @@
+import SwiftUI
+import Combine
+import Foundation
+
+// MARK: - Data Models
+
+struct Course: Codable, Identifiable {
+    let id: String
+    let title: String
+    let description: String
+    let level: String
+    let estimatedHours: Int
+    let videos: [Video]
+}
+
+struct Video: Codable, Identifiable {
+    let id: String
+    let title: String
+    let description: String
+    let duration: Int
+    let videoUrl: String
+}
+
+struct CoursesResponse: Codable {
+    let courses: [Course]
+}
+
+// MARK: - API Service
+
+class APIService {
+    private let baseURL = "http://127.0.0.1:3000/api"
+    private let session = URLSession.shared
+    
+    func fetchCourses() -> AnyPublisher<CoursesResponse, Error> {
+        guard let url = URL(string: "\(baseURL)/courses") else {
+            return Fail(error: URLError(.badURL))
+                .eraseToAnyPublisher()
+        }
+        
+        return session.dataTaskPublisher(for: url)
+            .map(\.data)
+            .decode(type: CoursesResponse.self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+}
+
+// MARK: - View Model
+
+class EVCoachViewModel: ObservableObject {
+    @Published var courses: [Course] = []
+    @Published var videos: [Video] = []
+    @Published var currentVideo: Video?
+    @Published var isLoading = false
+    
+    private let apiService = APIService()
+    private var cancellables = Set<AnyCancellable>()
+    
+    func loadCourses() {
+        isLoading = true
+        
+        apiService.fetchCourses()
+            .sink(receiveCompletion: { [weak self] completion in
+                DispatchQueue.main.async {
+                    self?.isLoading = false
+                }
+                
+                if case .failure(let error) = completion {
+                    print("Failed to fetch courses: \(error)")
+                }
+            }, receiveValue: { [weak self] response in
+                DispatchQueue.main.async {
+                    self?.courses = response.courses
+                    self?.videos = response.courses.flatMap { $0.videos }
+                }
+            })
+            .store(in: &cancellables)
+    }
+}

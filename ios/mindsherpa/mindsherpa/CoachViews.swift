@@ -178,6 +178,7 @@ struct VideoView: View {
                         ForEach(viewModel.courses, id: \.id) { course in
                             NavigationLink(
                                 destination: CourseDetailView(course: course, viewModel: viewModel)
+                                    .onAppear { viewModel.selectCourse(course) }
                             ) {
                                 CourseCardView(course: course, viewModel: viewModel)
                             }

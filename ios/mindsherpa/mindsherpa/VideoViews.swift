@@ -351,9 +351,6 @@ struct CourseDetailView: View {
         }
         .navigationTitle(course.title)
         .navigationBarTitleDisplayMode(.large)
-        .onAppear {
-            viewModel.selectCourse(course)
-        }
     }
     
     private func formatHours(_ hours: Double) -> String {
@@ -399,6 +396,7 @@ struct VideoListView: View {
                 ForEach(videos, id: \.id) { video in
                     NavigationLink(
                         destination: VideoPage(video: video, viewModel: viewModel)
+                            .onAppear { viewModel.selectVideo(video) }
                     ) {
                         VideoRowView(video: video, viewModel: viewModel)
                     }

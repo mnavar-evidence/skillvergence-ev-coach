@@ -91,8 +91,6 @@ struct VideoPage: View {
             if video.youtubeVideoId == nil, let url = URL(string: video.videoUrl) {
                 vm.load(from: url)
             }
-            // Track video view
-            viewModel.selectVideo(video)
         }
         .onDisappear {
             // Stop progress tracking when navigating away

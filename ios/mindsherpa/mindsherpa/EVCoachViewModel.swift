@@ -601,6 +601,39 @@ class EVCoachViewModel: ObservableObject {
         progressUpdateTimer?.invalidate()
         progressUpdateTimer = nil
     }
+
+    // MARK: - Course Progress Summary
+
+    /// Returns a summary of progress and watch time for a specific course.
+    ///
+    /// This function normalises course identifiers, as some backends prefix
+    /// course IDs with "course-" (e.g. "course-1") while others use just
+    /// numeric strings (e.g. "1").  It counts the number of completed
+    /// videos and podcasts, calculates the overall completion fraction and
+    /// sums the watched seconds for all media in the course.  Use this
+    /// summary to drive the CourseProgressSummary view.
+    func getCourseProgressSummary(courseId: String) -> (videosCompleted: Int, totalVideos: Int, podcastsCompleted: Int, totalPodcasts: Int, overallProgress: Double, totalWatchTime: Double) {
+        func normalize(_ id: String?) -> String {
+            guard let id = id else { return "" }
+            return id.replacingOccurrences(of: "course-", with: "")
+        }
+        let normalizedCourseId = normalize(courseId)
+        let courseVideos = videos.filter { normalize($0.courseId) == normalizedCourseId }
+        let videosCompleted = courseVideos.filter { completedVideos.contains($0.id) }.count
+        let totalVideos = courseVideos.count
+        let totalPodcasts = 0 // No podcasts in current implementation
+        let podcastsCompleted = 0 // No podcasts in current implementation
+        let totalItems = totalVideos + totalPodcasts
+        let completedItems = videosCompleted + podcastsCompleted
+        let overallProgress = totalItems > 0 ? Double(completedItems) / Double(totalItems) : 0.0
+        var totalWatchTime: Double = 0
+        for video in courseVideos {
+            if let progress = videoProgress[video.id] {
+                totalWatchTime += Double(progress.watchedSeconds)
+            }
+        }
+        return (videosCompleted, totalVideos, podcastsCompleted, totalPodcasts, overallProgress, totalWatchTime)
+    }
     
     // MARK: - End of Video Quiz Management
     

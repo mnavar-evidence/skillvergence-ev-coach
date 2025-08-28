@@ -311,6 +311,30 @@ struct CourseDetailView: View {
                         .progressViewStyle(LinearProgressViewStyle(tint: .blue))
                         .scaleEffect(y: 2)
                     
+                    // Continue Watching Button
+                    if let nextVideo = getNextVideo() {
+                        NavigationLink {
+                            VideoPage(video: nextVideo, viewModel: viewModel)
+                        } label: {
+                            ContinueWatchingButton(video: nextVideo, viewModel: viewModel)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(.top, 12)
+                    }
+
+                    // Enhanced progress summary for the course
+                    let summary = viewModel.getCourseProgressSummary(courseId: course.id)
+                    CourseProgressSummary(
+                        courseTitle: course.title,
+                        totalVideos: summary.totalVideos,
+                        completedVideos: summary.videosCompleted,
+                        totalPodcasts: summary.totalPodcasts,
+                        completedPodcasts: summary.podcastsCompleted,
+                        totalWatchTime: course.estimatedHours * 3600,
+                        watchedTime: summary.totalWatchTime
+                    )
+                    .padding(.top, 12)
+                    
                     Text(course.description)
                         .font(.body)
                         .foregroundStyle(.primary)
@@ -349,6 +373,20 @@ struct CourseDetailView: View {
         } else {
             return "\(Int(roundedHours))h"
         }
+    }
+
+    /// Returns the next incomplete video in the course based on sequence order.
+    /// If all videos are complete, returns nil.  This enables the "Continue Watching"
+    /// button at the top of the course detail page.
+    private func getNextVideo() -> Video? {
+        let sorted = course.videos.sorted { ($0.sequenceOrder ?? 0) < ($1.sequenceOrder ?? 0) }
+        for video in sorted {
+            let progress = viewModel.videoProgress[video.id]
+            if progress == nil || !(progress?.isCompleted ?? false) {
+                return video
+            }
+        }
+        return nil
     }
 }
 
@@ -489,6 +527,73 @@ struct VideoRowView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.quaternaryLabel), lineWidth: 0.5)
         )
+    }
+}
+
+// MARK: - Continue Watching Button
+
+/// A button that displays progress for the next video to continue watching.
+/// Shows title, completion percentage and duration.  Used in CourseDetailView.
+struct ContinueWatchingButton: View {
+    let video: Video
+    @ObservedObject var viewModel: EVCoachViewModel
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Play icon
+            ZStack {
+                Circle()
+                    .fill(Color.blue)
+                    .frame(width: 40, height: 40)
+                Image(systemName: "play.fill")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.white)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                let progress = viewModel.videoProgress[video.id]
+                if let progress = progress, progress.watchedSeconds > 0 {
+                    Text("Continue watching")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                    Text(video.title)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                    HStack(spacing: 8) {
+                        let progressPercent = Double(progress.watchedSeconds) / Double(progress.totalDuration) * 100
+                        Text("\(Int(progressPercent))% watched")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Circle()
+                            .fill(Color.secondary)
+                            .frame(width: 3, height: 3)
+                        Text(video.formattedDuration)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    Text("Start watching")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                    Text(video.title)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                    Text(video.formattedDuration)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(Color(.tertiaryLabel))
+        }
+        .padding(12)
+        .background(Color(UIColor.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 

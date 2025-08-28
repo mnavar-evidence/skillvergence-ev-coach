@@ -25,7 +25,7 @@ struct ContentView: View {
                 TabView(selection: $selectedTab) {
                     VideoView(viewModel: viewModel)
                         .tag(0)
-                    Text("Podcast View - Coming Soon")
+                    PodcastView(viewModel: viewModel)
                         .tag(1)
                     Text("Mind Map View - Coming Soon")
                         .tag(2)

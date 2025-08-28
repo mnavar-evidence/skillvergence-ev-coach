@@ -11,6 +11,7 @@ struct Course: Codable, Identifiable {
     let level: String
     let estimatedHours: Double
     let videos: [Video]
+    let podcasts: [Podcast]? // Optional for backward compatibility
     let thumbnailUrl: String?
     let sequenceOrder: Int?
     
@@ -65,6 +66,11 @@ struct Course: Codable, Identifiable {
             videoProgress[video.id]?.isCompleted ?? false
         }.count
         return Double(completedVideos) / Double(videos.count) * 100
+    }
+    
+    // Custom CodingKeys to handle optional podcasts field
+    private enum CodingKeys: String, CodingKey {
+        case id, title, description, level, estimatedHours, videos, podcasts, thumbnailUrl, sequenceOrder
     }
 }
 
@@ -219,6 +225,39 @@ struct Video: Codable, Identifiable {
     }
 }
 
+struct Podcast: Codable, Identifiable {
+    let id: String
+    let title: String
+    let description: String
+    let duration: Int // Duration in seconds
+    let audioUrl: String // Will point to SiteGround hosted files
+    let sequenceOrder: Int?
+    let courseId: String?
+    let episodeNumber: Int?
+    
+    // Enhanced properties
+    var thumbnailUrl: String? { nil } // Can be added later if needed
+    var transcript: String? { nil }
+    var showNotes: String? { nil }
+    
+    // Progress tracking properties - managed by ViewModel
+    var playbackPosition: Int = 0
+    var isCompleted: Bool = false
+    
+    // Custom CodingKeys to exclude progress properties from JSON decoding
+    private enum CodingKeys: String, CodingKey {
+        case id, title, description, duration, audioUrl, sequenceOrder, courseId, episodeNumber
+    }
+}
+
+struct PodcastProgress: Codable {
+    let podcastId: String
+    let playbackPosition: Int
+    let totalDuration: Int
+    let isCompleted: Bool
+    let lastPlayedAt: Date
+}
+
 struct Quiz: Codable, Identifiable {
     let id: String
     let title: String
@@ -303,6 +342,10 @@ struct CoursesResponse: Codable {
     let courses: [Course]
 }
 
+struct PodcastsResponse: Codable {
+    let podcasts: [Podcast]
+}
+
 struct AIRequest: Codable {
     let question: String
     let context: String?
@@ -339,7 +382,7 @@ enum AIError: Error, LocalizedError {
 // MARK: - API Service
 
 class APIService {
-    private let baseURL = "http://127.0.0.1:3000/api"
+    private let baseURL = "https://ev-transition-coach-backend-production.up.railway.app/api"
     private let session = URLSession.shared
     
     func fetchCourses() -> AnyPublisher<CoursesResponse, Error> {
@@ -351,6 +394,19 @@ class APIService {
         return session.dataTaskPublisher(for: url)
             .map(\.data)
             .decode(type: CoursesResponse.self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+    
+    func fetchPodcasts() -> AnyPublisher<PodcastsResponse, Error> {
+        guard let url = URL(string: "\(baseURL)/podcasts") else {
+            return Fail(error: URLError(.badURL))
+                .eraseToAnyPublisher()
+        }
+        
+        return session.dataTaskPublisher(for: url)
+            .map(\.data)
+            .decode(type: PodcastsResponse.self, decoder: JSONDecoder())
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
@@ -442,13 +498,16 @@ class APIService {
 class EVCoachViewModel: ObservableObject {
     @Published var courses: [Course] = []
     @Published var videos: [Video] = []
+    @Published var podcasts: [Podcast] = []
     @Published var currentVideo: Video?
+    @Published var currentPodcast: Podcast?
     @Published var currentCourse: Course?
     @Published var isLoading = false
     @Published var aiResponse: String = ""
     @Published var isAILoading = false
     @Published var aiError: String?
     @Published var videoProgress: [String: VideoProgress] = [:]
+    @Published var podcastProgress: [String: PodcastProgress] = [:]
     @Published var selectedCategory: CourseCategory?
     @Published var shouldShowEndQuiz: Bool = false
     @Published var completedVideos: Set<String> = [] // Track videos with completed end quizzes
@@ -460,19 +519,24 @@ class EVCoachViewModel: ObservableObject {
     func loadCourses() {
         isLoading = true
         
-        apiService.fetchCourses()
+        // Load both courses and podcasts
+        let coursesPublisher = apiService.fetchCourses()
+        let podcastsPublisher = apiService.fetchPodcasts()
+        
+        Publishers.Zip(coursesPublisher, podcastsPublisher)
             .sink(receiveCompletion: { [weak self] completion in
                 DispatchQueue.main.async {
                     self?.isLoading = false
                 }
                 
                 if case .failure(let error) = completion {
-                    print("Failed to fetch courses: \(error)")
+                    print("Failed to fetch courses and podcasts: \(error)")
                 }
-            }, receiveValue: { [weak self] response in
+            }, receiveValue: { [weak self] (coursesResponse, podcastsResponse) in
                 DispatchQueue.main.async {
-                    self?.courses = response.courses
-                    self?.videos = response.courses.flatMap { $0.videos }
+                    self?.courses = coursesResponse.courses
+                    self?.videos = coursesResponse.courses.flatMap { $0.videos }
+                    self?.podcasts = podcastsResponse.podcasts
                 }
             })
             .store(in: &cancellables)
@@ -631,6 +695,8 @@ class EVCoachViewModel: ObservableObject {
         }
         let normalizedCourseId = normalize(courseId)
         let courseVideos = videos.filter { normalize($0.courseId) == normalizedCourseId }
+        let coursePodcasts = podcasts.filter { normalize($0.courseId) == normalizedCourseId }
+        
         // A video is considered completed if it appears in the completedVideos set
         // OR if its corresponding VideoProgress entry reports isCompleted == true.
         let videosCompleted = courseVideos.filter { video in
@@ -638,11 +704,13 @@ class EVCoachViewModel: ObservableObject {
         }.count
 
         let totalVideos = courseVideos.count
-        let totalPodcasts = 0 // No podcasts in current implementation
+        let totalPodcasts = coursePodcasts.count
         
         // A podcast is considered completed if its PodcastProgress entry reports
         // isCompleted == true.
-        let podcastsCompleted = 0 // No podcasts in current implementation
+        let podcastsCompleted = coursePodcasts.filter { podcast in
+            podcastProgress[podcast.id]?.isCompleted ?? false
+        }.count
         let totalItems = totalVideos + totalPodcasts
         let completedItems = videosCompleted + podcastsCompleted
         let overallProgress = totalItems > 0 ? Double(completedItems) / Double(totalItems) : 0.0
@@ -653,6 +721,21 @@ class EVCoachViewModel: ObservableObject {
             }
         }
         return (videosCompleted, totalVideos, podcastsCompleted, totalPodcasts, overallProgress, totalWatchTime)
+    }
+    
+    // MARK: - Podcast Progress Tracking
+    
+    func updatePodcastProgress(podcastId: String, playbackPosition: Int, totalDuration: Int) {
+        let progress = PodcastProgress(
+            podcastId: podcastId,
+            playbackPosition: playbackPosition,
+            totalDuration: totalDuration,
+            isCompleted: playbackPosition >= totalDuration - 10, // Within 10 seconds of end
+            lastPlayedAt: Date()
+        )
+        podcastProgress[podcastId] = progress
+        
+        // Update backend - TODO: Implement API call when backend is ready
     }
     
     // MARK: - End of Video Quiz Management

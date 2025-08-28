@@ -14,7 +14,7 @@ import WebKit
 struct VideoPlayerView: View {
     let video: Video
     @ObservedObject var viewModel: EVCoachViewModel
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @State private var showEndQuiz = false
     
     var body: some View {
@@ -32,20 +32,7 @@ struct VideoPlayerView: View {
             }
             .background(Color.black)
             
-            // Floating Back Button
-            Button(action: { 
-                presentationMode.wrappedValue.dismiss() 
-            }) {
-                Image(systemName: "chevron.left")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .frame(width: 44, height: 44)
-                    .background(Color.black.opacity(0.6))
-                    .clipShape(Circle())
-            }
-            .padding(.top, 50)  // Account for safe area
-            .padding(.leading, 16)
+            // Back button removed - VideoDetailView handles navigation
         }
         .onAppear {
             viewModel.selectVideo(video)
@@ -260,22 +247,13 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
 struct CourseDetailView: View {
     let course: Course
     @ObservedObject var viewModel: EVCoachViewModel
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // Course Header
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                            Image(systemName: "chevron.left")
-                                .font(.title2)
-                                .foregroundColor(.primary)
-                        }
-                        Spacer()
-                    }
-                    
                     HStack(spacing: 12) {
                         Image(systemName: course.category.icon)
                             .font(.title)
@@ -340,7 +318,16 @@ struct CourseDetailView: View {
             }
             .padding()
         }
-        .navigationBarHidden(true)
+        .navigationTitle(course.title)
+        .navigationBarTitleDisplayMode(.large)
+        .navigationDestination(isPresented: Binding(
+            get: { viewModel.selectedVideo != nil },
+            set: { if !$0 { viewModel.selectedVideo = nil } }
+        )) {
+            if let video = viewModel.selectedVideo {
+                VideoDetailView(video: video, viewModel: viewModel)
+            }
+        }
         .onAppear {
             viewModel.selectCourse(course)
         }
@@ -371,7 +358,9 @@ struct VideoListView: View {
             
             VStack(spacing: 12) {
                 ForEach(videos, id: \.id) { video in
-                    NavigationLink(destination: VideoDetailView(video: video, viewModel: viewModel)) {
+                    Button {
+                        viewModel.selectedVideo = video
+                    } label: {
                         VideoRowView(video: video, viewModel: viewModel)
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -499,87 +488,56 @@ struct VideoRowView: View {
 struct VideoDetailView: View {
     let video: Video
     @ObservedObject var viewModel: EVCoachViewModel
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @State private var showingQuiz = false
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Top Navigation Bar
-            HStack {
-                Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.title2)
-                        Text("Back")
-                            .font(.headline)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Simplified Video Player section
+                Rectangle()
+                    .fill(Color.black)
+                    .aspectRatio(16/9, contentMode: .fit)
+                    .overlay(
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(.white)
+                    )
+                
+                // Video Info
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(video.title)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text(video.description)
+                        .font(.body)
+                        .foregroundStyle(.primary)
+                    
+                    HStack {
+                        Label("\(video.duration / 60):\(String(format: "%02d", video.duration % 60))", systemImage: "clock")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        Spacer()
                     }
-                    .foregroundColor(.primary)
                 }
-                
-                Spacer()
-                
-                if video.quiz != nil {
-                    Button("Take Quiz") {
+                .padding()
+            }
+        }
+        .navigationTitle(video.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if video.quiz != nil {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Quiz") {
                         showingQuiz = true
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(.ultraThinMaterial)
-            
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    // Video Player
-                    VideoPlayerView(video: video, viewModel: viewModel)
-                    
-                    // Video Info
-                    VStack(alignment: .leading, spacing: 16) {
-                        // Video Details
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(video.title)
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            HStack(spacing: 16) {
-                                Label(video.formattedDuration, systemImage: "clock")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                
-                                if let progress = viewModel.videoProgress[video.id] {
-                                    Label("\(Int(Double(progress.watchedSeconds) / Double(video.duration) * 100))% complete", systemImage: "chart.line.uptrend.xyaxis")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            
-                            Text(video.description)
-                                .font(.body)
-                                .foregroundStyle(.primary)
-                        }
-                        
-                        Divider()
-                        
-                        // Transcript (if available)
-                        if let transcript = video.transcript {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Transcript")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                
-                                Text(transcript)
-                                    .font(.body)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                }
-                .padding()
-            }
         }
-        .navigationBarHidden(true)
         .sheet(isPresented: $showingQuiz) {
             if let quiz = video.quiz {
                 QuizView(quiz: quiz, viewModel: viewModel)

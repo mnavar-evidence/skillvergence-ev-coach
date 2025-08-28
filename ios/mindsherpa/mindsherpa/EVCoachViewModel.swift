@@ -530,6 +530,8 @@ class EVCoachViewModel: ObservableObject {
     @Published var videos: [Video] = []
     @Published var currentVideo: Video?
     @Published var currentCourse: Course?
+    @Published var selectedCourse: Course?
+    @Published var selectedVideo: Video?
     @Published var isLoading = false
     @Published var aiResponse: String = ""
     @Published var isAILoading = false
@@ -557,22 +559,28 @@ class EVCoachViewModel: ObservableObject {
     }
     
     func loadCourses() {
+        print("🔄 Starting to load courses...")
+        print("📍 API URL: \(AppConfig.coursesEndpoint)")
         isLoading = true
         
         apiService.fetchCourses()
-            .sink(receiveCompletion: { [weak self] completion in
-                DispatchQueue.main.async {
-                    self?.isLoading = false
-                }
-                
+            .sink(receiveCompletion: { [weak self] completion in                
                 if case .failure(let error) = completion {
-                    print("Failed to fetch courses: \(error)")
+                    print("❌ Failed to fetch courses: \(error)")
+                    print("❌ Error details: \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        self?.isLoading = false
+                    }
                 }
             }, receiveValue: { [weak self] response in
+                print("✅ Successfully fetched \(response.courses.count) courses")
+                print("📋 Course titles: \(response.courses.map { $0.title })")
                 DispatchQueue.main.async {
                     self?.courses = response.courses
                     self?.videos = response.courses.flatMap { $0.videos }
+                    self?.isLoading = false
                     self?.loadPodcasts()
+                    print("🎯 UI Updated - isLoading: \(self?.isLoading ?? true), courses count: \(self?.courses.count ?? 0)")
                 }
             })
             .store(in: &cancellables)

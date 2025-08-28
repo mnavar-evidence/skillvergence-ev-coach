@@ -3,15 +3,22 @@ import Foundation
 struct AppConfig {
     // MARK: - API Configuration
     
+    // Force production mode for testing
+    static let baseURL = "https://backend-production-f873.up.railway.app"
+    static let isProduction = true
+    
+    // Uncomment below for development
+    /*
     #if DEBUG
     // Development - Local server  
     static let baseURL = "http://192.168.86.46:3000"  // Your Mac's IP address
     static let isProduction = false
     #else
     // Production - Railway deployment
-    static let baseURL = "https://ev-coach-api.railway.app"
+    static let baseURL = "https://backend-production-f873.up.railway.app"
     static let isProduction = true
     #endif
+    */
     
     // MARK: - API Endpoints
     
@@ -57,12 +64,16 @@ struct AppConfig {
         print("   Environment: \(isProduction ? "Production" : "Development")")
         print("   Base URL: \(baseURL)")
         print("   API URL: \(apiURL)")
+        print("   Courses URL: \(coursesEndpoint)")
         print("   Network Logging: \(enableNetworkLogging)")
         print("   Device ID: \(DeviceManager.shared.deviceId)")
         
         #if DEBUG
         print("   ⚠️  HTTP connections enabled for local development")
         print("   📶 Ensure your device is on the same WiFi network")
+        #else
+        print("   🌐 Using Railway production backend")
+        print("   📡 Testing network connectivity...")
         #endif
     }
 }

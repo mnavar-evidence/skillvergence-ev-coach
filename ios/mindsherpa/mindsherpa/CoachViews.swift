@@ -175,8 +175,10 @@ struct VideoView: View {
                     .padding(.vertical, 40)
                 } else {
                     LazyVStack(spacing: 12) {
-                        ForEach(viewModel.courses) { course in
-                            NavigationLink(destination: CourseDetailView(course: course, viewModel: viewModel)) {
+                        ForEach(viewModel.courses, id: \.id) { course in
+                            Button {
+                                viewModel.selectedCourse = course
+                            } label: {
                                 CourseCardView(course: course, viewModel: viewModel)
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -184,10 +186,25 @@ struct VideoView: View {
                     }
                 }
                 
-                // AI Interaction at bottom - no Spacer needed in ScrollView
+                // AI Interaction with proper spacing
                 AIInteractionView(viewModel: viewModel)
+                    .padding(.top, 20)
+                
+                // Bottom safe area padding
+                Color.clear
+                    .frame(height: 50)
+                
+                // Modern navigation handled by navigationDestination
             }
             .padding()
+        }
+        .navigationDestination(isPresented: Binding(
+            get: { viewModel.selectedCourse != nil },
+            set: { if !$0 { viewModel.selectedCourse = nil } }
+        )) {
+            if let course = viewModel.selectedCourse {
+                CourseDetailView(course: course, viewModel: viewModel)
+            }
         }
     }
 }
@@ -196,7 +213,24 @@ struct CourseCardView: View {
     let course: Course
     @ObservedObject var viewModel: EVCoachViewModel
     
-    private func formatHours(_ hours: Double) -> String {
+    // Cache expensive calculations
+    private let formattedDuration: String
+    private let completionPercentage: Double
+    private let completedVideoCount: Int
+    
+    init(course: Course, viewModel: EVCoachViewModel) {
+        self.course = course
+        self.viewModel = viewModel
+        
+        // Pre-calculate expensive values
+        self.formattedDuration = Self.formatHours(course.estimatedHours)
+        self.completionPercentage = course.completionPercentage(with: viewModel.videoProgress)
+        self.completedVideoCount = course.videos.filter { video in
+            viewModel.videoProgress[video.id]?.isCompleted ?? false
+        }.count
+    }
+    
+    private static func formatHours(_ hours: Double) -> String {
         if hours < 1.0 {
             let minutes = Int(hours * 60)
             return "\(minutes) min"
@@ -230,7 +264,7 @@ struct CourseCardView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(formatHours(course.estimatedHours))
+                    Text(formattedDuration)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 8)
@@ -238,9 +272,8 @@ struct CourseCardView: View {
                         .background(.thinMaterial)
                         .clipShape(Capsule())
                     
-                    let completionPct = course.completionPercentage(with: viewModel.videoProgress)
-                    if completionPct > 0 {
-                        Text("\(Int(completionPct))%")
+                    if completionPercentage > 0 {
+                        Text("\(Int(completionPercentage))%")
                             .font(.caption2)
                             .foregroundStyle(.green)
                             .fontWeight(.medium)
@@ -255,25 +288,21 @@ struct CourseCardView: View {
                 .lineLimit(2)
             
             // Progress bar if course has progress
-            let completionPct = course.completionPercentage(with: viewModel.videoProgress)
-            if completionPct > 0 {
+            if completionPercentage > 0 {
                 VStack(spacing: 4) {
                     HStack {
                         Text("Progress")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        let completedCount = course.videos.filter { video in
-                            viewModel.videoProgress[video.id]?.isCompleted ?? false
-                        }.count
-                        Text("\(completedCount) of \(course.videos.count) videos")
+                        Text("\(completedVideoCount) of \(course.videos.count) videos")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
                     
                     MediaProgressIndicator(
-                        progress: completionPct / 100.0,
-                        isCompleted: completionPct >= 100,
+                        progress: completionPercentage / 100.0,
+                        isCompleted: completionPercentage >= 100,
                         mediaType: .course,
                         size: .medium
                     )
@@ -308,6 +337,8 @@ struct CourseCardView: View {
                 .stroke(.quaternary, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .scaleEffect(viewModel.isLoading ? 0.98 : 1.0)
+        .opacity(viewModel.isLoading ? 0.6 : 1.0)
     }
 }
 

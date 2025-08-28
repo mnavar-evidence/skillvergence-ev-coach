@@ -21,7 +21,7 @@ struct ContentView: View {
     @State private var previousTab = 0
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Top Section: Coach & Progress
                 CoachHeaderView(viewModel: viewModel)
@@ -39,11 +39,11 @@ struct ContentView: View {
                         .tag(2)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                .onChange(of: selectedTab) { newTab in
+                .onChange(of: selectedTab) { oldValue, newValue in
                     let tabNames = ["Video", "Podcast", "Mind-Map"]
-                    let tabName = tabNames[safe: newTab] ?? "Unknown"
-                    analyticsManager.track(.tabSwitched(from: previousTab, to: newTab, tabName: tabName))
-                    previousTab = newTab
+                    let tabName = tabNames[safe: newValue] ?? "Unknown"
+                    analyticsManager.track(.tabSwitched(from: oldValue, to: newValue, tabName: tabName))
+                    previousTab = newValue
                 }
                 
                 Spacer()
@@ -53,10 +53,6 @@ struct ContentView: View {
         }
         .onAppear {
             viewModel.loadCourses()
-        }
-        .onTapGesture {
-            // Global keyboard dismissal
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
     }
 }

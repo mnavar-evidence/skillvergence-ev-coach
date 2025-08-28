@@ -176,9 +176,8 @@ struct VideoView: View {
                 } else {
                     LazyVStack(spacing: 12) {
                         ForEach(viewModel.courses, id: \.id) { course in
-                            Button {
-                                viewModel.selectedCourse = course
-                            } label: {
+                            // Use value-based navigation rather than mutating view model state.
+                            NavigationLink(value: course) {
                                 CourseCardView(course: course, viewModel: viewModel)
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -197,6 +196,10 @@ struct VideoView: View {
                 // Modern navigation handled by navigationDestination
             }
             .padding()
+        }
+        // Present course details using value-based navigation
+        .navigationDestination(for: Course.self) { course in
+            CourseDetailView(course: course, viewModel: viewModel)
         }
     }
 }

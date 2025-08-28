@@ -4,7 +4,7 @@ import Foundation
 
 // MARK: - Data Models
 
-struct Course: Codable, Identifiable {
+struct Course: Codable, Identifiable, Hashable {
     let id: String
     let title: String
     let description: String
@@ -68,7 +68,13 @@ struct Course: Codable, Identifiable {
     }
 }
 
-struct Video: Codable, Identifiable {
+// Conform Course to Hashable using its id.  This allows value-based NavigationLink to work.
+extension Course {
+    static func == (lhs: Course, rhs: Course) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+
+struct Video: Codable, Identifiable, Hashable {
     let id: String
     let title: String
     let description: String
@@ -217,6 +223,12 @@ struct Video: Codable, Identifiable {
             )
         }
     }
+}
+
+// Conform Video to Hashable using its id.
+extension Video {
+    static func == (lhs: Video, rhs: Video) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
 struct Quiz: Codable, Identifiable {
@@ -912,8 +924,15 @@ class EVCoachViewModel: ObservableObject {
     }
     
     func getCourseProgressSummary(courseId: String) -> (videosCompleted: Int, totalVideos: Int, podcastsCompleted: Int, totalPodcasts: Int, overallProgress: Double, totalWatchTime: Double) {
-        let courseVideos = videos.filter { $0.courseId == courseId }
-        let coursePodcasts = podcasts.filter { $0.courseId == courseId }
+        // Normalise course identifiers.  Backends sometimes prefix ids with "course-" (e.g. "course-1") while courses
+        // may use just the numeric string (e.g. "1").  Strip the "course-" prefix from both sides when comparing.
+        func normalize(_ id: String?) -> String {
+            guard let id = id else { return "" }
+            return id.replacingOccurrences(of: "course-", with: "")
+        }
+        let normalizedCourseId = normalize(courseId)
+        let courseVideos = videos.filter { normalize($0.courseId) == normalizedCourseId }
+        let coursePodcasts = podcasts.filter { normalize($0.courseId) == normalizedCourseId }
         
         let videosCompleted = courseVideos.filter { completedVideos.contains($0.id) }.count
         let podcastsCompleted = coursePodcasts.filter { podcastProgress[$0.id]?.isCompleted == true }.count

@@ -351,6 +351,10 @@ struct CourseDetailView: View {
         }
         .navigationTitle(course.title)
         .navigationBarTitleDisplayMode(.large)
+        // Present video details using value-based navigation
+        .navigationDestination(for: Video.self) { video in
+            VideoPage(video: video, viewModel: viewModel)
+        }
         .onAppear {
             viewModel.selectCourse(course)
         }
@@ -397,10 +401,8 @@ struct VideoListView: View {
             
             VStack(spacing: 12) {
                 ForEach(videos, id: \.id) { video in
-                    NavigationLink {
-                        // Safe navigation with stable URL construction
-                        VideoPage(video: video, viewModel: viewModel)
-                    } label: {
+                    // Use NavigationLink with a Video value instead of mutating state
+                    NavigationLink(value: video) {
                         VideoRowView(video: video, viewModel: viewModel)
                     }
                     .buttonStyle(PlainButtonStyle())

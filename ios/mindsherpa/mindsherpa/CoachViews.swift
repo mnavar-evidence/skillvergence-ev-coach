@@ -271,9 +271,12 @@ struct CourseCardView: View {
                             .foregroundStyle(.secondary)
                     }
                     
-                    ProgressView(value: completionPct / 100.0)
-                        .progressViewStyle(LinearProgressViewStyle(tint: .blue))
-                        .scaleEffect(y: 0.8)
+                    MediaProgressIndicator(
+                        progress: completionPct / 100.0,
+                        isCompleted: completionPct >= 100,
+                        mediaType: .course,
+                        size: .medium
+                    )
                 }
             }
             
@@ -313,6 +316,7 @@ struct CourseCardView: View {
 struct AIInteractionView: View {
     @ObservedObject var viewModel: EVCoachViewModel
     @State private var questionText = ""
+    @FocusState private var isTextFieldFocused: Bool
 
     let quickQuestions = [
         "Compare alternator vs DC-DC",
@@ -328,7 +332,10 @@ struct AIInteractionView: View {
                 HStack(spacing: 8) {
                     ForEach(quickQuestions, id: \.self) { question in
                         Button {
-                            withAnimation(.easeInOut(duration: 0.2)) { questionText = question }
+                            withAnimation(.easeInOut(duration: 0.2)) { 
+                                questionText = question
+                                isTextFieldFocused = true // Focus the text field for editing
+                            }
                         } label: {
                             Text(question).font(.caption).foregroundStyle(.primary)
                         }
@@ -344,7 +351,13 @@ struct AIInteractionView: View {
             HStack(spacing: 8) {
                 HStack {
                     Image(systemName: "magnifyingglass").foregroundStyle(.secondary).font(.caption)
-                    TextField("Ask about this content...", text: $questionText).textFieldStyle(.plain)
+                    TextField("Ask about this content...", text: $questionText)
+                        .textFieldStyle(.plain)
+                        .focused($isTextFieldFocused)
+                        .submitLabel(.send)
+                        .onSubmit {
+                            sendQuestion()
+                        }
                 }
                 .padding(.horizontal, 16).padding(.vertical, 10)
                 .background(RoundedRectangle(cornerRadius: 12).fill(.ultraThinMaterial))
@@ -364,8 +377,7 @@ struct AIInteractionView: View {
                 //.disabled(questionText.isEmpty || viewModel.isAILoading)
                 
                 Button {
-                    viewModel.askAI(question: questionText)
-                    questionText = ""
+                    sendQuestion()
                 } label: {
                     Image(systemName: questionText.isEmpty ? "paperplane" : "paperplane.fill")
                         .font(.caption)
@@ -438,5 +450,22 @@ struct AIInteractionView: View {
         .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 3)
         .padding(.top, 8)
         .padding(.horizontal, 4)
+        .onTapGesture {
+            // Dismiss keyboard when tapping outside text field
+            isTextFieldFocused = false
+        }
+    }
+    
+    // MARK: - Methods
+    
+    private func sendQuestion() {
+        guard !questionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        
+        // Dismiss keyboard first
+        isTextFieldFocused = false
+        
+        // Send to AI
+        viewModel.askAI(question: questionText)
+        questionText = ""
     }
 }

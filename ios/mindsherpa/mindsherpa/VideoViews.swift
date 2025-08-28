@@ -305,11 +305,18 @@ struct CourseDetailView: View {
                         }
                     }
                     
-                    // Progress Bar
-                    let completionPct = course.completionPercentage(with: viewModel.videoProgress)
-                    ProgressView(value: completionPct / 100.0)
-                        .progressViewStyle(LinearProgressViewStyle(tint: .blue))
-                        .scaleEffect(y: 2)
+                    // Enhanced Progress Summary
+                    let progressSummary = viewModel.getCourseProgressSummary(courseId: course.id)
+                    CourseProgressSummary(
+                        courseTitle: course.title,
+                        totalVideos: progressSummary.totalVideos,
+                        completedVideos: progressSummary.videosCompleted,
+                        totalPodcasts: progressSummary.totalPodcasts,
+                        completedPodcasts: progressSummary.podcastsCompleted,
+                        totalWatchTime: course.estimatedHours * 3600, // Convert to seconds
+                        watchedTime: progressSummary.totalWatchTime
+                    )
+                    .padding(.top, 12)
                     
                     Text(course.description)
                         .font(.body)
@@ -340,13 +347,11 @@ struct CourseDetailView: View {
     }
     
     private func formatHours(_ hours: Double) -> String {
-        let roundedHours = hours.rounded()
-        if roundedHours == 1 {
-            return "1h"
-        } else if roundedHours < 1 {
+        if hours < 1 {
             let minutes = Int(hours * 60)
             return "\(minutes)m"
         } else {
+            let roundedHours = hours.rounded()
             return "\(Int(roundedHours))h"
         }
     }
@@ -456,23 +461,20 @@ struct VideoRowView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                 
-                // Progress indicator
+                // Enhanced Progress indicator
                 if let progress = progress, progress.watchedSeconds > 0 {
-                    HStack(spacing: 8) {
-                        ProgressView(value: Double(progress.watchedSeconds) / Double(video.duration))
-                            .progressViewStyle(LinearProgressViewStyle(tint: .blue))
-                            .scaleEffect(y: 0.8)
-                        
-                        if progress.isCompleted {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                                .font(.caption)
-                        } else {
-                            Text("\(Int(Double(progress.watchedSeconds) / Double(video.duration) * 100))%")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+                    MediaProgressIndicator(
+                        progress: progress.progressDouble,
+                        isCompleted: progress.isCompleted,
+                        mediaType: .video,
+                        size: .small
+                    )
+                } else if let progress = progress {
+                    TimeProgressIndicator(
+                        currentTime: Double(progress.watchedSeconds),
+                        totalTime: Double(video.duration),
+                        isCompleted: progress.isCompleted
+                    )
                 }
             }
             

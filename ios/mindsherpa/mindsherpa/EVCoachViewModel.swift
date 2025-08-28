@@ -297,6 +297,59 @@ struct VideoProgress: Codable {
     let totalDuration: Int
     let isCompleted: Bool
     let lastWatchedAt: Date
+    let deviceId: String?
+    
+    // Backward compatibility initializer
+    init(videoId: String, watchedSeconds: Int, totalDuration: Int, isCompleted: Bool, lastWatchedAt: Date, deviceId: String? = nil) {
+        self.videoId = videoId
+        self.watchedSeconds = watchedSeconds
+        self.totalDuration = totalDuration
+        self.isCompleted = isCompleted
+        self.lastWatchedAt = lastWatchedAt
+        self.deviceId = deviceId ?? DeviceManager.shared.deviceId
+    }
+}
+
+struct Podcast: Codable, Identifiable {
+    let id: String
+    let title: String
+    let description: String
+    let audioUrl: String
+    let duration: Int // in seconds
+    let courseId: String
+    let thumbnailUrl: String?
+    let publishedAt: Date
+    let episodeNumber: Int
+    
+    var formattedDuration: String {
+        let minutes = duration / 60
+        let seconds = duration % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
+struct PodcastProgress: Codable {
+    let podcastId: String
+    let playbackPosition: Int // in seconds
+    let totalDuration: Int
+    let isCompleted: Bool
+    let lastPlayedAt: Date
+    let deviceId: String?
+    
+    var progressPercentage: Double {
+        guard totalDuration > 0 else { return 0.0 }
+        return Double(playbackPosition) / Double(totalDuration) * 100.0
+    }
+    
+    // Backward compatibility initializer
+    init(podcastId: String, playbackPosition: Int, totalDuration: Int, isCompleted: Bool, lastPlayedAt: Date, deviceId: String? = nil) {
+        self.podcastId = podcastId
+        self.playbackPosition = playbackPosition
+        self.totalDuration = totalDuration
+        self.isCompleted = isCompleted
+        self.lastPlayedAt = lastPlayedAt
+        self.deviceId = deviceId ?? DeviceManager.shared.deviceId
+    }
 }
 
 struct CoursesResponse: Codable {
@@ -306,6 +359,13 @@ struct CoursesResponse: Codable {
 struct AIRequest: Codable {
     let question: String
     let context: String?
+    let deviceId: String?
+    
+    init(question: String, context: String? = nil, deviceId: String? = nil) {
+        self.question = question
+        self.context = context
+        self.deviceId = deviceId ?? DeviceManager.shared.deviceId
+    }
 }
 
 struct AIResponse: Codable {
@@ -339,7 +399,7 @@ enum AIError: Error, LocalizedError {
 // MARK: - API Service
 
 class APIService {
-    private let baseURL = "http://127.0.0.1:3000/api"
+    private let baseURL = AppConfig.apiURL
     private let session = URLSession.shared
     
     func fetchCourses() -> AnyPublisher<CoursesResponse, Error> {
@@ -435,6 +495,32 @@ class APIService {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+    
+    // MARK: - Analytics Methods
+    
+    func sendAnalyticsEvents(_ events: [AnalyticsEventData]) -> AnyPublisher<Void, Error> {
+        guard let url = URL(string: "\(baseURL)/analytics/events") else {
+            return Fail(error: URLError(.badURL))
+                .eraseToAnyPublisher()
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            urlRequest.httpBody = try JSONEncoder().encode(events)
+        } catch {
+            return Fail(error: error)
+                .eraseToAnyPublisher()
+        }
+        
+        return session.dataTaskPublisher(for: urlRequest)
+            .map { _ in () } // Convert to Void
+            .catch { _ in Just(()).setFailureType(to: Error.self) } // Don't fail on analytics errors
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
 }
 
 // MARK: - View Model
@@ -449,6 +535,8 @@ class EVCoachViewModel: ObservableObject {
     @Published var isAILoading = false
     @Published var aiError: String?
     @Published var videoProgress: [String: VideoProgress] = [:]
+    @Published var podcasts: [Podcast] = []
+    @Published var podcastProgress: [String: PodcastProgress] = [:]
     @Published var selectedCategory: CourseCategory?
     @Published var shouldShowEndQuiz: Bool = false
     @Published var completedVideos: Set<String> = [] // Track videos with completed end quizzes
@@ -456,6 +544,17 @@ class EVCoachViewModel: ObservableObject {
     private let apiService = APIService()
     private var cancellables = Set<AnyCancellable>()
     private var progressUpdateTimer: Timer?
+    private let analyticsManager = AnalyticsManager.shared
+    
+    // MARK: - Persistence Keys
+    private let videoProgressKey = "VideoProgress"
+    private let completedVideosKey = "CompletedVideos"
+    private let podcastProgressKey = "PodcastProgress"
+    
+    init() {
+        loadProgressFromStorage()
+        analyticsManager.track(.appLaunched)
+    }
     
     func loadCourses() {
         isLoading = true
@@ -473,6 +572,7 @@ class EVCoachViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self?.courses = response.courses
                     self?.videos = response.courses.flatMap { $0.videos }
+                    self?.loadPodcasts()
                 }
             })
             .store(in: &cancellables)
@@ -490,6 +590,14 @@ class EVCoachViewModel: ObservableObject {
         // Create context from current course content
         let context = createContext()
         
+        // Track AI question
+        analyticsManager.track(.aiQuestionAsked(
+            question: question,
+            context: context,
+            courseId: currentCourse?.id
+        ))
+        
+        let startTime = Date()
         apiService.askAI(question: question, context: context)
             .sink(receiveCompletion: { [weak self] completion in
                 DispatchQueue.main.async {
@@ -503,9 +611,18 @@ class EVCoachViewModel: ObservableObject {
                     }
                 }
             }, receiveValue: { [weak self] response in
+                let responseTime = Date().timeIntervalSince(startTime)
+                
                 DispatchQueue.main.async {
                     self?.aiResponse = response.answer
                     self?.aiError = nil
+                    
+                    // Track AI response received
+                    self?.analyticsManager.track(.aiResponseReceived(
+                        question: question,
+                        response: response.answer,
+                        responseTime: responseTime
+                    ))
                 }
             })
             .store(in: &cancellables)
@@ -545,6 +662,13 @@ class EVCoachViewModel: ObservableObject {
         currentVideo = video
         // Reset end quiz state for new video
         shouldShowEndQuiz = false
+        
+        // Track video started
+        analyticsManager.trackVideoEvent(.videoStarted(
+            videoId: video.id,
+            courseId: video.courseId ?? "",
+            title: video.title
+        ))
     }
     
     func loadVideoProgress(for videos: [Video]) {
@@ -573,6 +697,18 @@ class EVCoachViewModel: ObservableObject {
             lastWatchedAt: Date()
         )
         videoProgress[videoId] = progress
+        
+        // Track video completion if completed
+        if progress.isCompleted {
+            analyticsManager.trackVideoEvent(.videoCompleted(
+                videoId: videoId,
+                courseId: currentVideo?.courseId ?? "",
+                totalDuration: totalDuration
+            ))
+        }
+        
+        // Save progress to local storage immediately
+        saveProgressToStorage()
         
         // Update backend
         apiService.updateVideoProgress(videoId: videoId, watchedSeconds: watchedSeconds, totalDuration: totalDuration)
@@ -623,6 +759,9 @@ class EVCoachViewModel: ObservableObject {
             // Mark video as completed - user gets credit for watching
             completedVideos.insert(videoId)
             
+            // Save completed videos to storage immediately
+            saveProgressToStorage()
+            
             // Mark video progress as completed in the backend
             if let currentVideo = currentVideo, currentVideo.id == videoId {
                 updateVideoProgress(videoId: videoId, watchedSeconds: currentVideo.duration, totalDuration: currentVideo.duration)
@@ -637,6 +776,253 @@ class EVCoachViewModel: ObservableObject {
     
     var coursesGroupedByCategory: [CourseCategory: [Course]] {
         Dictionary(grouping: courses, by: { $0.category })
+    }
+    
+    // MARK: - Progress Persistence
+    
+    private func loadProgressFromStorage() {
+        // Load video progress
+        if let progressData = UserDefaults.standard.data(forKey: videoProgressKey),
+           let decodedProgress = try? JSONDecoder().decode([String: VideoProgress].self, from: progressData) {
+            videoProgress = decodedProgress
+        }
+        
+        // Load completed videos
+        if let completedData = UserDefaults.standard.data(forKey: completedVideosKey),
+           let decodedCompleted = try? JSONDecoder().decode(Set<String>.self, from: completedData) {
+            completedVideos = decodedCompleted
+        }
+        
+        // Load podcast progress
+        if let podcastData = UserDefaults.standard.data(forKey: podcastProgressKey),
+           let decodedPodcastProgress = try? JSONDecoder().decode([String: PodcastProgress].self, from: podcastData) {
+            podcastProgress = decodedPodcastProgress
+        }
+    }
+    
+    private func saveProgressToStorage() {
+        // Save video progress
+        if let progressData = try? JSONEncoder().encode(videoProgress) {
+            UserDefaults.standard.set(progressData, forKey: videoProgressKey)
+        }
+        
+        // Save completed videos
+        if let completedData = try? JSONEncoder().encode(completedVideos) {
+            UserDefaults.standard.set(completedData, forKey: completedVideosKey)
+        }
+        
+        // Save podcast progress
+        if let podcastData = try? JSONEncoder().encode(podcastProgress) {
+            UserDefaults.standard.set(podcastData, forKey: podcastProgressKey)
+        }
+        
+        // Ensure data is written to disk
+        UserDefaults.standard.synchronize()
+    }
+    
+    func clearAllProgress() {
+        videoProgress.removeAll()
+        completedVideos.removeAll()
+        podcastProgress.removeAll()
+        UserDefaults.standard.removeObject(forKey: videoProgressKey)
+        UserDefaults.standard.removeObject(forKey: completedVideosKey)
+        UserDefaults.standard.removeObject(forKey: podcastProgressKey)
+        UserDefaults.standard.synchronize()
+    }
+    
+    // MARK: - Enhanced Progress Methods
+    
+    func updateVideoProgress(videoId: String, currentTime: Double, totalDuration: Double, isCompleted: Bool = false) {
+        let watchedSeconds = Int(currentTime)
+        let totalSeconds = Int(totalDuration)
+        
+        let progress = VideoProgress(
+            videoId: videoId,
+            watchedSeconds: watchedSeconds,
+            totalDuration: totalSeconds,
+            isCompleted: isCompleted || (currentTime >= totalDuration * 0.95), // Auto-complete at 95%
+            lastWatchedAt: Date(),
+            deviceId: DeviceManager.shared.deviceId
+        )
+        
+        videoProgress[videoId] = progress
+        
+        if progress.isCompleted {
+            completedVideos.insert(videoId)
+        }
+        
+        saveProgressToStorage()
+        
+        // Track analytics
+        AnalyticsManager.shared.track(.videoProgressUpdate(
+            videoId: videoId,
+            progressPercentage: Int(progress.progressDouble * 100),
+            watchedSeconds: watchedSeconds,
+            totalDuration: totalSeconds
+        ))
+        
+        if progress.isCompleted && !completedVideos.contains(videoId) {
+            AnalyticsManager.shared.track(.videoCompleted(
+                videoId: videoId,
+                courseId: getCourseId(for: videoId) ?? "",
+                totalDuration: totalSeconds
+            ))
+        }
+    }
+    
+    func updatePodcastProgress(podcastId: String, currentTime: Double, totalDuration: Double, isCompleted: Bool = false) {
+        let playbackSeconds = Int(currentTime)
+        let totalSeconds = Int(totalDuration)
+        
+        let progress = PodcastProgress(
+            podcastId: podcastId,
+            playbackPosition: playbackSeconds,
+            totalDuration: totalSeconds,
+            isCompleted: isCompleted || (currentTime >= totalDuration * 0.95), // Auto-complete at 95%
+            lastPlayedAt: Date(),
+            deviceId: DeviceManager.shared.deviceId
+        )
+        
+        podcastProgress[podcastId] = progress
+        saveProgressToStorage()
+        
+        // Track analytics
+        AnalyticsManager.shared.track(.podcastProgressUpdate(
+            podcastId: podcastId,
+            progressPercentage: Int(progress.progressPercentage),
+            playbackPosition: playbackSeconds,
+            totalDuration: totalSeconds
+        ))
+        
+        if progress.isCompleted {
+            AnalyticsManager.shared.track(.podcastCompleted(
+                podcastId: podcastId,
+                courseId: getPodcastCourseId(for: podcastId) ?? "",
+                totalDuration: totalSeconds
+            ))
+        }
+    }
+    
+    func getCourseProgressSummary(courseId: String) -> (videosCompleted: Int, totalVideos: Int, podcastsCompleted: Int, totalPodcasts: Int, overallProgress: Double, totalWatchTime: Double) {
+        let courseVideos = videos.filter { $0.courseId == courseId }
+        let coursePodcasts = podcasts.filter { $0.courseId == courseId }
+        
+        let videosCompleted = courseVideos.filter { completedVideos.contains($0.id) }.count
+        let podcastsCompleted = coursePodcasts.filter { podcastProgress[$0.id]?.isCompleted == true }.count
+        
+        let totalVideos = courseVideos.count
+        let totalPodcasts = coursePodcasts.count
+        let totalItems = totalVideos + totalPodcasts
+        let completedItems = videosCompleted + podcastsCompleted
+        
+        let overallProgress = totalItems > 0 ? Double(completedItems) / Double(totalItems) : 0.0
+        
+        // Calculate total watch time
+        var totalWatchTime: Double = 0
+        for video in courseVideos {
+            if let progress = videoProgress[video.id] {
+                totalWatchTime += Double(progress.watchedSeconds)
+            }
+        }
+        for podcast in coursePodcasts {
+            if let progress = podcastProgress[podcast.id] {
+                totalWatchTime += Double(progress.playbackPosition)
+            }
+        }
+        
+        return (videosCompleted, totalVideos, podcastsCompleted, totalPodcasts, overallProgress, totalWatchTime)
+    }
+    
+    private func getCourseId(for videoId: String) -> String? {
+        return videos.first { $0.id == videoId }?.courseId
+    }
+    
+    private func getPodcastCourseId(for podcastId: String) -> String? {
+        return podcasts.first { $0.id == podcastId }?.courseId
+    }
+    
+    func getVideoProgress(for videoId: String) -> VideoProgress? {
+        return videoProgress[videoId]
+    }
+    
+    func getPodcastProgress(for podcastId: String) -> PodcastProgress? {
+        return podcastProgress[podcastId]
+    }
+    
+    func isVideoCompleted(_ videoId: String) -> Bool {
+        return completedVideos.contains(videoId) || videoProgress[videoId]?.isCompleted == true
+    }
+    
+    func isPodcastCompleted(_ podcastId: String) -> Bool {
+        return podcastProgress[podcastId]?.isCompleted == true
+    }
+    
+    // MARK: - Podcast Methods
+    
+    func loadPodcasts() {
+        // For now, use sample podcast data - in the future this will call API
+        let samplePodcasts = [
+            Podcast(
+                id: "podcast-1-1",
+                title: "Understanding EV Safety Fundamentals",
+                description: "A deep dive conversation about the core principles of electric vehicle safety, covering who can work on high voltage systems and why proper training matters.",
+                audioUrl: "https://example.com/podcasts/ev-safety-fundamentals.mp3",
+                duration: 1680, // 28 minutes
+                courseId: "1",
+                thumbnailUrl: nil,
+                publishedAt: Date(),
+                episodeNumber: 1
+            ),
+            Podcast(
+                id: "podcast-2-1", 
+                title: "Electrical Circuits Explained Simply",
+                description: "Breaking down complex electrical concepts into easy-to-understand analogies and practical examples for EV technicians.",
+                audioUrl: "https://example.com/podcasts/electrical-circuits-explained.mp3",
+                duration: 1320, // 22 minutes
+                courseId: "2",
+                thumbnailUrl: nil,
+                publishedAt: Date(),
+                episodeNumber: 2
+            ),
+            Podcast(
+                id: "podcast-3-1",
+                title: "Advanced Diagnostics Deep Dive",
+                description: "Expert discussion on using oscilloscopes and advanced measurement tools for EV system diagnostics.",
+                audioUrl: "https://example.com/podcasts/advanced-diagnostics.mp3", 
+                duration: 1920, // 32 minutes
+                courseId: "3",
+                thumbnailUrl: nil,
+                publishedAt: Date(),
+                episodeNumber: 3
+            )
+        ]
+        
+        self.podcasts = samplePodcasts
+    }
+    
+    func updatePodcastProgress(podcastId: String, playbackPosition: Int, totalDuration: Int) {
+        let progress = PodcastProgress(
+            podcastId: podcastId,
+            playbackPosition: playbackPosition,
+            totalDuration: totalDuration,
+            isCompleted: playbackPosition >= totalDuration - 30, // Consider completed if within 30 seconds of end
+            lastPlayedAt: Date()
+        )
+        
+        podcastProgress[podcastId] = progress
+        
+        // Track podcast completion if completed
+        if progress.isCompleted {
+            if let podcast = podcasts.first(where: { $0.id == podcastId }) {
+                analyticsManager.trackPodcastEvent(.podcastCompleted(
+                    podcastId: podcastId,
+                    courseId: podcast.courseId,
+                    totalDuration: totalDuration
+                ))
+            }
+        }
+        
+        saveProgressToStorage()
     }
 }
 

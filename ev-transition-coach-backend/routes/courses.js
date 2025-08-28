@@ -1,6 +1,23 @@
 const express = require('express');
 const router = express.Router();
 
+// Function to extract YouTube video ID from URL
+function extractYouTubeVideoId(url) {
+  if (!url) return null;
+  
+  const patterns = [
+    /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return null;
+}
+
 // Comprehensive course data with real YouTube video links
 const sampleCourses = [
   {
@@ -226,7 +243,16 @@ const sampleCourses = [
 // GET /api/courses - Get all courses
 router.get('/', async (req, res) => {
   try {
-    res.json({ courses: sampleCourses });
+    // Process courses to add YouTube video IDs
+    const processedCourses = sampleCourses.map(course => ({
+      ...course,
+      videos: course.videos.map(video => ({
+        ...video,
+        youtubeVideoId: extractYouTubeVideoId(video.videoUrl)
+      }))
+    }));
+    
+    res.json({ courses: processedCourses });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch courses' });
   }
@@ -242,7 +268,16 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Course not found' });
     }
     
-    res.json(course);
+    // Process course to add YouTube video IDs
+    const processedCourse = {
+      ...course,
+      videos: course.videos.map(video => ({
+        ...video,
+        youtubeVideoId: extractYouTubeVideoId(video.videoUrl)
+      }))
+    };
+    
+    res.json(processedCourse);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch course' });
   }

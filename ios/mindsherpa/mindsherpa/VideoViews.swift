@@ -366,7 +366,7 @@ struct VideoListView: View {
             
             VStack(spacing: 12) {
                 ForEach(videos, id: \.id) { video in
-                    NavigationLink(destination: VideoDetailView(video: video, viewModel: viewModel)) {
+                    NavigationLink(destination: VideoPage(video: video, viewModel: viewModel)) {
                         VideoRowView(video: video, viewModel: viewModel)
                     }
                     .buttonStyle(PlainButtonStyle())

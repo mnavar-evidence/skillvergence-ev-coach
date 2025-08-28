@@ -573,6 +573,18 @@ class EVCoachViewModel: ObservableObject {
             lastWatchedAt: Date()
         )
         videoProgress[videoId] = progress
+
+        // If the video has effectively been completed (e.g. user watched nearly the
+        // entire duration), also mark it as completed in the completedVideos set.
+        // Without adding the video ID here, course completion indicators will only
+        // update after the user passes an end-of-video quiz. By inserting the
+        // video into `completedVideos` when progress.isCompleted is true, the
+        // UI can reflect completed status immediately and persist it across
+        // sessions.  The end-of-video quiz will still run and can update this
+        // set as appropriate.
+        if progress.isCompleted {
+            completedVideos.insert(videoId)
+        }
         
         // Update backend
         apiService.updateVideoProgress(videoId: videoId, watchedSeconds: watchedSeconds, totalDuration: totalDuration)
@@ -619,9 +631,17 @@ class EVCoachViewModel: ObservableObject {
         }
         let normalizedCourseId = normalize(courseId)
         let courseVideos = videos.filter { normalize($0.courseId) == normalizedCourseId }
-        let videosCompleted = courseVideos.filter { completedVideos.contains($0.id) }.count
+        // A video is considered completed if it appears in the completedVideos set
+        // OR if its corresponding VideoProgress entry reports isCompleted == true.
+        let videosCompleted = courseVideos.filter { video in
+            completedVideos.contains(video.id) || (videoProgress[video.id]?.isCompleted ?? false)
+        }.count
+
         let totalVideos = courseVideos.count
         let totalPodcasts = 0 // No podcasts in current implementation
+        
+        // A podcast is considered completed if its PodcastProgress entry reports
+        // isCompleted == true.
         let podcastsCompleted = 0 // No podcasts in current implementation
         let totalItems = totalVideos + totalPodcasts
         let completedItems = videosCompleted + podcastsCompleted

@@ -113,28 +113,48 @@ struct YouTubePlayerView: UIViewRepresentable {
                 var hasTriggeredEndQuiz = false;
                 
                 var progressInterval = setInterval(function() {
-                    // Always track elapsed time when page is visible
-                    if (!document.hidden) {
+                    // Only track progress when page is visible and focused
+                    if (!document.hidden && document.hasFocus()) {
                         elapsed = Math.floor((Date.now() - startTime) / 1000);
                         
                         // Send progress update
-                        window.webkit.messageHandlers.progressUpdate.postMessage({
-                            videoId: '\(video.id)',
-                            watchedSeconds: elapsed,
-                            totalDuration: videoDuration
-                        });
+                        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.progressUpdate) {
+                            window.webkit.messageHandlers.progressUpdate.postMessage({
+                                videoId: '\(video.id)',
+                                watchedSeconds: elapsed,
+                                totalDuration: videoDuration
+                            });
+                        }
                         
                         // Check if video is near completion (within last 30 seconds or at 90% completion)
                         if (!hasTriggeredEndQuiz && elapsed >= Math.max(videoDuration - 30, videoDuration * 0.9)) {
                             hasTriggeredEndQuiz = true;
-                            window.webkit.messageHandlers.videoNearEnd.postMessage({
-                                videoId: '\(video.id)',
-                                elapsed: elapsed,
-                                duration: videoDuration
-                            });
+                            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.videoNearEnd) {
+                                window.webkit.messageHandlers.videoNearEnd.postMessage({
+                                    videoId: '\(video.id)',
+                                    elapsed: elapsed,
+                                    duration: videoDuration
+                                });
+                            }
                         }
                     }
                 }, 2000); // Check every 2 seconds
+                
+                // Clean up interval when page becomes hidden
+                document.addEventListener('visibilitychange', function() {
+                    if (document.hidden && progressInterval) {
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+                    }
+                });
+                
+                // Pause timer when window loses focus
+                window.addEventListener('blur', function() {
+                    if (progressInterval) {
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+                    }
+                });
             </script>
         </body>
         </html>
@@ -283,6 +303,17 @@ struct CourseDetailView: View {
                         }
                     }
                     
+                    // Continue Watching Button
+                    if let nextVideo = getNextVideo() {
+                        NavigationLink {
+                            VideoPage(video: nextVideo, viewModel: viewModel)
+                        } label: {
+                            ContinueWatchingButton(video: nextVideo, viewModel: viewModel)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(.top, 12)
+                    }
+                    
                     // Enhanced Progress Summary
                     let progressSummary = viewModel.getCourseProgressSummary(courseId: course.id)
                     CourseProgressSummary(
@@ -320,14 +351,6 @@ struct CourseDetailView: View {
         }
         .navigationTitle(course.title)
         .navigationBarTitleDisplayMode(.large)
-        .navigationDestination(isPresented: Binding(
-            get: { viewModel.selectedVideo != nil },
-            set: { if !$0 { viewModel.selectedVideo = nil } }
-        )) {
-            if let video = viewModel.selectedVideo {
-                VideoDetailView(video: video, viewModel: viewModel)
-            }
-        }
         .onAppear {
             viewModel.selectCourse(course)
         }
@@ -341,6 +364,22 @@ struct CourseDetailView: View {
             let roundedHours = hours.rounded()
             return "\(Int(roundedHours))h"
         }
+    }
+    
+    private func getNextVideo() -> Video? {
+        // Sort videos by sequence order
+        let sortedVideos = course.videos.sorted { $0.sequenceOrder ?? 0 < $1.sequenceOrder ?? 0 }
+        
+        // Find first incomplete video
+        for video in sortedVideos {
+            let progress = viewModel.videoProgress[video.id]
+            if progress == nil || !progress!.isCompleted {
+                return video
+            }
+        }
+        
+        // If all videos are complete, return nil
+        return nil
     }
 }
 
@@ -358,8 +397,9 @@ struct VideoListView: View {
             
             VStack(spacing: 12) {
                 ForEach(videos, id: \.id) { video in
-                    Button {
-                        viewModel.selectedVideo = video
+                    NavigationLink {
+                        // Safe navigation with stable URL construction
+                        VideoPage(video: video, viewModel: viewModel)
                     } label: {
                         VideoRowView(video: video, viewModel: viewModel)
                     }
@@ -376,11 +416,9 @@ struct VideoRowView: View {
     let video: Video
     @ObservedObject var viewModel: EVCoachViewModel
     
-    var progress: VideoProgress? {
-        viewModel.videoProgress[video.id]
-    }
-    
     var body: some View {
+        let progress = viewModel.videoProgress[video.id]
+        
         HStack(spacing: 12) {
             // Video Thumbnail
             AsyncImage(url: video.thumbnailUrl.flatMap { URL(string: $0) }) { phase in
@@ -450,20 +488,44 @@ struct VideoRowView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                 
-                // Enhanced Progress indicator
-                if let progress = progress, progress.watchedSeconds > 0 {
-                    MediaProgressIndicator(
-                        progress: progress.progressDouble,
-                        isCompleted: progress.isCompleted,
-                        mediaType: .video,
-                        size: .small
-                    )
-                } else if let progress = progress {
-                    TimeProgressIndicator(
-                        currentTime: Double(progress.watchedSeconds),
-                        totalTime: Double(video.duration),
-                        isCompleted: progress.isCompleted
-                    )
+                // Enhanced Progress indicator with percentage
+                HStack(spacing: 8) {
+                    if let progress = progress, progress.watchedSeconds > 0 {
+                        // Progress bar
+                        MediaProgressIndicator(
+                            progress: progress.progressDouble,
+                            isCompleted: progress.isCompleted,
+                            mediaType: .video,
+                            size: .small
+                        )
+                        
+                        // Percentage text
+                        Text("\(Int(progress.progressDouble * 100))%")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .foregroundStyle(progress.isCompleted ? .green : .blue)
+                            .frame(width: 35, alignment: .trailing)
+                    } else {
+                        // Empty state - just show duration
+                        HStack {
+                            Text("Not started")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                        }
+                    }
+                }
+                
+                // Completion status
+                if let progress = progress, progress.isCompleted {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.green)
+                        Text("Completed")
+                            .font(.caption2)
+                            .foregroundStyle(.green)
+                    }
                 }
             }
             
@@ -483,71 +545,89 @@ struct VideoRowView: View {
     }
 }
 
-// MARK: - Video Detail View
+// MARK: - Continue Watching Button
 
-struct VideoDetailView: View {
+struct ContinueWatchingButton: View {
     let video: Video
     @ObservedObject var viewModel: EVCoachViewModel
-    @Environment(\.dismiss) private var dismiss
-    @State private var showingQuiz = false
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Simplified Video Player section
-                Rectangle()
-                    .fill(Color.black)
-                    .aspectRatio(16/9, contentMode: .fit)
-                    .overlay(
-                        Image(systemName: "play.circle.fill")
-                            .font(.system(size: 50))
-                            .foregroundColor(.white)
-                    )
+        HStack(spacing: 12) {
+            // Play Icon
+            ZStack {
+                Circle()
+                    .fill(.blue)
+                    .frame(width: 40, height: 40)
                 
-                // Video Info
-                VStack(alignment: .leading, spacing: 16) {
+                Image(systemName: "play.fill")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(.white)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                // Progress-aware title
+                let progress = viewModel.videoProgress[video.id]
+                if let progress = progress, progress.watchedSeconds > 0 {
+                    Text("Continue watching")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                    
                     Text(video.title)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    Text(video.description)
-                        .font(.body)
+                        .font(.headline)
                         .foregroundStyle(.primary)
+                        .lineLimit(1)
                     
-                    HStack {
-                        Label("\(video.duration / 60):\(String(format: "%02d", video.duration % 60))", systemImage: "clock")
+                    // Progress indicator
+                    HStack(spacing: 8) {
+                        Text("\(Int(progress.progressDouble * 100))% watched")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         
-                        Spacer()
+                        Circle()
+                            .fill(.secondary)
+                            .frame(width: 3, height: 3)
+                        
+                        Text(video.formattedDuration)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
+                } else {
+                    Text("Start watching")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                    
+                    Text(video.title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    
+                    Text(video.formattedDuration)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-                .padding()
             }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.tertiary)
         }
-        .navigationTitle(video.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if video.quiz != nil {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Quiz") {
-                        showingQuiz = true
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                }
-            }
-        }
-        .sheet(isPresented: $showingQuiz) {
-            if let quiz = video.quiz {
-                QuizView(quiz: quiz, viewModel: viewModel)
-            }
-        }
-        .onAppear {
-            viewModel.selectVideo(video)
-        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.blue.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(.blue.opacity(0.3), lineWidth: 1)
+                )
+        )
     }
 }
+
+// MARK: - Video Detail View (Replaced with VideoPage.swift for crash safety)
 
 // MARK: - Quiz View
 

@@ -198,14 +198,6 @@ struct VideoView: View {
             }
             .padding()
         }
-        .navigationDestination(isPresented: Binding(
-            get: { viewModel.selectedCourse != nil },
-            set: { if !$0 { viewModel.selectedCourse = nil } }
-        )) {
-            if let course = viewModel.selectedCourse {
-                CourseDetailView(course: course, viewModel: viewModel)
-            }
-        }
     }
 }
 
@@ -213,19 +205,17 @@ struct CourseCardView: View {
     let course: Course
     @ObservedObject var viewModel: EVCoachViewModel
     
-    // Cache expensive calculations
-    private let formattedDuration: String
-    private let completionPercentage: Double
-    private let completedVideoCount: Int
+    // Computed properties to avoid crashes from accessing @Published during init
+    private var formattedDuration: String {
+        Self.formatHours(course.estimatedHours)
+    }
     
-    init(course: Course, viewModel: EVCoachViewModel) {
-        self.course = course
-        self.viewModel = viewModel
-        
-        // Pre-calculate expensive values
-        self.formattedDuration = Self.formatHours(course.estimatedHours)
-        self.completionPercentage = course.completionPercentage(with: viewModel.videoProgress)
-        self.completedVideoCount = course.videos.filter { video in
+    private var completionPercentage: Double {
+        course.completionPercentage(with: viewModel.videoProgress)
+    }
+    
+    private var completedVideoCount: Int {
+        course.videos.filter { video in
             viewModel.videoProgress[video.id]?.isCompleted ?? false
         }.count
     }

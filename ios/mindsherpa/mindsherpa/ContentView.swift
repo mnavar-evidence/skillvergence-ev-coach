@@ -50,6 +50,14 @@ struct ContentView: View {
             }
             .background(Color(UIColor.systemBackground))
             .navigationBarHidden(true)
+            .navigationDestination(isPresented: Binding(
+                get: { viewModel.selectedCourse != nil },
+                set: { if !$0 { viewModel.selectedCourse = nil } }
+            )) {
+                if let course = viewModel.selectedCourse {
+                    CourseDetailView(course: course, viewModel: viewModel)
+                }
+            }
         }
         .onAppear {
             viewModel.loadCourses()

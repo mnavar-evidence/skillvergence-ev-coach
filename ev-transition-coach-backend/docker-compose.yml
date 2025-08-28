@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ev_coach_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ev_coach_development
+      POSTGRES_USER: ev_coach_user
+      POSTGRES_PASSWORD: dev_password_123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+      - ./database/backups:/backups
+    networks:
+      - ev_coach_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ev_coach_user -d ev_coach_development"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer:4.8.1
+    container_name: ev_coach_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: flat
+    networks:
+      - ev_coach_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Development backend service (optional)
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ev_coach_backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://ev_coach_user:dev_password_123@postgres:5432/ev_coach_development
+      PORT: 3000
+      CORS_ORIGIN: http://localhost:3000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - ev_coach_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run dev
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  ev_coach_network:
+    driver: bridge

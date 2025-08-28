@@ -1,0 +1,55 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm install && npm run build"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[[services]]
+name = "ev-coach-backend"
+source = "."
+
+[services.variables]
+NODE_ENV = "production"
+PORT = "3000"
+
+[services.healthcheck]
+path = "/health"
+interval = 30
+timeout = 10
+retries = 3
+
+[services.deploy]
+replicas = 1
+
+[[services.domains]]
+host = "ev-coach-api.railway.app"
+
+# PostgreSQL Database Configuration
+[[services]]
+name = "postgres"
+image = "postgres:15-alpine"
+
+[services.variables]
+POSTGRES_DB = "${{ POSTGRES_DB }}"
+POSTGRES_USER = "${{ POSTGRES_USER }}"  
+POSTGRES_PASSWORD = "${{ POSTGRES_PASSWORD }}"
+
+[services.volumes]
+- source = "postgres_data"
+  target = "/var/lib/postgresql/data"
+  
+# Environment Variables for Railway
+[environments.production.variables]
+DATABASE_URL = "${{ Postgres.DATABASE_URL }}"
+POSTGRES_URL = "${{ Postgres.POSTGRES_URL }}"
+CORS_ORIGIN = "https://ev-coach-app.netlify.app,https://ev-coach.railway.app"
+NODE_ENV = "production"
+
+[environments.staging.variables]
+DATABASE_URL = "${{ Postgres.DATABASE_URL }}"
+NODE_ENV = "staging"
+CORS_ORIGIN = "*"

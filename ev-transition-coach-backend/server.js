@@ -2,10 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+require('dotenv').config({ path: '.env.local' });
 
 const courseRoutes = require('./routes/courses');
 const aiRoutes = require('./routes/ai');
+const analyticsRoutes = require('./routes/analytics');
+const progressRoutes = require('./routes/progress');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,6 +42,8 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/courses', courseRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/progress', progressRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -55,9 +59,12 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`EV Transition Coach API running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Local: http://localhost:${PORT}`);
+  console.log(`Network: http://192.168.86.46:${PORT}`);
+  console.log(`Allowed CORS origins: ${process.env.CORS_ORIGIN}`);
 });
 
 module.exports = app;

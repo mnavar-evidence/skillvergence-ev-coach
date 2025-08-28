@@ -6,16 +6,16 @@ const sampleCourses = [
   {
     id: "1",
     title: "High Voltage Safety Foundation",
-    description: "Essential safety training for working with high voltage EV systems",
+    description: "Overview of high voltage safety roles, training, and authorization in EV systems",
     level: "Level 1",
-    estimatedHours: 4.5,
+    estimatedHours: 0.773,
     thumbnailUrl: null,
     sequenceOrder: 1,
     videos: [
       {
         id: "1-1",
         title: "1.1 EV Safety Pyramid - Who's Allowed to Touch",
-        description: "Understanding personnel qualifications for HV work",
+        description: "Roles, responsibilities, and protocols for electrically aware, qualified, and authorized workers",
         duration: 370, // 6:10 in seconds
         videoUrl: "https://youtu.be/4KiaE9KPu1g",
         sequenceOrder: 1,
@@ -24,7 +24,7 @@ const sampleCourses = [
       {
         id: "1-2", 
         title: "1.2 High Voltage Hazards Overview",
-        description: "Understanding electrical dangers in EVs",
+        description: "Understanding risks like electric shock, arc flash, and arc blast, and their effects on the body",
         duration: 417, // 6:57 in seconds
         videoUrl: "https://youtu.be/YL8zgLZ096U",
         sequenceOrder: 2,
@@ -33,7 +33,7 @@ const sampleCourses = [
       {
         id: "1-3",
         title: "1.3 Navigating Electrical Shock Protection Boundaries",
-        description: "Required PPE for EV high voltage work",
+        description: "Identifying and applying limited, restricted, and arc flash boundaries to prevent accidents",
         duration: 406, // 6:46 in seconds
         videoUrl: "https://youtu.be/N1dLWS57e2s",
         sequenceOrder: 3,
@@ -42,8 +42,8 @@ const sampleCourses = [
       {
         id: "1-4",
         title: "1.4 High Voltage PPE  Your First Line of Defense",
-        description: "LOTO procedures for EV systems",
-        duration: 413, // 6:53 in seconds
+        description: "Selecting and using proper PPE with arc ratings and hazard risk categories",
+        duration: 415, // 6:55 in seconds
         videoUrl: "https://youtu.be/kVrO3nvOZXk",
         sequenceOrder: 4,
         courseId: "1"
@@ -51,7 +51,7 @@ const sampleCourses = [
       {
         id: "1-5",
         title: "1.5 Inside an Electric Car - The Journey of Energy",
-        description: "What to do in emergency situations",
+        description: "Functions of batteries, traction motors, inverters, converters, and other HV parts",
         duration: 406, // 6:46 in seconds
         videoUrl: "https://youtu.be/b8W0H5-qRLM",
         sequenceOrder: 5,
@@ -60,7 +60,7 @@ const sampleCourses = [
       {
         id: "1-6",
         title: "1.6 Taming the Current - EV High Voltage Safety",
-        description: "Verifying safe conditions before work",
+        description: "Techniques for disabling batteries, using service disconnects, and handling HV components safely",
         duration: 462, // 7:42 in seconds
         videoUrl: "https://youtu.be/LlmbSDnSDoA",
         sequenceOrder: 6,
@@ -69,7 +69,7 @@ const sampleCourses = [
       {
         id: "1-7",
         title: "1.7 How to Spot High Voltage Danger on an Electric Bus",
-        description: "Review of safety protocols and best practices",
+        description: "Identifying high voltage components in electric vehicles through various visual cues",
         duration: 307, // 5:07 in seconds
         videoUrl: "https://youtu.be/CbVm-Ey91p4",
         sequenceOrder: 7,
@@ -82,42 +82,42 @@ const sampleCourses = [
     title: "Electrical Fundamentals",
     description: "Core electrical concepts for EV technicians",
     level: "Level 1", 
-    estimatedHours: 2.5,
+    estimatedHours: 0.517,
     thumbnailUrl: null,
     sequenceOrder: 2,
     videos: [
       {
         id: "2-1",
-        title: "Basic Circuit Components & Configuration",
-        description: "Understanding electrical components and circuits",
-        duration: 900, // 15 minutes
+        title: "2.1 Automotive Electrical Circuits 101",
+        description: "Fundamentals of voltage, current, resistance, and power with practical circuit labs",
+        duration: 433, // 7:13 in seconds
         videoUrl: "https://youtu.be/lM8BX4JMAgo?si=Umxcgqa1KNZuoBxN",
         sequenceOrder: 1,
         courseId: "2"
       },
       {
         id: "2-2",
-        title: "Voltage, Current, and Resistance",
-        description: "Fundamental electrical principles",
-        duration: 720, // 12 minutes
+        title: "2.2 Electrical Measurement and Digital Multimeter",
+        description: "Safe and accurate use of digital multimeters for voltage, current, resistance, and more",
+        duration: 461, // 7:41 in seconds
         videoUrl: "https://youtu.be/w8jPxtj16xc?si=lpyXJQuqIZxIimdk",
         sequenceOrder: 2,
         courseId: "2"
       },
       {
         id: "2-3",
-        title: "AC vs DC Power Systems",
-        description: "Understanding alternating and direct current",
-        duration: 840, // 14 minutes
+        title: "2.3 Electrical Fault Analysis: Measurement and Diagnosis",
+        description: "Diagnosing opens, shorts, high resistance, and component failures using diagrams and meters",
+        duration: 409, // 6:49 in seconds
         videoUrl: "https://youtu.be/GM5LmaEVwm0?si=LFUfHB_MaBWtU8JQ",
         sequenceOrder: 3,
         courseId: "2"
       },
       {
         id: "2-4",
-        title: "Electrical Testing and Measurement",
-        description: "Using multimeters and testing equipment",
-        duration: 1020, // 17 minutes
+        title: "2.4 Automotive Circuit Diagnosis and Troubleshooting",
+        description: "Systematic troubleshooting of circuits, relays, switches, and motors using diagnostic tools",
+        duration: 551, // 9:11 in seconds
         videoUrl: "https://youtu.be/jSx5H47YCWk?si=ruyCTNFVPktzla-u",
         sequenceOrder: 4,
         courseId: "2"
@@ -129,44 +129,53 @@ const sampleCourses = [
     title: "EV System Components",
     description: "Understanding electric vehicle system architecture",
     level: "Level 2",
-    estimatedHours: 1.2,
+    estimatedHours: 0.215,
     thumbnailUrl: null,
     sequenceOrder: 3,
     videos: [
       {
         id: "3-1",
-        title: "EV Architecture Overview",
-        description: "Complete overview of electric vehicle systems",
-        duration: 1200, // 20 minutes
+        title: "3.1 Advanced Electrical Diagnostics",
+        description: "Oscilloscope and advanced multimeter use, sensors, actuators, and circuit analysis",
+        duration: 391, // 6:31 in seconds
         videoUrl: "https://youtu.be/Wbwm7dOQfLY?si=51XKND1jEgkoPZxW",
         sequenceOrder: 1,
+        courseId: "3"
+      },
+      {
+        id: "3-2",
+        title: "3.2 Vehicle Communication Networks",
+        description: "Diagnosis of CAN, LIN, FlexRay, MOST, and Ethernet bus systems with gateways and fiber optics",
+        duration: 384, // 6:24 in seconds
+        videoUrl: "https://youtu.be/Rk27qlWgPQY",
+        sequenceOrder: 2,
         courseId: "3"
       }
     ]
   },
   {
     id: "4",
-    title: "Battery Technology",
+    title: "EV Charging Systems",
     description: "EV battery systems and management",
     level: "Level 2",
-    estimatedHours: 1.8,
+    estimatedHours: 0.255,
     thumbnailUrl: null,
     sequenceOrder: 4,
     videos: [
       {
         id: "4-1",
-        title: "Battery Types and Chemistry",
-        description: "Understanding different EV battery technologies",
-        duration: 960, // 16 minutes
+        title: "4.1 Electric Vehicle Supply Equipment & Electric Vehicle Charging Systems",
+        description: "Types, levels, connectors, standards, and safety features of EV charging equipments",
+        duration: 502, // 8:22 in seconds
         videoUrl: "https://youtu.be/Xl4-BlPQuGE?si=H851Kr8lxMUe-AYv",
         sequenceOrder: 1,
         courseId: "4"
       },
       {
         id: "4-2",
-        title: "Battery Management Systems",
-        description: "BMS operation and diagnostics",
-        duration: 900, // 15 minutes
+        title: "4.2 Charging Diagnostics & Battery Management",
+        description: "Testing, troubleshooting charging systems, and managing battery performance and safety",
+        duration: 414, // 6:54 in seconds
         videoUrl: "https://youtu.be/ARAfACV7-3E?si=Yj8oKfqzqDkWPfl4",
         sequenceOrder: 2,
         courseId: "4"
@@ -178,24 +187,34 @@ const sampleCourses = [
     title: "Advanced EV Systems",
     description: "Advanced diagnostics and system integration",
     level: "Level 3",
-    estimatedHours: 2.0,
+    estimatedHours: 0.410,
     thumbnailUrl: null,
     sequenceOrder: 5,
     videos: [
       {
+        id: "5-1",
+        title: "5.1 Introduction to Electric Vehicles",
+        description: "History, evolution, key powertrain components, charging, and environmental benefits",
+        duration: 459, // 7:39 in seconds
+        videoUrl: "https://youtu.be/5dL9g8LqGVU",
+        sequenceOrder: 1,
+        courseId: "5"
+      },
+    
+      {
         id: "5-2",
-        title: "Motor Control Systems",
-        description: "Electric motor control and inverter systems",
-        duration: 1080, // 18 minutes
+        title: "5.2 EV Energy Storage Systems",
+        description: "Battery types, chemistry, management, capacity, and thermal considerations",
+        duration: 483, // 8:03 in seconds
         videoUrl: "https://youtu.be/CPIsnjd3SBU?si=xMJ4WDfb_NglCr20",
         sequenceOrder: 2,
         courseId: "5"
       },
       {
         id: "5-3",
-        title: "Charging Systems and Infrastructure",
-        description: "EV charging technology and installation",
-        duration: 1020, // 17 minutes
+        title: "5.3 EV Architecture, Motors & Controllers",
+        description: "Powertrain layouts, motor types, controllers, and regenerative braking systems",
+        duration: 532, // 8:52 in seconds
         videoUrl: "https://youtu.be/hABCuNpftUk?si=L8DZa25Q3SLUoo_G",
         sequenceOrder: 3,
         courseId: "5"

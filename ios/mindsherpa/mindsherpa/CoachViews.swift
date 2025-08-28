@@ -197,13 +197,13 @@ struct CourseCardView: View {
     @ObservedObject var viewModel: EVCoachViewModel
     
     private func formatHours(_ hours: Double) -> String {
-        let roundedHours = hours.rounded()
-        if roundedHours == 1 {
-            return "1 hour"
-        } else if roundedHours < 1 {
+        if hours < 1.0 {
             let minutes = Int(hours * 60)
             return "\(minutes) min"
+        } else if hours == 1.0 {
+            return "1 hour"
         } else {
+            let roundedHours = hours.rounded()
             return "\(Int(roundedHours)) hours"
         }
     }

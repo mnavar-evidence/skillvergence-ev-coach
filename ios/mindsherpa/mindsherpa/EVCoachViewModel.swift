@@ -16,15 +16,29 @@ struct Course: Codable, Identifiable {
     
     // Enhanced properties with defaults for backward compatibility
     var category: CourseCategory {
-        // Infer category from title or default to EV technician
-        if title.lowercased().contains("datacenter") || title.lowercased().contains("server") {
-            return .datacenterTechnician
-        } else if title.lowercased().contains("automotive") && !title.lowercased().contains("ev") {
-            return .automotive
-        } else if title.lowercased().contains("safety") {
+        // Map courses to specific categories based on title
+        switch title {
+        case "High Voltage Safety Foundation":
             return .electricalSafety
-        } else {
-            return .evTechnician
+        case "Electrical Fundamentals":
+            return .electricalFundamentals
+        case "Advanced Electrical Diagnostics":
+            return .evSystemComponents
+        case "EV Charging Systems":
+            return .batteryTechnology
+        case "Advanced EV Systems":
+            return .advancedEvSystems
+        default:
+            // Fallback logic for other courses
+            if title.lowercased().contains("datacenter") || title.lowercased().contains("server") {
+                return .datacenterTechnician
+            } else if title.lowercased().contains("automotive") && !title.lowercased().contains("ev") {
+                return .automotive
+            } else if title.lowercased().contains("safety") {
+                return .electricalSafety
+            } else {
+                return .evTechnician
+            }
         }
     }
     
@@ -234,6 +248,10 @@ enum CourseCategory: String, Codable, CaseIterable {
     case datacenterTechnician = "datacenter_technician"
     case automotive = "automotive"
     case electricalSafety = "electrical_safety"
+    case electricalFundamentals = "electrical_fundamentals"
+    case evSystemComponents = "ev_system_components"
+    case batteryTechnology = "battery_technology"
+    case advancedEvSystems = "advanced_ev_systems"
     
     var displayName: String {
         switch self {
@@ -241,6 +259,10 @@ enum CourseCategory: String, Codable, CaseIterable {
         case .datacenterTechnician: return "Datacenter Technician"
         case .automotive: return "Automotive"
         case .electricalSafety: return "Electrical Safety"
+        case .electricalFundamentals: return "Electrical Fundamentals"
+        case .evSystemComponents: return "EV System Components"
+        case .batteryTechnology: return "Battery Technology"
+        case .advancedEvSystems: return "Advanced EV Systems"
         }
     }
     
@@ -250,6 +272,10 @@ enum CourseCategory: String, Codable, CaseIterable {
         case .datacenterTechnician: return "server.rack"
         case .automotive: return "car.fill"
         case .electricalSafety: return "exclamationmark.triangle.fill"
+        case .electricalFundamentals: return "bolt.circle.fill"
+        case .evSystemComponents: return "car.rear.and.tire.marks"
+        case .batteryTechnology: return "battery.100.bolt"
+        case .advancedEvSystems: return "gearshape.2.fill"
         }
     }
 }

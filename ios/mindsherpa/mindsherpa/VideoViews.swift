@@ -397,8 +397,9 @@ struct VideoListView: View {
             
             VStack(spacing: 12) {
                 ForEach(videos, id: \.id) { video in
-                    // Use NavigationLink with a Video value instead of mutating state
-                    NavigationLink(value: video) {
+                    NavigationLink(
+                        destination: VideoPage(video: video, viewModel: viewModel)
+                    ) {
                         VideoRowView(video: video, viewModel: viewModel)
                     }
                     .buttonStyle(PlainButtonStyle())

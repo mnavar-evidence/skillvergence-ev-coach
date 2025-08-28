@@ -93,7 +93,7 @@ struct CoachHeaderView: View {
                         Text("Coach Nova • personalized")
                             .font(.headline)
                             .foregroundStyle(.primary)
-                        Text("Simple first, with shop analogies.")
+                        Text("Training that pays. Careers that last.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

@@ -351,10 +351,6 @@ struct CourseDetailView: View {
         }
         .navigationTitle(course.title)
         .navigationBarTitleDisplayMode(.large)
-        // Present video details using value-based navigation
-        .navigationDestination(for: Video.self) { video in
-            VideoPage(video: video, viewModel: viewModel)
-        }
         .onAppear {
             viewModel.selectCourse(course)
         }

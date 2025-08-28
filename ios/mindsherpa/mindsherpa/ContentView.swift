@@ -51,6 +51,13 @@ struct ContentView: View {
             .background(Color(UIColor.systemBackground))
             .navigationBarHidden(true)
         }
+        // Register the destinations here, outside of TabView/ScrollViews
+        .navigationDestination(for: Course.self) { course in
+            CourseDetailView(course: course, viewModel: viewModel)
+        }
+        .navigationDestination(for: Video.self) { video in
+            VideoPage(video: video, viewModel: viewModel)
+        }
         .onAppear {
             viewModel.loadCourses()
         }

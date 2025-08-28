@@ -197,10 +197,6 @@ struct VideoView: View {
             }
             .padding()
         }
-        // Present course details using value-based navigation
-        .navigationDestination(for: Course.self) { course in
-            CourseDetailView(course: course, viewModel: viewModel)
-        }
     }
 }
 

@@ -519,24 +519,37 @@ class EVCoachViewModel: ObservableObject {
     func loadCourses() {
         isLoading = true
         
-        // Load both courses and podcasts
-        let coursesPublisher = apiService.fetchCourses()
-        let podcastsPublisher = apiService.fetchPodcasts()
-        
-        Publishers.Zip(coursesPublisher, podcastsPublisher)
+        // Load courses first (required)
+        apiService.fetchCourses()
             .sink(receiveCompletion: { [weak self] completion in
                 DispatchQueue.main.async {
                     self?.isLoading = false
                 }
                 
                 if case .failure(let error) = completion {
-                    print("Failed to fetch courses and podcasts: \(error)")
+                    print("Failed to fetch courses: \(error)")
                 }
-            }, receiveValue: { [weak self] (coursesResponse, podcastsResponse) in
+            }, receiveValue: { [weak self] response in
                 DispatchQueue.main.async {
-                    self?.courses = coursesResponse.courses
-                    self?.videos = coursesResponse.courses.flatMap { $0.videos }
-                    self?.podcasts = podcastsResponse.podcasts
+                    self?.courses = response.courses
+                    self?.videos = response.courses.flatMap { $0.videos }
+                }
+                
+                // Load podcasts separately (optional - won't block courses if it fails)
+                self?.loadPodcasts()
+            })
+            .store(in: &cancellables)
+    }
+    
+    private func loadPodcasts() {
+        apiService.fetchPodcasts()
+            .sink(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    print("Failed to fetch podcasts (endpoint may not exist yet): \(error)")
+                }
+            }, receiveValue: { [weak self] response in
+                DispatchQueue.main.async {
+                    self?.podcasts = response.podcasts
                 }
             })
             .store(in: &cancellables)

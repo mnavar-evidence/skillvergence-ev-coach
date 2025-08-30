@@ -382,7 +382,7 @@ enum AIError: Error, LocalizedError {
 // MARK: - API Service
 
 class APIService {
-    private let baseURL = "https://ev-transition-coach-backend-production.up.railway.app/api"
+    private let baseURL = "https://backend-production-f873.up.railway.app/api"
     private let session = URLSession.shared
     
     func fetchCourses() -> AnyPublisher<CoursesResponse, Error> {

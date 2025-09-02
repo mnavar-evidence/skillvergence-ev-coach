@@ -204,6 +204,8 @@ struct PodcastPlayerView: View {
     @State private var currentTime: Double = 0
     @State private var duration: Double = 0
     @State private var timeObserver: Any?
+    @State private var isLoadingAudio = false
+    @State private var audioError: String?
     
     var body: some View {
         NavigationView {
@@ -283,14 +285,22 @@ struct PodcastPlayerView: View {
                         Image(systemName: "gobackward.15")
                             .font(.title)
                     }
+                    .disabled(isLoadingAudio || player == nil)
                     
                     Button {
                         togglePlayPause()
                     } label: {
-                        Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                            .font(.system(size: 64))
-                            .foregroundStyle(.purple)
+                        if isLoadingAudio {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                                .frame(width: 64, height: 64)
+                        } else {
+                            Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                                .font(.system(size: 64))
+                                .foregroundStyle(.purple)
+                        }
                     }
+                    .disabled(isLoadingAudio || player == nil)
                     
                     Button {
                         seekForward()
@@ -298,21 +308,40 @@ struct PodcastPlayerView: View {
                         Image(systemName: "goforward.15")
                             .font(.title)
                     }
+                    .disabled(isLoadingAudio || player == nil)
+                }
+                
+                // Error message
+                if let error = audioError {
+                    Text("Error: \(error)")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
                 }
                 
                 Spacer()
             }
         }
         .onAppear {
-            setupPlayer()
+            Task {
+                await setupPlayer()
+            }
         }
         .onDisappear {
             cleanupPlayer()
         }
     }
     
-    private func setupPlayer() {
-        guard let url = URL(string: podcast.audioUrl) else { return }
+    private func setupPlayer() async {
+        isLoadingAudio = true
+        audioError = nil
+        
+        guard let url = URL(string: podcast.audioUrl) else { 
+            audioError = "Invalid audio URL"
+            isLoadingAudio = false
+            return 
+        }
         
         player = AVPlayer(url: url)
         
@@ -330,13 +359,24 @@ struct PodcastPlayerView: View {
         
         // Get duration
         if let item = player?.currentItem {
-            duration = item.asset.duration.seconds.isFinite ? item.asset.duration.seconds : 0
-            
-            // Restore playback position if exists
-            if let progress = viewModel.podcastProgress[podcast.id], progress.playbackPosition > 0 {
-                currentTime = Double(progress.playbackPosition)
-                player?.seek(to: CMTime(seconds: currentTime, preferredTimescale: 600))
+            do {
+                let durationTime = try await item.asset.load(.duration)
+                self.duration = durationTime.seconds.isFinite ? durationTime.seconds : 0
+                
+                // Restore playback position if exists
+                if let progress = viewModel.podcastProgress[podcast.id], progress.playbackPosition > 0 {
+                    currentTime = Double(progress.playbackPosition)
+                    await player?.seek(to: CMTime(seconds: currentTime, preferredTimescale: 600))
+                }
+                
+                isLoadingAudio = false
+            } catch {
+                audioError = "Failed to load audio: \(error.localizedDescription)"
+                isLoadingAudio = false
             }
+        } else {
+            audioError = "Unable to create player item"
+            isLoadingAudio = false
         }
     }
     
@@ -383,10 +423,24 @@ struct PodcastPlayerView: View {
 
 #Preview {
     let viewModel = EVCoachViewModel()
-    // Add sample podcasts for preview
+    // Add sample course for preview
+    viewModel.courses = [
+        Course(
+            id: "electrical-fundamentals", 
+            title: "Electrical Fundamentals", 
+            description: "Master the electrical principles powering electric vehicles", 
+            level: "Intermediate", 
+            estimatedHours: 8.0, 
+            videos: [], 
+            podcasts: nil, 
+            thumbnailUrl: nil, 
+            sequenceOrder: 1
+        )
+    ]
+    // Add sample podcasts for preview with real content
     viewModel.podcasts = [
-        Podcast(id: "1", title: "Introduction to EV Safety", description: "Learn the fundamentals of working safely with electric vehicles", duration: 1800, audioUrl: "https://example.com/audio1.mp3", sequenceOrder: 1, courseId: "1", episodeNumber: 1),
-        Podcast(id: "2", title: "Battery Technology Deep Dive", description: "Understanding lithium-ion batteries and safety protocols", duration: 2400, audioUrl: "https://example.com/audio2.mp3", sequenceOrder: 2, courseId: "1", episodeNumber: 2)
+        Podcast(id: "1", title: "Electrifying the Road: Unpacking the Physics and Power of EV Motors", description: "Deep dive into electric vehicle motor physics, power delivery systems, and the fundamental principles that make EVs work", duration: 1800, audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Electrifying_the_Road__Unpacking_the_Physics_and_Power_of_EV_Motors.m4a", sequenceOrder: 1, courseId: "electrical-fundamentals", episodeNumber: 1),
+        Podcast(id: "2", title: "Introduction to EV Safety", description: "Learn the fundamentals of working safely with electric vehicles", duration: 1500, audioUrl: "https://example.com/audio2.mp3", sequenceOrder: 2, courseId: "electrical-fundamentals", episodeNumber: 2)
     ]
     return PodcastView(viewModel: viewModel)
 }

@@ -491,6 +491,30 @@ class APIService {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+    
+    func sendAnalyticsEvents(_ events: [AnalyticsEventData]) -> AnyPublisher<Void, Error> {
+        guard let url = URL(string: "\(baseURL)/analytics") else {
+            return Fail(error: URLError(.badURL))
+                .eraseToAnyPublisher()
+        }
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            urlRequest.httpBody = try JSONEncoder().encode(events)
+        } catch {
+            return Fail(error: error)
+                .eraseToAnyPublisher()
+        }
+        
+        return session.dataTaskPublisher(for: urlRequest)
+            .map { _ in () }
+            .mapError { $0 as Error }
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
 }
 
 // MARK: - View Model

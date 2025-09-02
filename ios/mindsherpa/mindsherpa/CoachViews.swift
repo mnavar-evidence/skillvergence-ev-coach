@@ -175,8 +175,11 @@ struct VideoView: View {
                     .padding(.vertical, 40)
                 } else {
                     LazyVStack(spacing: 12) {
-                        ForEach(viewModel.courses) { course in
-                            NavigationLink(destination: CourseDetailView(course: course, viewModel: viewModel)) {
+                        ForEach(viewModel.courses, id: \.id) { course in
+                            NavigationLink(
+                                destination: CourseDetailView(course: course, viewModel: viewModel)
+                                    .onAppear { viewModel.selectCourse(course) }
+                            ) {
                                 CourseCardView(course: course, viewModel: viewModel)
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -184,8 +187,15 @@ struct VideoView: View {
                     }
                 }
                 
-                // AI Interaction at bottom - no Spacer needed in ScrollView
+                // AI Interaction with proper spacing
                 AIInteractionView(viewModel: viewModel)
+                    .padding(.top, 20)
+                
+                // Bottom safe area padding
+                Color.clear
+                    .frame(height: 50)
+                
+                // Modern navigation handled by navigationDestination
             }
             .padding()
         }
@@ -196,7 +206,22 @@ struct CourseCardView: View {
     let course: Course
     @ObservedObject var viewModel: EVCoachViewModel
     
-    private func formatHours(_ hours: Double) -> String {
+    // Computed properties to avoid crashes from accessing @Published during init
+    private var formattedDuration: String {
+        Self.formatHours(course.estimatedHours)
+    }
+    
+    private var completionPercentage: Double {
+        course.completionPercentage(with: viewModel.videoProgress)
+    }
+    
+    private var completedVideoCount: Int {
+        course.videos.filter { video in
+            viewModel.videoProgress[video.id]?.isCompleted ?? false
+        }.count
+    }
+    
+    private static func formatHours(_ hours: Double) -> String {
         if hours < 1.0 {
             let minutes = Int(hours * 60)
             return "\(minutes) min"
@@ -230,7 +255,7 @@ struct CourseCardView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(formatHours(course.estimatedHours))
+                    Text(formattedDuration)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 8)
@@ -238,9 +263,8 @@ struct CourseCardView: View {
                         .background(.thinMaterial)
                         .clipShape(Capsule())
                     
-                    let completionPct = course.completionPercentage(with: viewModel.videoProgress)
-                    if completionPct > 0 {
-                        Text("\(Int(completionPct))%")
+                    if completionPercentage > 0 {
+                        Text("\(Int(completionPercentage))%")
                             .font(.caption2)
                             .foregroundStyle(.green)
                             .fontWeight(.medium)
@@ -255,25 +279,24 @@ struct CourseCardView: View {
                 .lineLimit(2)
             
             // Progress bar if course has progress
-            let completionPct = course.completionPercentage(with: viewModel.videoProgress)
-            if completionPct > 0 {
+            if completionPercentage > 0 {
                 VStack(spacing: 4) {
                     HStack {
                         Text("Progress")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        let completedCount = course.videos.filter { video in
-                            viewModel.videoProgress[video.id]?.isCompleted ?? false
-                        }.count
-                        Text("\(completedCount) of \(course.videos.count) videos")
+                        Text("\(completedVideoCount) of \(course.videos.count) videos")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
                     
-                    ProgressView(value: completionPct / 100.0)
-                        .progressViewStyle(LinearProgressViewStyle(tint: .blue))
-                        .scaleEffect(y: 0.8)
+                    MediaProgressIndicator(
+                        progress: completionPercentage / 100.0,
+                        isCompleted: completionPercentage >= 100,
+                        mediaType: .course,
+                        size: .medium
+                    )
                 }
             }
             
@@ -305,6 +328,8 @@ struct CourseCardView: View {
                 .stroke(.quaternary, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .scaleEffect(viewModel.isLoading ? 0.98 : 1.0)
+        .opacity(viewModel.isLoading ? 0.6 : 1.0)
     }
 }
 
@@ -313,6 +338,7 @@ struct CourseCardView: View {
 struct AIInteractionView: View {
     @ObservedObject var viewModel: EVCoachViewModel
     @State private var questionText = ""
+    @FocusState private var isTextFieldFocused: Bool
 
     let quickQuestions = [
         "Compare alternator vs DC-DC",
@@ -328,7 +354,10 @@ struct AIInteractionView: View {
                 HStack(spacing: 8) {
                     ForEach(quickQuestions, id: \.self) { question in
                         Button {
-                            withAnimation(.easeInOut(duration: 0.2)) { questionText = question }
+                            withAnimation(.easeInOut(duration: 0.2)) { 
+                                questionText = question
+                                isTextFieldFocused = true // Focus the text field for editing
+                            }
                         } label: {
                             Text(question).font(.caption).foregroundStyle(.primary)
                         }
@@ -344,7 +373,13 @@ struct AIInteractionView: View {
             HStack(spacing: 8) {
                 HStack {
                     Image(systemName: "magnifyingglass").foregroundStyle(.secondary).font(.caption)
-                    TextField("Ask about this content...", text: $questionText).textFieldStyle(.plain)
+                    TextField("Ask about this content...", text: $questionText)
+                        .textFieldStyle(.plain)
+                        .focused($isTextFieldFocused)
+                        .submitLabel(.send)
+                        .onSubmit {
+                            sendQuestion()
+                        }
                 }
                 .padding(.horizontal, 16).padding(.vertical, 10)
                 .background(RoundedRectangle(cornerRadius: 12).fill(.ultraThinMaterial))
@@ -364,8 +399,7 @@ struct AIInteractionView: View {
                 //.disabled(questionText.isEmpty || viewModel.isAILoading)
                 
                 Button {
-                    viewModel.askAI(question: questionText)
-                    questionText = ""
+                    sendQuestion()
                 } label: {
                     Image(systemName: questionText.isEmpty ? "paperplane" : "paperplane.fill")
                         .font(.caption)
@@ -438,5 +472,22 @@ struct AIInteractionView: View {
         .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 3)
         .padding(.top, 8)
         .padding(.horizontal, 4)
+        .onTapGesture {
+            // Dismiss keyboard when tapping outside text field
+            isTextFieldFocused = false
+        }
+    }
+    
+    // MARK: - Methods
+    
+    private func sendQuestion() {
+        guard !questionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        
+        // Dismiss keyboard first
+        isTextFieldFocused = false
+        
+        // Send to AI
+        viewModel.askAI(question: questionText)
+        questionText = ""
     }
 }

@@ -8,12 +8,20 @@
 import SwiftUI
 import AVKit
 
+extension Array {
+    subscript(safe index: Index) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
+}
+
 struct ContentView: View {
     @StateObject private var viewModel = EVCoachViewModel()
+    @StateObject private var analyticsManager = AnalyticsManager.shared
     @State private var selectedTab = 0
+    @State private var previousTab = 0
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Top Section: Coach & Progress
                 CoachHeaderView(viewModel: viewModel)
@@ -31,6 +39,12 @@ struct ContentView: View {
                         .tag(2)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                .onChange(of: selectedTab) { oldValue, newValue in
+                    let tabNames = ["Video", "Podcast", "Mind-Map"]
+                    let tabName = tabNames[safe: newValue] ?? "Unknown"
+                    analyticsManager.track(.tabSwitched(from: oldValue, to: newValue, tabName: tabName))
+                    previousTab = newValue
+                }
                 
                 Spacer()
             }

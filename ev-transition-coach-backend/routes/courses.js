@@ -21,7 +21,7 @@ function extractYouTubeVideoId(url) {
 // Comprehensive course data with real YouTube video links
 const sampleCourses = [
   {
-    id: "1",
+    id: "course-1",
     title: "High Voltage Safety Foundation",
     description: "Overview of high voltage safety roles, training, and authorization in EV systems",
     level: "Level 1",
@@ -36,7 +36,7 @@ const sampleCourses = [
         duration: 370, // 6:10 in seconds
         videoUrl: "https://youtu.be/4KiaE9KPu1g",
         sequenceOrder: 1,
-        courseId: "1"
+        courseId: "course-1"
       },
       {
         id: "1-2", 
@@ -45,7 +45,7 @@ const sampleCourses = [
         duration: 417, // 6:57 in seconds
         videoUrl: "https://youtu.be/YL8zgLZ096U",
         sequenceOrder: 2,
-        courseId: "1"
+        courseId: "course-1"
       },
       {
         id: "1-3",
@@ -54,7 +54,7 @@ const sampleCourses = [
         duration: 406, // 6:46 in seconds
         videoUrl: "https://youtu.be/N1dLWS57e2s",
         sequenceOrder: 3,
-        courseId: "1"
+        courseId: "course-1"
       },
       {
         id: "1-4",
@@ -63,7 +63,7 @@ const sampleCourses = [
         duration: 415, // 6:55 in seconds
         videoUrl: "https://youtu.be/kVrO3nvOZXk",
         sequenceOrder: 4,
-        courseId: "1"
+        courseId: "course-1"
       },
       {
         id: "1-5",
@@ -72,7 +72,7 @@ const sampleCourses = [
         duration: 406, // 6:46 in seconds
         videoUrl: "https://youtu.be/b8W0H5-qRLM",
         sequenceOrder: 5,
-        courseId: "1"
+        courseId: "course-1"
       },
       {
         id: "1-6",
@@ -81,7 +81,7 @@ const sampleCourses = [
         duration: 462, // 7:42 in seconds
         videoUrl: "https://youtu.be/LlmbSDnSDoA",
         sequenceOrder: 6,
-        courseId: "1"
+        courseId: "course-1"
       },
       {
         id: "1-7",
@@ -90,12 +90,12 @@ const sampleCourses = [
         duration: 307, // 5:07 in seconds
         videoUrl: "https://youtu.be/CbVm-Ey91p4",
         sequenceOrder: 7,
-        courseId: "1"
+        courseId: "course-1"
       }
     ]
   },
   {
-    id: "2",
+    id: "course-2",
     title: "Electrical Fundamentals",
     description: "Core electrical concepts for EV technicians",
     level: "Level 1", 
@@ -110,7 +110,7 @@ const sampleCourses = [
         duration: 433, // 7:13 in seconds
         videoUrl: "https://youtu.be/nOIeEFK29Dk",
         sequenceOrder: 1,
-        courseId: "2"
+        courseId: "course-2"
       },
       {
         id: "2-2",
@@ -119,7 +119,7 @@ const sampleCourses = [
         duration: 461, // 7:41 in seconds
         videoUrl: "https://youtu.be/AsAm7REAfpE",
         sequenceOrder: 2,
-        courseId: "2"
+        courseId: "course-2"
       },
       {
         id: "2-3",
@@ -128,7 +128,7 @@ const sampleCourses = [
         duration: 409, // 6:49 in seconds
         videoUrl: "https://youtu.be/a4VWxBun4KQ",
         sequenceOrder: 3,
-        courseId: "2"
+        courseId: "course-2"
       },
       {
         id: "2-4",
@@ -137,12 +137,12 @@ const sampleCourses = [
         duration: 551, // 9:11 in seconds
         videoUrl: "https://youtu.be/R0IRO66lsjo",
         sequenceOrder: 4,
-        courseId: "2"
+        courseId: "course-2"
       }
     ]
   },
   {
-    id: "3",
+    id: "course-3",
     title: "EV System Components",
     description: "Understanding electric vehicle system architecture",
     level: "Level 2",
@@ -157,7 +157,7 @@ const sampleCourses = [
         duration: 391, // 6:31 in seconds
         videoUrl: "https://youtu.be/Z46KIZb1HHI",
         sequenceOrder: 1,
-        courseId: "3"
+        courseId: "course-3"
       },
       {
         id: "3-2",
@@ -166,12 +166,12 @@ const sampleCourses = [
         duration: 384, // 6:24 in seconds
         videoUrl: "https://youtu.be/gPw-OlOD4wI",
         sequenceOrder: 2,
-        courseId: "3"
+        courseId: "course-3"
       }
     ]
   },
   {
-    id: "4",
+    id: "course-4",
     title: "EV Charging Systems",
     description: "EV battery systems and management",
     level: "Level 2",
@@ -186,7 +186,7 @@ const sampleCourses = [
         duration: 502, // 8:22 in seconds
         videoUrl: "https://youtu.be/6Jqi2FKVVf4",
         sequenceOrder: 1,
-        courseId: "4"
+        courseId: "course-4"
       },
       {
         id: "4-2",
@@ -195,12 +195,12 @@ const sampleCourses = [
         duration: 414, // 6:54 in seconds
         videoUrl: "https://youtu.be/rm6aSXFCQNg",
         sequenceOrder: 2,
-        courseId: "4"
+        courseId: "course-4"
       }
     ]
   },
   {
-    id: "5",
+    id: "course-5",
     title: "Advanced EV Systems",
     description: "Advanced diagnostics and system integration",
     level: "Level 3",
@@ -215,7 +215,7 @@ const sampleCourses = [
         duration: 459, // 7:39 in seconds
         videoUrl: "https://youtu.be/R0lxSpGDrRU",
         sequenceOrder: 1,
-        courseId: "5"
+        courseId: "course-5"
       },
     
       {
@@ -225,7 +225,7 @@ const sampleCourses = [
         duration: 483, // 8:03 in seconds
         videoUrl: "https://youtu.be/pFRJioF3lkk",
         sequenceOrder: 2,
-        courseId: "5"
+        courseId: "course-5"
       },
       {
         id: "5-3",
@@ -234,7 +234,7 @@ const sampleCourses = [
         duration: 532, // 8:52 in seconds
         videoUrl: "https://youtu.be/ZI0fzy8tUH8",
         sequenceOrder: 3,
-        courseId: "5"
+        courseId: "course-5"
       }
     ]
   }

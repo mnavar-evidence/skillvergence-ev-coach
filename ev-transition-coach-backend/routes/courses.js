@@ -108,7 +108,7 @@ const sampleCourses = [
         title: "2.1 Automotive Electrical Circuits 101",
         description: "Fundamentals of voltage, current, resistance, and power with practical circuit labs",
         duration: 433, // 7:13 in seconds
-        videoUrl: "https://youtu.be/lM8BX4JMAgo?si=Umxcgqa1KNZuoBxN",
+        videoUrl: "https://youtu.be/nOIeEFK29Dk",
         sequenceOrder: 1,
         courseId: "2"
       },
@@ -117,7 +117,7 @@ const sampleCourses = [
         title: "2.2 Electrical Measurement and Digital Multimeter",
         description: "Safe and accurate use of digital multimeters for voltage, current, resistance, and more",
         duration: 461, // 7:41 in seconds
-        videoUrl: "https://youtu.be/w8jPxtj16xc?si=lpyXJQuqIZxIimdk",
+        videoUrl: "https://youtu.be/AsAm7REAfpE",
         sequenceOrder: 2,
         courseId: "2"
       },
@@ -126,7 +126,7 @@ const sampleCourses = [
         title: "2.3 Electrical Fault Analysis: Measurement and Diagnosis",
         description: "Diagnosing opens, shorts, high resistance, and component failures using diagrams and meters",
         duration: 409, // 6:49 in seconds
-        videoUrl: "https://youtu.be/GM5LmaEVwm0?si=LFUfHB_MaBWtU8JQ",
+        videoUrl: "https://youtu.be/a4VWxBun4KQ",
         sequenceOrder: 3,
         courseId: "2"
       },
@@ -135,7 +135,7 @@ const sampleCourses = [
         title: "2.4 Automotive Circuit Diagnosis and Troubleshooting",
         description: "Systematic troubleshooting of circuits, relays, switches, and motors using diagnostic tools",
         duration: 551, // 9:11 in seconds
-        videoUrl: "https://youtu.be/jSx5H47YCWk?si=ruyCTNFVPktzla-u",
+        videoUrl: "https://youtu.be/R0IRO66lsjo",
         sequenceOrder: 4,
         courseId: "2"
       }
@@ -155,7 +155,7 @@ const sampleCourses = [
         title: "3.1 Advanced Electrical Diagnostics",
         description: "Oscilloscope and advanced multimeter use, sensors, actuators, and circuit analysis",
         duration: 391, // 6:31 in seconds
-        videoUrl: "https://youtu.be/Wbwm7dOQfLY?si=51XKND1jEgkoPZxW",
+        videoUrl: "https://youtu.be/Z46KIZb1HHI",
         sequenceOrder: 1,
         courseId: "3"
       },
@@ -164,7 +164,7 @@ const sampleCourses = [
         title: "3.2 Vehicle Communication Networks",
         description: "Diagnosis of CAN, LIN, FlexRay, MOST, and Ethernet bus systems with gateways and fiber optics",
         duration: 384, // 6:24 in seconds
-        videoUrl: "https://youtu.be/Rk27qlWgPQY",
+        videoUrl: "https://youtu.be/gPw-OlOD4wI",
         sequenceOrder: 2,
         courseId: "3"
       }
@@ -184,7 +184,7 @@ const sampleCourses = [
         title: "4.1 Electric Vehicle Supply Equipment & Electric Vehicle Charging Systems",
         description: "Types, levels, connectors, standards, and safety features of EV charging equipments",
         duration: 502, // 8:22 in seconds
-        videoUrl: "https://youtu.be/Xl4-BlPQuGE?si=H851Kr8lxMUe-AYv",
+        videoUrl: "https://youtu.be/6Jqi2FKVVf4",
         sequenceOrder: 1,
         courseId: "4"
       },
@@ -193,7 +193,7 @@ const sampleCourses = [
         title: "4.2 Charging Diagnostics & Battery Management",
         description: "Testing, troubleshooting charging systems, and managing battery performance and safety",
         duration: 414, // 6:54 in seconds
-        videoUrl: "https://youtu.be/ARAfACV7-3E?si=Yj8oKfqzqDkWPfl4",
+        videoUrl: "https://youtu.be/rm6aSXFCQNg",
         sequenceOrder: 2,
         courseId: "4"
       }
@@ -213,7 +213,7 @@ const sampleCourses = [
         title: "5.1 Introduction to Electric Vehicles",
         description: "History, evolution, key powertrain components, charging, and environmental benefits",
         duration: 459, // 7:39 in seconds
-        videoUrl: "https://youtu.be/5dL9g8LqGVU",
+        videoUrl: "https://youtu.be/R0lxSpGDrRU",
         sequenceOrder: 1,
         courseId: "5"
       },
@@ -223,7 +223,7 @@ const sampleCourses = [
         title: "5.2 EV Energy Storage Systems",
         description: "Battery types, chemistry, management, capacity, and thermal considerations",
         duration: 483, // 8:03 in seconds
-        videoUrl: "https://youtu.be/CPIsnjd3SBU?si=xMJ4WDfb_NglCr20",
+        videoUrl: "https://youtu.be/pFRJioF3lkk",
         sequenceOrder: 2,
         courseId: "5"
       },
@@ -232,7 +232,7 @@ const sampleCourses = [
         title: "5.3 EV Architecture, Motors & Controllers",
         description: "Powertrain layouts, motor types, controllers, and regenerative braking systems",
         duration: 532, // 8:52 in seconds
-        videoUrl: "https://youtu.be/hABCuNpftUk?si=L8DZa25Q3SLUoo_G",
+        videoUrl: "https://youtu.be/ZI0fzy8tUH8",
         sequenceOrder: 3,
         courseId: "5"
       }

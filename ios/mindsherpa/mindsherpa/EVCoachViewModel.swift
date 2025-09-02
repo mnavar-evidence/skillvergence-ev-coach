@@ -592,8 +592,28 @@ class EVCoachViewModel: ObservableObject {
                 duration: 1800, 
                 audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Electrifying_the_Road__Unpacking_the_Physics_and_Power_of_EV_Motors.m4a", 
                 sequenceOrder: 1, 
-                courseId: "2", // Use course ID "2" which is "Electrical Fundamentals" based on the mapping
+                courseId: "2", // Electrical Fundamentals
                 episodeNumber: 1
+            ),
+            Podcast(
+                id: "podcast-real-2", 
+                title: "From Spark Plugs to Silent Power: Unpacking the Electrification of Vehicles", 
+                description: "Explore the evolution from traditional combustion engines to electric powertrains and understand the transformative shift in automotive technology", 
+                duration: 1650, 
+                audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/From_Spark_Plugs_to_Silent_Power__Unpacking_the_Electrification_of_Vehicles.m4a", 
+                sequenceOrder: 2, 
+                courseId: "2", // Electrical Fundamentals
+                episodeNumber: 2
+            ),
+            Podcast(
+                id: "podcast-real-3", 
+                title: "Demystifying EV Batteries: From Lead-Acid to Lithium-Ion, Watts to Wh, and Beyond", 
+                description: "Comprehensive guide to electric vehicle battery technologies, energy measurements, and the science behind modern EV power storage", 
+                duration: 1920, 
+                audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Demystifying_EV_Batteries__From_Lead-Acid_to_Lithium-Ion,_Watts_to_Wh,_and_Beyond.m4a", 
+                sequenceOrder: 3, 
+                courseId: "4", // Battery Technology (based on course mapping: "EV Charging Systems" -> battery technology)
+                episodeNumber: 3
             )
         ]
     }

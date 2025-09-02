@@ -105,6 +105,47 @@ struct PodcastCourseSection: View {
     }
 }
 
+struct PodcastArtworkPlaceholder: View {
+    let courseId: String?
+    
+    private var courseInfo: (gradient: LinearGradient, icon: String) {
+        let normalizedCourseId = courseId?.replacingOccurrences(of: "course-", with: "") ?? ""
+        
+        switch normalizedCourseId {
+        case "2", "electrical-fundamentals":
+            return (
+                LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing),
+                "bolt.fill"
+            )
+        case "3", "battery-technology":
+            return (
+                LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing),
+                "battery.100percent"
+            )
+        case "4", "ev-charging-systems":
+            return (
+                LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing),
+                "car.fill"
+            )
+        default:
+            return (
+                LinearGradient(colors: [.purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing),
+                "podcast.fill"
+            )
+        }
+    }
+    
+    var body: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .fill(courseInfo.gradient)
+            .overlay(
+                Image(systemName: courseInfo.icon)
+                    .font(.system(size: 24))
+                    .foregroundStyle(.white)
+            )
+    }
+}
+
 struct PodcastCardView: View {
     let podcast: Podcast
     @ObservedObject var viewModel: EVCoachViewModel
@@ -123,15 +164,22 @@ struct PodcastCardView: View {
             viewModel.currentPodcast = podcast
         } label: {
             HStack(spacing: 16) {
-                // Podcast artwork placeholder
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(.purple.gradient)
+                // Podcast artwork
+                VStack {
+                    if let thumbnailUrl = podcast.thumbnailUrl, let url = URL(string: thumbnailUrl) {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            PodcastArtworkPlaceholder(courseId: podcast.courseId)
+                        }
                         .frame(width: 60, height: 60)
-                    
-                    Image(systemName: "podcast.fill")
-                        .font(.title2)
-                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    } else {
+                        PodcastArtworkPlaceholder(courseId: podcast.courseId)
+                            .frame(width: 60, height: 60)
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 6) {
@@ -229,14 +277,23 @@ struct PodcastPlayerView: View {
                 
                 // Artwork
                 ZStack {
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(.purple.gradient)
+                    if let thumbnailUrl = podcast.thumbnailUrl, let url = URL(string: thumbnailUrl) {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            PodcastArtworkPlaceholder(courseId: podcast.courseId)
+                        }
                         .frame(width: 250, height: 250)
-                        .shadow(color: .purple.opacity(0.3), radius: 20, x: 0, y: 10)
-                    
-                    Image(systemName: "podcast.fill")
-                        .font(.system(size: 80))
-                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
+                        .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+                    } else {
+                        PodcastArtworkPlaceholder(courseId: podcast.courseId)
+                            .frame(width: 250, height: 250)
+                            .clipShape(RoundedRectangle(cornerRadius: 24))
+                            .shadow(color: .purple.opacity(0.3), radius: 20, x: 0, y: 10)
+                    }
                 }
                 
                 // Track info
@@ -423,7 +480,6 @@ struct PodcastPlayerView: View {
 
 #Preview {
     let viewModel = EVCoachViewModel()
-    // Add sample course for preview
     viewModel.courses = [
         Course(
             id: "electrical-fundamentals", 
@@ -437,10 +493,9 @@ struct PodcastPlayerView: View {
             sequenceOrder: 1
         )
     ]
-    // Add sample podcasts for preview with real content
     viewModel.podcasts = [
-        Podcast(id: "1", title: "Electrifying the Road: Unpacking the Physics and Power of EV Motors", description: "Deep dive into electric vehicle motor physics, power delivery systems, and the fundamental principles that make EVs work", duration: 1800, audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Electrifying_the_Road__Unpacking_the_Physics_and_Power_of_EV_Motors.m4a", sequenceOrder: 1, courseId: "electrical-fundamentals", episodeNumber: 1),
-        Podcast(id: "2", title: "Introduction to EV Safety", description: "Learn the fundamentals of working safely with electric vehicles", duration: 1500, audioUrl: "https://example.com/audio2.mp3", sequenceOrder: 2, courseId: "electrical-fundamentals", episodeNumber: 2)
+        Podcast(id: "1", title: "Electrifying the Road: Unpacking the Physics and Power of EV Motors", description: "Deep dive into electric vehicle motor physics, power delivery systems, and the fundamental principles that make EVs work", duration: 1800, audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Electrifying_the_Road__Unpacking_the_Physics_and_Power_of_EV_Motors.m4a", sequenceOrder: 1, courseId: "electrical-fundamentals", episodeNumber: 1, thumbnailUrl: nil),
+        Podcast(id: "2", title: "Introduction to EV Safety", description: "Learn the fundamentals of working safely with electric vehicles", duration: 1500, audioUrl: "https://example.com/audio2.mp3", sequenceOrder: 2, courseId: "electrical-fundamentals", episodeNumber: 2, thumbnailUrl: nil)
     ]
     return PodcastView(viewModel: viewModel)
 }

@@ -234,9 +234,9 @@ struct Podcast: Codable, Identifiable {
     let sequenceOrder: Int?
     let courseId: String?
     let episodeNumber: Int?
+    let thumbnailUrl: String? // Individual episode thumbnail URL
     
     // Enhanced properties
-    var thumbnailUrl: String? { nil } // Can be added later if needed
     var transcript: String? { nil }
     var showNotes: String? { nil }
     
@@ -246,7 +246,7 @@ struct Podcast: Codable, Identifiable {
     
     // Custom CodingKeys to exclude progress properties from JSON decoding
     private enum CodingKeys: String, CodingKey {
-        case id, title, description, duration, audioUrl, sequenceOrder, courseId, episodeNumber
+        case id, title, description, duration, audioUrl, sequenceOrder, courseId, episodeNumber, thumbnailUrl
     }
 }
 
@@ -587,33 +587,36 @@ class EVCoachViewModel: ObservableObject {
         return [
             Podcast(
                 id: "podcast-real-1", 
-                title: "Electrifying the Road: Unpacking the Physics and Power of EV Motors", 
-                description: "Deep dive into electric vehicle motor physics, power delivery systems, and the fundamental principles that make EVs work", 
-                duration: 1800, 
-                audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Electrifying_the_Road__Unpacking_the_Physics_and_Power_of_EV_Motors.m4a", 
-                sequenceOrder: 1, 
-                courseId: "2", // Electrical Fundamentals
-                episodeNumber: 1
-            ),
-            Podcast(
-                id: "podcast-real-2", 
                 title: "From Spark Plugs to Silent Power: Unpacking the Electrification of Vehicles", 
                 description: "Explore the evolution from traditional combustion engines to electric powertrains and understand the transformative shift in automotive technology", 
                 duration: 1650, 
-                audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/From_Spark_Plugs_to_Silent_Power__Unpacking_the_Electrification_of_Vehicles.m4a", 
+                audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/From_Spark_Plugs_to_Silent_Power__Unpacking_the_Electrification_of_Vehicles.m4a",
+                sequenceOrder: 1, 
+                courseId: "2", // Electrical Fundamentals
+                episodeNumber: 1,
+                thumbnailUrl: "https://skillvergence.mindsherpa.ai/podcasts/images/spark-plugs-episode.png"
+            ),
+            Podcast(
+                id: "podcast-real-2", 
+                title: "Electrifying the Road: Unpacking the Physics and Power of EV Motors", 
+                description: "Deep dive into electric vehicle motor physics, power delivery systems, and the fundamental principles that make EVs work", 
+                duration: 1800, 
+                audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Electrifying_the_Road__Unpacking_the_Physics_and_Power_of_EV_Motors.m4a",
                 sequenceOrder: 2, 
                 courseId: "2", // Electrical Fundamentals
-                episodeNumber: 2
+                episodeNumber: 2,
+                thumbnailUrl: "https://skillvergence.mindsherpa.ai/podcasts/images/ev-motors-episode.png"
             ),
             Podcast(
                 id: "podcast-real-3", 
                 title: "Demystifying EV Batteries: From Lead-Acid to Lithium-Ion, Watts to Wh, and Beyond", 
                 description: "Comprehensive guide to electric vehicle battery technologies, energy measurements, and the science behind modern EV power storage", 
                 duration: 1920, 
-                audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Demystifying_EV_Batteries__From_Lead-Acid_to_Lithium-Ion,_Watts_to_Wh,_and_Beyond.m4a", 
+                audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Demystifying_EV_Batteries__From_Lead-Acid_to_Lithium-Ion,_Watts_to_Wh,_and_Beyond.m4a",
                 sequenceOrder: 3, 
                 courseId: "4", // Battery Technology (based on course mapping: "EV Charging Systems" -> battery technology)
-                episodeNumber: 3
+                episodeNumber: 3,
+                thumbnailUrl: "https://skillvergence.mindsherpa.ai/podcasts/images/ev-batteries-episode.png"
             )
         ]
     }

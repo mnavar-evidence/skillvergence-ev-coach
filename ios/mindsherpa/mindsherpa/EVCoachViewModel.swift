@@ -567,9 +567,13 @@ class EVCoachViewModel: ObservableObject {
     
     private func loadPodcasts() {
         apiService.fetchPodcasts()
-            .sink(receiveCompletion: { completion in
+            .sink(receiveCompletion: { [weak self] completion in
                 if case .failure(let error) = completion {
                     print("Failed to fetch podcasts (endpoint may not exist yet): \(error)")
+                    // Provide fallback sample data when API fails
+                    DispatchQueue.main.async {
+                        self?.podcasts = self?.createSamplePodcasts() ?? []
+                    }
                 }
             }, receiveValue: { [weak self] response in
                 DispatchQueue.main.async {
@@ -577,6 +581,21 @@ class EVCoachViewModel: ObservableObject {
                 }
             })
             .store(in: &cancellables)
+    }
+    
+    private func createSamplePodcasts() -> [Podcast] {
+        return [
+            Podcast(
+                id: "podcast-real-1", 
+                title: "Electrifying the Road: Unpacking the Physics and Power of EV Motors", 
+                description: "Deep dive into electric vehicle motor physics, power delivery systems, and the fundamental principles that make EVs work", 
+                duration: 1800, 
+                audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Electrifying_the_Road__Unpacking_the_Physics_and_Power_of_EV_Motors.m4a", 
+                sequenceOrder: 1, 
+                courseId: "2", // Use course ID "2" which is "Electrical Fundamentals" based on the mapping
+                episodeNumber: 1
+            )
+        ]
     }
     
     func askAI(question: String) {

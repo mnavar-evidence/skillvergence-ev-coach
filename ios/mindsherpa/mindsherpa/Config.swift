@@ -3,8 +3,14 @@ import Foundation
 struct AppConfig {
     // MARK: - API Configuration
     
-    // Force production mode for testing
-    static let baseURL = "https://backend-production-f873.up.railway.app"
+    // Temporary: Use Railway URL directly until DNS propagates
+    static let baseURL = "https://backend-production-f873.up.railway.app"  // Direct Railway URL
+    // TODO: Change back to https://api.mindsherpa.ai once DNS works
+    
+    // Fallback: Direct Railway URLs (update when needed)
+    static let fallbackBaseURL = "https://backend-production-f873.up.railway.app"
+    static let configurationURL = "https://skillvergence.mindsherpa.ai/config.json"  // Dynamic config
+    
     static let isProduction = true
     
     // Uncomment below for development
@@ -20,11 +26,7 @@ struct AppConfig {
     #endif
     */
     
-    // MARK: - API Endpoints
-    
-    static var apiURL: String {
-        return "\(baseURL)/api"
-    }
+    // MARK: - API Endpoints (Updated to use dynamic configuration)
     
     static var coursesEndpoint: String {
         return "\(apiURL)/courses"
@@ -57,12 +59,70 @@ struct AppConfig {
         return !isProduction
     }
     
+    // MARK: - Dynamic Configuration
+    
+    private static var _dynamicBaseURL: String?
+    
+    static var currentBaseURL: String {
+        return _dynamicBaseURL ?? baseURL
+    }
+    
+    static var apiURL: String {
+        return "\(currentBaseURL)/api"
+    }
+    
+    static func loadDynamicConfiguration() async {
+        do {
+            guard let url = URL(string: configurationURL) else { return }
+            let (data, _) = try await URLSession.shared.data(from: url)
+            
+            if let config = try? JSONDecoder().decode(DynamicConfig.self, from: data) {
+                _dynamicBaseURL = config.apiBaseURL
+                print("✅ Loaded dynamic config: \(config.apiBaseURL)")
+            }
+        } catch {
+            print("⚠️ Could not load dynamic config, using default: \(error)")
+        }
+    }
+    
+    static func testConnectivity() async -> Bool {
+        // Test primary URL
+        if await testURL(currentBaseURL) {
+            return true
+        }
+        
+        // Test fallback URL
+        print("⚠️ Primary URL failed, trying fallback...")
+        if await testURL(fallbackBaseURL) {
+            _dynamicBaseURL = fallbackBaseURL
+            print("✅ Using fallback URL: \(fallbackBaseURL)")
+            return true
+        }
+        
+        return false
+    }
+    
+    private static func testURL(_ baseURL: String) async -> Bool {
+        guard let url = URL(string: "\(baseURL)/health") else { return false }
+        
+        do {
+            let (_, response) = try await URLSession.shared.data(from: url)
+            if let httpResponse = response as? HTTPURLResponse {
+                return httpResponse.statusCode == 200
+            }
+        } catch {
+            print("❌ Connection test failed for \(baseURL): \(error)")
+        }
+        
+        return false
+    }
+
     // MARK: - Helper Methods
     
     static func printConfiguration() {
         print("📱 EV Coach App Configuration")
         print("   Environment: \(isProduction ? "Production" : "Development")")
-        print("   Base URL: \(baseURL)")
+        print("   Current Base URL: \(currentBaseURL)")
         print("   API URL: \(apiURL)")
         print("   Courses URL: \(coursesEndpoint)")
         print("   Network Logging: \(enableNetworkLogging)")
@@ -162,5 +222,21 @@ enum NetworkError: Error, LocalizedError {
         case .serverError(let message):
             return "Server error: \(message)"
         }
+    }
+}
+
+// MARK: - Dynamic Configuration Model
+
+struct DynamicConfig: Codable {
+    let apiBaseURL: String
+    let cdnBaseURL: String?
+    let version: String?
+    let features: [String: Bool]?
+    
+    enum CodingKeys: String, CodingKey {
+        case apiBaseURL = "api_base_url"
+        case cdnBaseURL = "cdn_base_url"
+        case version
+        case features
     }
 }

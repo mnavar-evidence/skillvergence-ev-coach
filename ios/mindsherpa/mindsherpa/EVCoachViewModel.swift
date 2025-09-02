@@ -382,14 +382,27 @@ enum AIError: Error, LocalizedError {
 // MARK: - API Service
 
 class APIService {
-    private let baseURL = "https://backend-production-f873.up.railway.app/api"
     private let session = URLSession.shared
     
     func fetchCourses() -> AnyPublisher<CoursesResponse, Error> {
-        guard let url = URL(string: "\(baseURL)/courses") else {
+        let primaryURL = "\(AppConfig.apiURL)/courses"
+        let fallbackURL = "\(AppConfig.fallbackBaseURL)/api/courses"
+        
+        return fetchFromURL(primaryURL)
+            .catch { _ in
+                print("⚠️ Primary URL failed, trying fallback...")
+                return self.fetchFromURL(fallbackURL)
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    private func fetchFromURL(_ urlString: String) -> AnyPublisher<CoursesResponse, Error> {
+        guard let url = URL(string: urlString) else {
             return Fail(error: URLError(.badURL))
                 .eraseToAnyPublisher()
         }
+        
+        print("🌐 Fetching courses from: \(urlString)")
         
         return session.dataTaskPublisher(for: url)
             .map(\.data)
@@ -399,7 +412,19 @@ class APIService {
     }
     
     func fetchPodcasts() -> AnyPublisher<PodcastsResponse, Error> {
-        guard let url = URL(string: "\(baseURL)/podcasts") else {
+        let primaryURL = "\(AppConfig.apiURL)/podcasts"
+        let fallbackURL = "\(AppConfig.fallbackBaseURL)/api/podcasts"
+        
+        return fetchPodcastsFromURL(primaryURL)
+            .catch { _ in
+                print("⚠️ Primary URL failed for podcasts, trying fallback...")
+                return self.fetchPodcastsFromURL(fallbackURL)
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    private func fetchPodcastsFromURL(_ urlString: String) -> AnyPublisher<PodcastsResponse, Error> {
+        guard let url = URL(string: urlString) else {
             return Fail(error: URLError(.badURL))
                 .eraseToAnyPublisher()
         }
@@ -412,7 +437,7 @@ class APIService {
     }
     
     func askAI(question: String, context: String? = nil) -> AnyPublisher<AIResponse, Error> {
-        guard let url = URL(string: "\(baseURL)/ai/ask") else {
+        guard let url = URL(string: "\(AppConfig.apiURL)/ai/ask") else {
             return Fail(error: AIError.invalidURL)
                 .eraseToAnyPublisher()
         }
@@ -447,7 +472,7 @@ class APIService {
     }
     
     func updateVideoProgress(videoId: String, watchedSeconds: Int, totalDuration: Int) -> AnyPublisher<Void, Error> {
-        guard let url = URL(string: "\(baseURL)/video/progress") else {
+        guard let url = URL(string: "\(AppConfig.apiURL)/video/progress") else {
             return Fail(error: URLError(.badURL))
                 .eraseToAnyPublisher()
         }
@@ -479,7 +504,7 @@ class APIService {
     }
     
     func getVideoProgress(videoId: String) -> AnyPublisher<VideoProgress?, Error> {
-        guard let url = URL(string: "\(baseURL)/video/progress/\(videoId)") else {
+        guard let url = URL(string: "\(AppConfig.apiURL)/video/progress/\(videoId)") else {
             return Fail(error: URLError(.badURL))
                 .eraseToAnyPublisher()
         }
@@ -493,7 +518,7 @@ class APIService {
     }
     
     func sendAnalyticsEvents(_ events: [AnalyticsEventData]) -> AnyPublisher<Void, Error> {
-        guard let url = URL(string: "\(baseURL)/analytics") else {
+        guard let url = URL(string: "\(AppConfig.apiURL)/analytics") else {
             return Fail(error: URLError(.badURL))
                 .eraseToAnyPublisher()
         }

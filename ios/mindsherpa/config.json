@@ -1,0 +1,11 @@
+{
+  "api_base_url": "https://backend-production-f873.up.railway.app",
+  "cdn_base_url": "https://skillvergence.mindsherpa.ai",
+  "version": "1.0.0",
+  "features": {
+    "podcasts_enabled": true,
+    "ai_chat_enabled": true,
+    "analytics_enabled": true,
+    "offline_mode": false
+  }
+}

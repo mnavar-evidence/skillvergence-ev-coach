@@ -10,6 +10,13 @@ import SwiftUI
 @main
 struct mindsherpaApp: App {
     init() {
+        // Load dynamic configuration and test connectivity
+        Task {
+            await AppConfig.loadDynamicConfiguration()
+            let isConnected = await AppConfig.testConnectivity()
+            print("🌐 Network connectivity: \(isConnected ? "✅ Connected" : "❌ Failed")")
+        }
+        
         // Print app configuration on startup
         AppConfig.printConfiguration()
         

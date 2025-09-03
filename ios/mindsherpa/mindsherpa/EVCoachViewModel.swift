@@ -742,7 +742,17 @@ class EVCoachViewModel: ObservableObject {
         )
         videoProgress[videoId] = progress
         
-        // TODO: Add new progress store call in safer way later
+        // Also update new progress store with real progress data (async to avoid MainActor issues)
+        if let currentCourse = currentCourse {
+            Task { @MainActor in
+                ProgressStore.shared.updateVideoProgress(
+                    videoId: videoId,
+                    courseId: currentCourse.id,
+                    currentTime: Double(watchedSeconds),
+                    duration: Double(totalDuration)
+                )
+            }
+        }
 
         // If the video has effectively been completed (e.g. user watched nearly the
         // entire duration), also mark it as completed in the completedVideos set.

@@ -93,14 +93,6 @@ struct VideoPage: View {
             }
             // Track video view
             viewModel.selectVideo(video)
-            
-            // Test write to new progress store (baby step)
-            ProgressStore.shared.updateVideoProgress(
-                videoId: video.id,
-                courseId: "1", // Simple test course ID  
-                currentTime: 30.0, // 30 seconds watched
-                duration: Double(video.duration)
-            )
         }
         .onDisappear {
             // Stop progress tracking when navigating away

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVKit
+import AVFoundation
 
 struct PodcastView: View {
     @ObservedObject var viewModel: EVCoachViewModel
@@ -398,6 +399,14 @@ struct PodcastPlayerView: View {
             audioError = "Invalid audio URL"
             isLoadingAudio = false
             return 
+        }
+        
+        // Configure audio session for playback on physical devices
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Failed to set up audio session: \(error)")
         }
         
         player = AVPlayer(url: url)

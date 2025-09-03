@@ -119,8 +119,16 @@ struct CoachHeaderView: View {
             
             // Progress Metrics
             HStack(spacing: 12) {
-                MetricView(title: "Streak", value: "3d", icon: "flame.fill")
-                MetricView(title: "Time", value: "15m", icon: "clock.fill")
+                MetricView(
+                    title: "Streak", 
+                    value: "\(ProgressStore.shared.getCurrentStreak())d", 
+                    icon: "flame.fill"
+                )
+                MetricView(
+                    title: "Today", 
+                    value: String(format: "%.0fm", ProgressStore.shared.getTodayActivity()), 
+                    icon: "clock.fill"
+                )
                 MetricView(title: "Confidence", value: "72%", icon: "chart.line.uptrend.xyaxis")
             }
         }
@@ -212,19 +220,6 @@ struct CourseCardView: View {
     }
     
     private var completionPercentage: Double {
-        // Use new progress store data if available, fallback to old system
-        return newStoreCompletionPercentage ?? course.completionPercentage(with: viewModel.videoProgress)
-    }
-    
-    private var completedVideoCount: Int {
-        // Use new progress store data if available, fallback to old system  
-        return newStoreCompletedCount ?? course.videos.filter { video in
-            viewModel.videoProgress[video.id]?.isCompleted ?? false
-        }.count
-    }
-    
-    // New progress store calculations
-    private var newStoreCompletionPercentage: Double? {
         let totalVideos = course.videos.count
         guard totalVideos > 0 else { return 0 }
         
@@ -232,14 +227,13 @@ struct CourseCardView: View {
             ProgressStore.shared.videoProgress(videoId: video.id)?.completed ?? false
         }.count
         
-        return completedCount > 0 ? Double(completedCount) / Double(totalVideos) * 100.0 : nil
+        return Double(completedCount) / Double(totalVideos) * 100.0
     }
     
-    private var newStoreCompletedCount: Int? {
-        let count = course.videos.filter { video in
+    private var completedVideoCount: Int {
+        return course.videos.filter { video in
             ProgressStore.shared.videoProgress(videoId: video.id)?.completed ?? false
         }.count
-        return count > 0 ? count : nil
     }
     
     private static func formatHours(_ hours: Double) -> String {
@@ -512,3 +506,4 @@ struct AIInteractionView: View {
         questionText = ""
     }
 }
+

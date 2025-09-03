@@ -478,24 +478,26 @@ struct PodcastPlayerView: View {
     }
 }
 
-#Preview {
-    let viewModel = EVCoachViewModel()
-    viewModel.courses = [
-        Course(
-            id: "electrical-fundamentals", 
-            title: "Electrical Fundamentals", 
-            description: "Master the electrical principles powering electric vehicles", 
-            level: "Intermediate", 
-            estimatedHours: 8.0, 
-            videos: [], 
-            podcasts: nil, 
-            thumbnailUrl: nil, 
-            sequenceOrder: 1
-        )
-    ]
-    viewModel.podcasts = [
-        Podcast(id: "1", title: "Electrifying the Road: Unpacking the Physics and Power of EV Motors", description: "Deep dive into electric vehicle motor physics, power delivery systems, and the fundamental principles that make EVs work", duration: 1800, audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Electrifying_the_Road__Unpacking_the_Physics_and_Power_of_EV_Motors.m4a", sequenceOrder: 1, courseId: "electrical-fundamentals", episodeNumber: 1, thumbnailUrl: nil),
-        Podcast(id: "2", title: "Introduction to EV Safety", description: "Learn the fundamentals of working safely with electric vehicles", duration: 1500, audioUrl: "https://example.com/audio2.mp3", sequenceOrder: 2, courseId: "electrical-fundamentals", episodeNumber: 2, thumbnailUrl: nil)
-    ]
-    return PodcastView(viewModel: viewModel)
+struct PodcastView_Previews: PreviewProvider {
+    static var previews: some View {
+        let viewModel = EVCoachViewModel()
+        viewModel.courses = [
+            Course(
+                id: "electrical-fundamentals", 
+                title: "Electrical Fundamentals", 
+                description: "Master the electrical principles powering electric vehicles", 
+                level: "Intermediate", 
+                estimatedHours: 8.0, 
+                videos: [], 
+                podcasts: nil, 
+                thumbnailUrl: nil, 
+                sequenceOrder: 1
+            )
+        ]
+        viewModel.podcasts = [
+            Podcast(id: "1", title: "Electrifying the Road: Unpacking the Physics and Power of EV Motors", description: "Deep dive into electric vehicle motor physics, power delivery systems, and the fundamental principles that make EVs work", duration: 1800, audioUrl: "https://skillvergence.mindsherpa.ai/podcasts/Electrifying_the_Road__Unpacking_the_Physics_and_Power_of_EV_Motors.m4a", sequenceOrder: 1, courseId: "electrical-fundamentals", episodeNumber: 1, thumbnailUrl: nil),
+            Podcast(id: "2", title: "Introduction to EV Safety", description: "Learn the fundamentals of working safely with electric vehicles", duration: 1500, audioUrl: "https://example.com/audio2.mp3", sequenceOrder: 2, courseId: "electrical-fundamentals", episodeNumber: 2, thumbnailUrl: nil)
+        ]
+        return PodcastView(viewModel: viewModel)
+    }
 }

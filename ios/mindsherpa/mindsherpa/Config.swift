@@ -3,9 +3,8 @@ import Foundation
 struct AppConfig {
     // MARK: - API Configuration
     
-    // Temporary: Use Railway URL directly until DNS propagates
-    static let baseURL = "https://backend-production-f873.up.railway.app"  // Direct Railway URL
-    // TODO: Change back to https://api.mindsherpa.ai once DNS works
+    // Primary: Custom domain with SSL certificate
+    static let baseURL = "https://api.mindsherpa.ai"  // Custom domain URL
     
     // Fallback: Direct Railway URLs (update when needed)
     static let fallbackBaseURL = "https://backend-production-f873.up.railway.app"

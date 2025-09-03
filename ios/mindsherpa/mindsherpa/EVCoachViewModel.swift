@@ -60,18 +60,41 @@ struct Course: Codable, Identifiable {
         }
     }
     
-    func completionPercentage(with videoProgress: [String: VideoProgress]) -> Double {
-        guard !videos.isEmpty else { return 0 }
-        let completedVideos = videos.filter { video in
-            videoProgress[video.id]?.isCompleted ?? false
-        }.count
-        return Double(completedVideos) / Double(videos.count) * 100
+    // Manual initializer for creating Course objects programmatically
+    init(id: String, title: String, description: String, level: String, estimatedHours: Double, videos: [Video], podcasts: [Podcast]? = nil, thumbnailUrl: String? = nil, sequenceOrder: Int? = nil) {
+        self.id = id
+        self.title = title
+        self.description = description
+        self.level = level
+        self.estimatedHours = estimatedHours
+        self.videos = videos
+        self.podcasts = podcasts
+        self.thumbnailUrl = thumbnailUrl
+        self.sequenceOrder = sequenceOrder
     }
     
-    // Custom CodingKeys to handle optional podcasts field
+    // Custom decoder to handle missing podcasts field gracefully
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        description = try container.decode(String.self, forKey: .description)
+        level = try container.decode(String.self, forKey: .level)
+        estimatedHours = try container.decode(Double.self, forKey: .estimatedHours)
+        videos = try container.decode([Video].self, forKey: .videos)
+        thumbnailUrl = try container.decodeIfPresent(String.self, forKey: .thumbnailUrl)
+        sequenceOrder = try container.decodeIfPresent(Int.self, forKey: .sequenceOrder)
+        
+        // Handle podcasts field that may be missing from API response
+        podcasts = try container.decodeIfPresent([Podcast].self, forKey: .podcasts)
+    }
+    
+    // CodingKeys for JSON decoding
     private enum CodingKeys: String, CodingKey {
         case id, title, description, level, estimatedHours, videos, podcasts, thumbnailUrl, sequenceOrder
     }
+    
 }
 
 struct Video: Codable, Identifiable {

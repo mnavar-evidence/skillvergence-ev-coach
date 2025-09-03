@@ -306,7 +306,7 @@ struct CourseDetailView: View {
                         Spacer()
                         
                         VStack(alignment: .trailing, spacing: 4) {
-                            let completionPct = course.completionPercentage(with: viewModel.videoProgress)
+                            let completionPct = calculateCompletionPercentage()
                             Text("\(Int(completionPct))%")
                                 .font(.headline)
                                 .fontWeight(.semibold)
@@ -318,34 +318,67 @@ struct CourseDetailView: View {
                     }
                     
                     // Progress Bar
-                    let completionPct = course.completionPercentage(with: viewModel.videoProgress)
+                    let completionPct = calculateCompletionPercentage()
                     ProgressView(value: completionPct / 100.0)
                         .progressViewStyle(LinearProgressViewStyle(tint: .blue))
                         .scaleEffect(y: 2)
                     
-                    // Continue Watching Button
-                    if let nextVideo = getNextVideo() {
+                    // Course-specific Continue Watching - shows last watched video in this course
+                    if let lastWatchedVideo = getLastWatchedVideo() {
                         NavigationLink {
-                            VideoPage(video: nextVideo, viewModel: viewModel)
+                            VideoPage(video: lastWatchedVideo, viewModel: viewModel)
                         } label: {
-                            ContinueWatchingButton(video: nextVideo, viewModel: viewModel)
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.blue)
+                                        .frame(width: 40, height: 40)
+                                    Image(systemName: "play.fill")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Continue Watching")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.secondary)
+                                    Text(lastWatchedVideo.title)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                        .lineLimit(2)
+                                    
+                                    if let progressRecord = ProgressStore.shared.videoProgress(videoId: lastWatchedVideo.id) {
+                                        if progressRecord.completed {
+                                            Text("Completed")
+                                                .font(.caption)
+                                                .foregroundColor(.green)
+                                        } else {
+                                            Text("\(Int(progressRecord.lastPositionSec / Double(lastWatchedVideo.duration) * 100))% watched")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    } else {
+                                        Text("Start watching")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(12)
+                            .background(Color(.secondarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .padding(.top, 12)
+                        .padding(.top, 8)
                     }
 
-                    // Enhanced progress summary for the course
-                    let summary = viewModel.getCourseProgressSummary(courseId: course.id)
-                    CourseProgressSummary(
-                        courseTitle: course.title,
-                        totalVideos: summary.totalVideos,
-                        completedVideos: summary.videosCompleted,
-                        totalPodcasts: summary.totalPodcasts,
-                        completedPodcasts: summary.podcastsCompleted,
-                        totalWatchTime: course.estimatedHours * 3600,
-                        watchedTime: summary.totalWatchTime
-                    )
-                    .padding(.top, 12)
                     
                     Text(course.description)
                         .font(.body)
@@ -354,7 +387,6 @@ struct CourseDetailView: View {
                     
                     // Course Stats
                     HStack(spacing: 16) {
-                        StatView(title: "Videos", value: "\(course.videos.count)", icon: "play.circle.fill")
                         StatView(title: "Duration", value: formatHours(course.estimatedHours), icon: "clock.fill")
                         StatView(title: "Level", value: course.skillLevel.displayName, icon: "chart.bar.fill")
                     }
@@ -390,15 +422,35 @@ struct CourseDetailView: View {
     /// Returns the next incomplete video in the course based on sequence order.
     /// If all videos are complete, returns nil.  This enables the "Continue Watching"
     /// button at the top of the course detail page.
-    private func getNextVideo() -> Video? {
-        let sorted = course.videos.sorted { ($0.sequenceOrder ?? 0) < ($1.sequenceOrder ?? 0) }
-        for video in sorted {
-            let progress = viewModel.videoProgress[video.id]
-            if progress == nil || !(progress?.isCompleted ?? false) {
-                return video
+    private func calculateCompletionPercentage() -> Double {
+        let totalVideos = course.videos.count
+        guard totalVideos > 0 else { return 0 }
+        
+        let completedCount = course.videos.filter { video in
+            ProgressStore.shared.videoProgress(videoId: video.id)?.completed ?? false
+        }.count
+        
+        return Double(completedCount) / Double(totalVideos) * 100.0
+    }
+    
+    private func getLastWatchedVideo() -> Video? {
+        var mostRecentVideo: Video? = nil
+        var mostRecentDate: Date = Date.distantPast
+        
+        // Look through all videos in this course to find the most recently watched one
+        for video in course.videos {
+            if let progressRecord = ProgressStore.shared.videoProgress(videoId: video.id) {
+                // Only consider videos that have been watched (have some progress)
+                if progressRecord.watchedSec > 30 { // At least 30 seconds watched
+                    if progressRecord.updatedAt > mostRecentDate {
+                        mostRecentDate = progressRecord.updatedAt
+                        mostRecentVideo = video
+                    }
+                }
             }
         }
-        return nil
+        
+        return mostRecentVideo
     }
 }
 
@@ -410,6 +462,7 @@ struct VideoListView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            
             Text("Course Content")
                 .font(.headline)
                 .fontWeight(.semibold)
@@ -432,21 +485,8 @@ struct VideoRowView: View {
     let video: Video
     @ObservedObject var viewModel: EVCoachViewModel
     
-    var progress: VideoProgress? {
-        // Use new store for all videos, fallback to old system
-        if let newRecord = ProgressStore.shared.videoProgress(videoId: video.id) {
-            // Convert new format to old format for UI compatibility
-            return VideoProgress(
-                videoId: newRecord.videoId,
-                watchedSeconds: Int(newRecord.watchedSec),
-                totalDuration: Int(newRecord.watchedSec + 100), // Fake total for testing
-                isCompleted: newRecord.completed,
-                lastWatchedAt: newRecord.updatedAt
-            )
-        } else {
-            // Use old system for all other videos
-            return viewModel.videoProgress[video.id]
-        }
+    var progressRecord: VideoProgressRecord? {
+        return ProgressStore.shared.videoProgress(videoId: video.id)
     }
     
     
@@ -520,41 +560,31 @@ struct VideoRowView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                 
-                // Progress indicator (check both old and new systems)
-                let hasOldProgress = progress?.watchedSeconds ?? 0 > 0
-                let newProgressRecord = ProgressStore.shared.videoProgress(videoId: video.id)
-                let isCompletedInNewStore = newProgressRecord?.completed ?? false
-                
-                // Show completion badge prominently if completed in new store
-                if isCompletedInNewStore {
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                            .font(.subheadline)
-                        Text("Completed")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.green)
-                        Spacer()
-                        if let completedAt = newProgressRecord?.completedAt {
-                            Text(completedAt, format: .dateTime.month().day())
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                } else if let progress = progress, hasOldProgress {
-                    // Show regular progress for non-completed videos
-                    HStack(spacing: 8) {
-                        ProgressView(value: Double(progress.watchedSeconds) / Double(video.duration))
-                            .progressViewStyle(LinearProgressViewStyle(tint: .blue))
-                            .scaleEffect(y: 0.8)
-                        
-                        if progress.isCompleted {
+                // Progress indicator using ProgressStore
+                if let record = progressRecord {
+                    if record.completed {
+                        HStack(spacing: 6) {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundStyle(.green)
+                                .font(.subheadline)
+                            Text("Completed")
                                 .font(.caption)
-                        } else {
-                            Text("\(Int(Double(progress.watchedSeconds) / Double(video.duration) * 100))%")
+                                .fontWeight(.medium)
+                                .foregroundStyle(.green)
+                            Spacer()
+                            if let completedAt = record.completedAt {
+                                Text(completedAt, format: .dateTime.month().day())
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    } else if record.lastPositionSec > 0 {
+                        HStack(spacing: 8) {
+                            ProgressView(value: record.lastPositionSec / Double(video.duration))
+                                .progressViewStyle(LinearProgressViewStyle(tint: .blue))
+                                .scaleEffect(y: 0.8)
+                            
+                            Text("\(Int(record.lastPositionSec / Double(video.duration) * 100))%")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -578,72 +608,6 @@ struct VideoRowView: View {
     }
 }
 
-// MARK: - Continue Watching Button
-
-/// A button that displays progress for the next video to continue watching.
-/// Shows title, completion percentage and duration.  Used in CourseDetailView.
-struct ContinueWatchingButton: View {
-    let video: Video
-    @ObservedObject var viewModel: EVCoachViewModel
-
-    var body: some View {
-        HStack(spacing: 12) {
-            // Play icon
-            ZStack {
-                Circle()
-                    .fill(Color.blue)
-                    .frame(width: 40, height: 40)
-                Image(systemName: "play.fill")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white)
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                let progress = viewModel.videoProgress[video.id]
-                if let progress = progress, progress.watchedSeconds > 0 {
-                    Text("Continue watching")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-                    Text(video.title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                    HStack(spacing: 8) {
-                        let progressPercent = Double(progress.watchedSeconds) / Double(progress.totalDuration) * 100
-                        Text("\(Int(progressPercent))% watched")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Circle()
-                            .fill(Color.secondary)
-                            .frame(width: 3, height: 3)
-                        Text(video.formattedDuration)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                } else {
-                    Text("Start watching")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-                    Text(video.title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                    Text(video.formattedDuration)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(Color(.tertiaryLabel))
-        }
-        .padding(12)
-        .background(Color(UIColor.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-}
 
 // MARK: - Video Detail View
 

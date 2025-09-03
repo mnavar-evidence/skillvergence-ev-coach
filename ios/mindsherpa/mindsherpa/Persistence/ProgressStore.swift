@@ -13,7 +13,7 @@ public class ProgressStore: ObservableObject {
     public static let shared = ProgressStore()
     
     // Simple in-memory storage
-    private var snapshot = ProgressSnapshot()
+    @Published private var snapshot = ProgressSnapshot()
     
     // File location for JSON storage
     private let storageURL: URL = {
@@ -42,8 +42,12 @@ public class ProgressStore: ObservableObject {
         
         // Get existing or create new
         let existing = snapshot.videos[videoId]
-        let watchedSec = max(existing?.watchedSec ?? 0, currentTime)
+        let previousWatchedSec = existing?.watchedSec ?? 0
+        let watchedSec = max(previousWatchedSec, currentTime)
         let completed = duration - currentTime <= 10 // completed if within 10 seconds of end
+        
+        // Calculate new watching time for daily activity tracking
+        let newWatchingTime = max(0, watchedSec - previousWatchedSec)
         
         let record = VideoProgressRecord(
             videoId: videoId,
@@ -59,10 +63,69 @@ public class ProgressStore: ObservableObject {
         var updatedVideos = snapshot.videos
         updatedVideos[videoId] = record
         
-        snapshot = ProgressSnapshot(videos: updatedVideos, courses: snapshot.courses, activity: snapshot.activity)
+        // Update daily activity tracking if there's new progress
+        var updatedActivity = snapshot.activity
+        if newWatchingTime > 0 {
+            let todayKey = formatDateKey(now)
+            let existingActivity = updatedActivity[todayKey]
+            let newTotalSeconds = (existingActivity?.watchedSecDay ?? 0) + newWatchingTime
+            
+            let dailyRecord = DailyActivityRecord(
+                day: Calendar.current.startOfDay(for: now),
+                watchedSecDay: newTotalSeconds
+            )
+            
+            updatedActivity[todayKey] = dailyRecord
+        }
+        
+        snapshot = ProgressSnapshot(videos: updatedVideos, courses: snapshot.courses, activity: updatedActivity)
         
         // Save to disk
         saveToDisk()
+    }
+    
+    // MARK: - Daily Activity Methods
+    
+    public func getTodayActivity() -> Double {
+        let today = formatDateKey(Date())
+        let seconds = snapshot.activity[today]?.watchedSecDay ?? 0
+        return seconds / 60.0 // Convert to minutes
+    }
+    
+    public func getCurrentStreak() -> Int {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        let today = Date()
+        var currentDate = today
+        var streak = 0
+        
+        // Check back up to 30 days
+        for _ in 0..<30 {
+            let dateKey = formatDateKey(currentDate)
+            if let activity = snapshot.activity[dateKey], activity.watchedSecDay > 0 {
+                streak += 1
+            } else if streak > 0 {
+                // Break streak if we find a day with no activity (but only if we already started counting)
+                break
+            } else if Calendar.current.isDate(currentDate, inSameDayAs: today) {
+                // If today has no activity, we still continue checking yesterday
+                // This handles the case where today just started
+            } else {
+                // If yesterday (or earlier) has no activity and we haven't started a streak, break
+                break
+            }
+            currentDate = Calendar.current.date(byAdding: .day, value: -1, to: currentDate)!
+        }
+        
+        return streak
+    }
+    
+    private func formatDateKey(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone.current
+        return formatter.string(from: date)
     }
     
     // MARK: - Persistence Methods

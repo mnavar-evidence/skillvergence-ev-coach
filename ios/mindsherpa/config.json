@@ -1,5 +1,5 @@
 {
-  "api_base_url": "https://backend-production-f873.up.railway.app",
+  "api_base_url": "https://api.mindsherpa.ai",
   "cdn_base_url": "https://skillvergence.mindsherpa.ai",
   "version": "1.0.0",
   "features": {

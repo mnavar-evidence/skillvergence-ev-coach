@@ -516,7 +516,14 @@ struct VideoRowView: View {
     var body: some View {
         HStack(spacing: 12) {
             // Video Thumbnail
-            AsyncImage(url: video.thumbnailUrl.flatMap { URL(string: $0) }) { phase in
+            AsyncImage(url: {
+                guard let thumbnailUrlString = video.thumbnailUrl,
+                      !thumbnailUrlString.isEmpty,
+                      let url = URL(string: thumbnailUrlString) else {
+                    return nil
+                }
+                return url
+            }()) { phase in
                 switch phase {
                 case .success(let image):
                     image

@@ -255,7 +255,8 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
             let interval = CMTime(seconds: 1.0, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
             player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
                 let watchedSeconds = Int(time.seconds)
-                viewModel.updateVideoProgress(videoId: video.id, watchedSeconds: watchedSeconds, totalDuration: video.duration)
+                let isPlaying = player.rate > 0 // Only track progress when actually playing
+                viewModel.updateVideoProgress(videoId: video.id, watchedSeconds: watchedSeconds, totalDuration: video.duration, isPlaying: isPlaying)
             }
             
             // Add seek event tracking to immediately capture manual scrubbing
@@ -264,9 +265,9 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
                 object: player.currentItem,
                 queue: .main
             ) { _ in
-                // Immediately save position when user seeks/scrubs
+                // Immediately save position when user seeks/scrubs (regardless of play state)
                 let currentTime = Int(player.currentTime().seconds)
-                viewModel.updateVideoProgress(videoId: video.id, watchedSeconds: currentTime, totalDuration: video.duration)
+                viewModel.updateVideoProgress(videoId: video.id, watchedSeconds: currentTime, totalDuration: video.duration, isPlaying: true)
             }
         }
         
@@ -334,10 +335,10 @@ struct CourseDetailView: View {
                         .progressViewStyle(LinearProgressViewStyle(tint: .blue))
                         .scaleEffect(y: 2)
                     
-                    // Course-specific Continue Watching - shows last watched video in this course
-                    if let lastWatchedVideo = getLastWatchedVideo() {
+                    // Course-specific Continue Watching - shows best video to continue with
+                    if let continueVideo = getVideoToContinue() {
                         NavigationLink {
-                            VideoPage(video: lastWatchedVideo, viewModel: viewModel)
+                            VideoPage(video: continueVideo, viewModel: viewModel)
                         } label: {
                             HStack(spacing: 12) {
                                 ZStack {
@@ -354,18 +355,18 @@ struct CourseDetailView: View {
                                         .font(.subheadline)
                                         .fontWeight(.medium)
                                         .foregroundColor(.secondary)
-                                    Text(lastWatchedVideo.title)
+                                    Text(continueVideo.title)
                                         .font(.headline)
                                         .foregroundColor(.primary)
                                         .lineLimit(2)
                                     
-                                    if let progressRecord = ProgressStore.shared.videoProgress(videoId: lastWatchedVideo.id) {
+                                    if let progressRecord = ProgressStore.shared.videoProgress(videoId: continueVideo.id) {
                                         if progressRecord.completed {
                                             Text("Completed")
                                                 .font(.caption)
                                                 .foregroundColor(.green)
                                         } else {
-                                            Text("\(Int(progressRecord.lastPositionSec / Double(lastWatchedVideo.duration) * 100))% watched")
+                                            Text("\(Int(progressRecord.lastPositionSec / Double(continueVideo.duration) * 100))% watched")
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
                                         }
@@ -444,19 +445,30 @@ struct CourseDetailView: View {
         return Double(completedCount) / Double(totalVideos) * 100.0
     }
     
-    private func getLastWatchedVideo() -> Video? {
+    private func getVideoToContinue() -> Video? {
         var mostRecentVideo: Video? = nil
         var mostRecentDate: Date = Date.distantPast
         
-        // Look through all videos in this course to find the most recently watched one
+        // Look through all videos in this course to find the most recently watched incomplete one
         for video in course.videos {
             if let progressRecord = ProgressStore.shared.videoProgress(videoId: video.id) {
-                // Only consider videos that have been watched (have some progress)
-                if progressRecord.watchedSec > 30 { // At least 30 seconds watched
+                // Only consider videos that have progress but are NOT completed
+                if progressRecord.watchedSec > 30 && !progressRecord.completed {
                     if progressRecord.updatedAt > mostRecentDate {
                         mostRecentDate = progressRecord.updatedAt
                         mostRecentVideo = video
                     }
+                }
+            }
+        }
+        
+        // If no incomplete videos with progress, return the first unwatched video
+        if mostRecentVideo == nil {
+            let sortedVideos = course.videos.sorted { ($0.sequenceOrder ?? 0) < ($1.sequenceOrder ?? 0) }
+            for video in sortedVideos {
+                let progressRecord = ProgressStore.shared.videoProgress(videoId: video.id)
+                if progressRecord == nil || (!progressRecord!.completed && progressRecord!.watchedSec <= 30) {
+                    return video // First unwatched or barely started video
                 }
             }
         }

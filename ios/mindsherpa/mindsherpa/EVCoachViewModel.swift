@@ -605,30 +605,40 @@ class EVCoachViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self?.courses = response.courses
                     self?.videos = response.courses.flatMap { $0.videos }
+                    self?.isLoading = false
+                    
+                    // Extract podcasts from courses instead of separate API call
+                    self?.extractPodcastsFromCourses()
                 }
-                
-                // Load podcasts separately (optional - won't block courses if it fails)
-                self?.loadPodcasts()
             })
             .store(in: &cancellables)
     }
     
+    private func extractPodcastsFromCourses() {
+        // Extract all podcasts from courses that have them
+        var allPodcasts: [Podcast] = []
+        
+        for course in courses {
+            if let coursePodcasts = course.podcasts {
+                allPodcasts.append(contentsOf: coursePodcasts)
+            }
+        }
+        
+        // If no podcasts found in courses, use sample data
+        if allPodcasts.isEmpty {
+            print("📻 No podcasts found in courses, using sample data")
+            allPodcasts = createSamplePodcasts()
+        } else {
+            print("📻 Found \(allPodcasts.count) podcasts in courses")
+        }
+        
+        self.podcasts = allPodcasts
+    }
+    
+    // Legacy method - kept for backward compatibility but no longer used
     private func loadPodcasts() {
-        apiService.fetchPodcasts()
-            .sink(receiveCompletion: { [weak self] completion in
-                if case .failure(let error) = completion {
-                    print("Failed to fetch podcasts (endpoint may not exist yet): \(error)")
-                    // Provide fallback sample data when API fails
-                    DispatchQueue.main.async {
-                        self?.podcasts = self?.createSamplePodcasts() ?? []
-                    }
-                }
-            }, receiveValue: { [weak self] response in
-                DispatchQueue.main.async {
-                    self?.podcasts = response.podcasts
-                }
-            })
-            .store(in: &cancellables)
+        // This method is deprecated - podcasts now come from courses
+        extractPodcastsFromCourses()
     }
     
     private func createSamplePodcasts() -> [Podcast] {
@@ -754,7 +764,7 @@ class EVCoachViewModel: ObservableObject {
         }
     }
     
-    func updateVideoProgress(videoId: String, watchedSeconds: Int, totalDuration: Int) {
+    func updateVideoProgress(videoId: String, watchedSeconds: Int, totalDuration: Int, isPlaying: Bool = true) {
         // Update local state immediately
         let progress = VideoProgress(
             videoId: videoId,
@@ -766,13 +776,15 @@ class EVCoachViewModel: ObservableObject {
         videoProgress[videoId] = progress
         
         // Also update new progress store with real progress data (async to avoid MainActor issues)
+        // Only update watch time accumulation when actually playing
         if let currentCourse = currentCourse {
             Task { @MainActor in
                 ProgressStore.shared.updateVideoProgress(
                     videoId: videoId,
                     courseId: currentCourse.id,
                     currentTime: Double(watchedSeconds),
-                    duration: Double(totalDuration)
+                    duration: Double(totalDuration),
+                    isPlaying: isPlaying
                 )
             }
         }

@@ -33,6 +33,226 @@ struct MetricView: View {
     }
 }
 
+struct LevelMetricView: View {
+    @ObservedObject private var progressStore = ProgressStore.shared
+    @State private var showLevelDetails = false
+    
+    var body: some View {
+        VStack(spacing: 6) {
+            // Level badge icon
+            Image(systemName: "star.fill")
+                .font(.title3)
+                .foregroundStyle(.orange)
+            
+            // Level title
+            Text("Level")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            
+            // Current level with XP progress
+            VStack(spacing: 2) {
+                Text("L\(progressStore.getCurrentLevel())")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.primary)
+                
+                // XP Progress bar
+                let levelProgress = progressStore.getXPProgressInCurrentLevel()
+                
+                ProgressView(value: levelProgress.percentage)
+                    .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+                    .scaleEffect(y: 0.6)
+                    .frame(width: 40)
+                
+                Text("\(progressStore.getTotalXP()) XP")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .onTapGesture {
+            showLevelDetails = true
+        }
+        .sheet(isPresented: $showLevelDetails) {
+            LevelDetailsView()
+        }
+    }
+}
+
+struct LevelDetailsView: View {
+    @ObservedObject private var progressStore = ProgressStore.shared
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    
+                    // Current Status
+                    VStack(spacing: 16) {
+                        Image(systemName: "star.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundStyle(.orange)
+                        
+                        Text(progressStore.getLevelTitle())
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("Level \(progressStore.getCurrentLevel())")
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                        
+                        let progress = progressStore.getXPProgressInCurrentLevel()
+                        VStack(spacing: 8) {
+                            ProgressView(value: progress.percentage)
+                                .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+                                .scaleEffect(y: 2)
+                            
+                            HStack {
+                                Text("\(progressStore.getTotalXP()) XP")
+                                Spacer()
+                                Text("\(progressStore.getXPForNextLevel()) XP")
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            
+                            let userName = progressStore.getUserName()
+                            let xpNeeded = progressStore.getXPForNextLevel() - progressStore.getTotalXP()
+                            Text(userName.isEmpty ? 
+                                 "Need \(xpNeeded) more XP to level up!" :
+                                 "\(userName), you need \(xpNeeded) more XP to level up!")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                    
+                    Divider()
+                    
+                    // How to Earn XP
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("How to Earn XP")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                        
+                        VStack(alignment: .leading, spacing: 12) {
+                            XPSourceRow(icon: "play.circle.fill", title: "Complete a video", xp: "+50 XP", color: .blue)
+                            XPSourceRow(icon: "eye.fill", title: "Watch part of a video", xp: "+10-40 XP", color: .purple)
+                            XPSourceRow(icon: "flame.fill", title: "Daily learning streak", xp: "+10 XP/day", color: .red)
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // Level Progression
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Level Progression")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                        
+                        VStack(spacing: 8) {
+                            LevelProgressRow(level: 1, title: "EV Apprentice", xp: "0-99 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 1)
+                            LevelProgressRow(level: 2, title: "Tech Trainee", xp: "100-249 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 2)
+                            LevelProgressRow(level: 3, title: "Junior Technician", xp: "250-499 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 3)
+                            LevelProgressRow(level: 4, title: "EV Technician", xp: "500-799 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 4)
+                            LevelProgressRow(level: 5, title: "Senior Tech", xp: "800-1199 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 5)
+                            LevelProgressRow(level: 6, title: "EV Specialist", xp: "1200-1699 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 6)
+                            LevelProgressRow(level: 7, title: "Master Tech", xp: "1700-2299 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 7)
+                            LevelProgressRow(level: 8, title: "EV Expert", xp: "2300-2999 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 8)
+                            LevelProgressRow(level: 9, title: "EV Master", xp: "3000+ XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 9)
+                        }
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Your Progress")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct XPSourceRow: View {
+    let icon: String
+    let title: String
+    let xp: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(color)
+                .frame(width: 24)
+            
+            Text(title)
+                .font(.subheadline)
+            
+            Spacer()
+            
+            Text(xp)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(.orange)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct LevelProgressRow: View {
+    let level: Int
+    let title: String
+    let xp: String
+    let isCurrentOrPast: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(isCurrentOrPast ? .orange : .gray.opacity(0.3))
+                    .frame(width: 32, height: 32)
+                
+                if isCurrentOrPast {
+                    Image(systemName: "checkmark")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                } else {
+                    Text("\(level)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(isCurrentOrPast ? .semibold : .regular)
+                    .foregroundStyle(isCurrentOrPast ? .primary : .secondary)
+                
+                Text(xp)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 2)
+    }
+}
+
 struct MediaTabsView: View {
     @Binding var selectedTab: Int
     
@@ -76,6 +296,8 @@ struct TabButton: View {
 
 struct CoachHeaderView: View {
     @ObservedObject var viewModel: EVCoachViewModel
+    @ObservedObject private var progressStore = ProgressStore.shared
+    @State private var showNamePrompt = false
     
     var body: some View {
         VStack(spacing: 16) {
@@ -87,10 +309,12 @@ struct CoachHeaderView: View {
                         .font(.title2)
                         .symbolRenderingMode(.hierarchical)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Coach Nova • personalized")
+                        let userName = progressStore.getUserName()
+                        Text(userName.isEmpty ? "Coach Nova • personalized" : "Welcome back, \(userName)!")
                             .font(.headline)
                             .foregroundStyle(.primary)
-                        Text("Training that pays. Careers that last.")
+                        Text(userName.isEmpty ? "Training that pays. Careers that last." : 
+                             "You're \(progressStore.getXPForNextLevel() - progressStore.getTotalXP()) XP from \(getNextLevelTitle())!")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -126,7 +350,7 @@ struct CoachHeaderView: View {
                     value: String(format: "%.0fm", ProgressStore.shared.getTodayActivity()), 
                     icon: "clock.fill"
                 )
-                MetricView(title: "Confidence", value: "72%", icon: "chart.line.uptrend.xyaxis")
+                LevelMetricView()
             }
         }
         .padding(.horizontal, 20)
@@ -139,6 +363,130 @@ struct CoachHeaderView: View {
         )
         .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 4)
         .padding(.horizontal, 4)
+        .onAppear {
+            // Show name prompt after user has some progress (completed at least 1 video or has streak)
+            if !progressStore.hasUserName() && shouldPromptForName() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    showNamePrompt = true
+                }
+            }
+        }
+        .sheet(isPresented: $showNamePrompt) {
+            NameCollectionView()
+        }
+    }
+    
+    private func getNextLevelTitle() -> String {
+        let nextLevel = progressStore.getCurrentLevel() + 1
+        switch nextLevel {
+        case 2: return "Tech Trainee"
+        case 3: return "Junior Technician"
+        case 4: return "EV Technician"
+        case 5: return "Senior Tech"
+        case 6: return "EV Specialist"
+        case 7: return "Master Tech"
+        case 8: return "EV Expert"
+        default: return "EV Master"
+        }
+    }
+    
+    private func shouldPromptForName() -> Bool {
+        // Prompt for name after user has shown engagement
+        let hasProgress = progressStore.getTotalXP() >= 50 // Completed at least 1 video
+        let hasStreak = progressStore.getCurrentStreak() >= 2 // Has a 2-day streak
+        return hasProgress || hasStreak
+    }
+}
+
+struct NameCollectionView: View {
+    @ObservedObject private var progressStore = ProgressStore.shared
+    @Environment(\.dismiss) private var dismiss
+    @State private var nameInput = ""
+    @FocusState private var isTextFieldFocused: Bool
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 30) {
+                Spacer()
+                
+                // Celebration/Progress context
+                VStack(spacing: 16) {
+                    Image(systemName: "star.circle.fill")
+                        .font(.system(size: 80))
+                        .foregroundStyle(.orange)
+                    
+                    Text("Great Progress!")
+                        .font(.title)
+                        .fontWeight(.bold)
+                    
+                    if progressStore.getTotalXP() >= 50 {
+                        Text("You've completed your first video and earned \(progressStore.getTotalXP()) XP!")
+                    } else if progressStore.getCurrentStreak() >= 2 {
+                        Text("You're on a \(progressStore.getCurrentStreak())-day learning streak!")
+                    } else {
+                        Text("You're making excellent progress!")
+                    }
+                    
+                    Text("I'd love to personalize your experience!")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                
+                // Name input
+                VStack(spacing: 16) {
+                    Text("What should I call you?")
+                        .font(.headline)
+                    
+                    TextField("Enter your first name", text: $nameInput)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($isTextFieldFocused)
+                        .autocorrectionDisabled()
+                        .textContentType(.givenName)
+                        .submitLabel(.done)
+                        .onSubmit {
+                            saveName()
+                        }
+                    
+                    Text("Just your first name or nickname - this stays private on your device")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.horizontal, 20)
+                
+                Spacer()
+                
+                // Buttons
+                VStack(spacing: 12) {
+                    Button("Continue") {
+                        saveName()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(nameInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    
+                    Button("Maybe later") {
+                        dismiss()
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .padding()
+            .navigationTitle("Personalize")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
+        }
+        .onAppear {
+            isTextFieldFocused = true
+        }
+    }
+    
+    private func saveName() {
+        let trimmed = nameInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            progressStore.setUserName(trimmed)
+            dismiss()
+        }
     }
 }
 

@@ -23,6 +23,29 @@ public class ProgressStore: ObservableObject {
     
     private init() {
         loadFromDisk()
+        loadUserName()
+    }
+    
+    // MARK: - User Profile Methods
+    
+    @Published public var userName: String = ""
+    
+    public func setUserName(_ name: String) {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        userName = trimmedName
+        UserDefaults.standard.set(trimmedName, forKey: "user_name")
+    }
+    
+    public func getUserName() -> String {
+        return userName.isEmpty ? UserDefaults.standard.string(forKey: "user_name") ?? "" : userName
+    }
+    
+    public func hasUserName() -> Bool {
+        return !getUserName().isEmpty
+    }
+    
+    private func loadUserName() {
+        userName = UserDefaults.standard.string(forKey: "user_name") ?? ""
     }
     
     // MARK: - Read Methods
@@ -37,17 +60,32 @@ public class ProgressStore: ObservableObject {
     
     // MARK: - Write Methods
     
-    public func updateVideoProgress(videoId: String, courseId: String, currentTime: Double, duration: Double) {
+    public func updateVideoProgress(videoId: String, courseId: String, currentTime: Double, duration: Double, isPlaying: Bool = true) {
         let now = Date()
         
         // Get existing or create new
         let existing = snapshot.videos[videoId]
+        let previousLastPosition = existing?.lastPositionSec ?? 0
         let previousWatchedSec = existing?.watchedSec ?? 0
-        let watchedSec = max(previousWatchedSec, currentTime)
-        let completed = duration - currentTime <= 30 || currentTime >= duration * 0.95 // completed if within 30 seconds of end or 95% watched
         
-        // Calculate new watching time for daily activity tracking
-        let newWatchingTime = max(0, watchedSec - previousWatchedSec)
+        // Calculate actual new watching time (only if playing AND moving forward within reasonable range)
+        let timeDiff = currentTime - previousLastPosition
+        let isReasonableProgress = isPlaying && timeDiff > 0 && timeDiff <= 3 // Only count when actually playing
+        let newWatchingTime = isReasonableProgress ? timeDiff : 0
+        
+        // Use max of accumulated time vs current position to prevent over-counting
+        let accumulatedTime = previousWatchedSec + newWatchingTime
+        let watchedSec = min(accumulatedTime, currentTime) // Cap at current position
+        
+        // Completion based on actual watch time percentage, not position
+        let watchPercentage = duration > 0 ? watchedSec / duration : 0
+        let completed = watchPercentage >= 0.85 || (duration - currentTime <= 30 && watchPercentage >= 0.70)
+        
+        // Debug logging (remove in production)
+        print("📹 Progress Update - Video: \(videoId.prefix(8))")
+        print("   Position: \(Int(previousLastPosition))s → \(Int(currentTime))s (diff: \(String(format: "%.1f", timeDiff))s)")
+        print("   Playing: \(isPlaying) | Reasonable: \(isReasonableProgress) | New time: +\(String(format: "%.1f", newWatchingTime))s")
+        print("   Watched: \(Int(previousWatchedSec))s → \(Int(watchedSec))s (\(Int(watchPercentage*100))%) | Completed: \(completed)")
         
         let record = VideoProgressRecord(
             videoId: videoId,
@@ -126,6 +164,102 @@ public class ProgressStore: ObservableObject {
         formatter.dateFormat = "yyyy-MM-dd"
         formatter.timeZone = TimeZone.current
         return formatter.string(from: date)
+    }
+    
+    // MARK: - XP and Level System Methods
+    
+    public func getTotalXP() -> Int {
+        var totalXP = 0
+        
+        // XP from completed videos (50 XP each)
+        for (_, progress) in snapshot.videos {
+            if progress.completed {
+                totalXP += 50
+            } else if progress.watchedSec > 60 {
+                // Partial XP for videos watched >1 minute (10-40 XP based on percentage)
+                let watchPercentage = progress.lastPositionSec / max(progress.watchedSec, 1)
+                let partialXP = min(Int(watchPercentage * 40), 40)
+                totalXP += partialXP
+            }
+        }
+        
+        // Bonus XP for streaks (10 XP per streak day)
+        totalXP += getCurrentStreak() * 10
+        
+        return totalXP
+    }
+    
+    public func getCurrentLevel() -> Int {
+        let xp = getTotalXP()
+        
+        // Level progression: 100, 250, 500, 800, 1200, 1700, 2300, 3000...
+        // Level 1: 0-99 XP, Level 2: 100-249 XP, Level 3: 250-499 XP, etc.
+        if xp < 100 { return 1 }
+        else if xp < 250 { return 2 }
+        else if xp < 500 { return 3 }
+        else if xp < 800 { return 4 }
+        else if xp < 1200 { return 5 }
+        else if xp < 1700 { return 6 }
+        else if xp < 2300 { return 7 }
+        else if xp < 3000 { return 8 }
+        else { return 9 + (xp - 3000) / 1000 } // Level 9+ every 1000 XP
+    }
+    
+    public func getXPForNextLevel() -> Int {
+        let level = getCurrentLevel()
+        
+        switch level {
+        case 1: return 100
+        case 2: return 250
+        case 3: return 500
+        case 4: return 800
+        case 5: return 1200
+        case 6: return 1700
+        case 7: return 2300
+        case 8: return 3000
+        default: return level * 1000 + 1000 // Level 9+
+        }
+    }
+    
+    public func getLevelTitle() -> String {
+        let level = getCurrentLevel()
+        
+        switch level {
+        case 1: return "EV Apprentice"
+        case 2: return "Tech Trainee"  
+        case 3: return "Junior Technician"
+        case 4: return "EV Technician"
+        case 5: return "Senior Tech"
+        case 6: return "EV Specialist"
+        case 7: return "Master Tech"
+        case 8: return "EV Expert"
+        default: return "EV Master"
+        }
+    }
+    
+    public func getXPProgressInCurrentLevel() -> (current: Int, needed: Int, percentage: Double) {
+        let totalXP = getTotalXP()
+        let level = getCurrentLevel()
+        let nextLevelXP = getXPForNextLevel()
+        
+        let levelStartXP: Int
+        switch level {
+        case 1: levelStartXP = 0
+        case 2: levelStartXP = 100
+        case 3: levelStartXP = 250
+        case 4: levelStartXP = 500
+        case 5: levelStartXP = 800
+        case 6: levelStartXP = 1200
+        case 7: levelStartXP = 1700
+        case 8: levelStartXP = 2300
+        default: levelStartXP = (level - 1) * 1000 + 2000 // Level 9+
+        }
+        
+        let currentLevelXP = totalXP - levelStartXP
+        let neededXP = nextLevelXP - levelStartXP
+        let percentage = Double(currentLevelXP) / Double(neededXP)
+        
+        return (current: currentLevelXP, needed: neededXP, percentage: min(percentage, 1.0))
     }
     
     // MARK: - Persistence Methods

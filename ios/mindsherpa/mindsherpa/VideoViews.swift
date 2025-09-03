@@ -93,7 +93,19 @@ struct YouTubePlayerView: UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {
         // Extract the 'si' parameter from the original URL for enhanced embed
         let siParameter = extractSiParameter(from: video.videoUrl) ?? ""
-        let embedParams = siParameter.isEmpty ? "" : "?si=\(siParameter)"
+        
+        // Check for resume position from ProgressStore
+        let resumeSeconds = ProgressStore.shared.videoProgress(videoId: video.id)?.lastPositionSec ?? 0
+        
+        // Build embed parameters
+        var embedParams = ""
+        if !siParameter.isEmpty {
+            embedParams += "?si=\(siParameter)"
+        }
+        if resumeSeconds > 5 { // Only resume if more than 5 seconds watched
+            let separator = embedParams.isEmpty ? "?" : "&"
+            embedParams += "\(separator)start=\(Int(resumeSeconds))"
+        }
         
         let embedHTML = """
         <!DOCTYPE html>
@@ -510,9 +522,28 @@ struct VideoRowView: View {
                 
                 // Progress indicator (check both old and new systems)
                 let hasOldProgress = progress?.watchedSeconds ?? 0 > 0
-                let _ = ProgressStore.shared.videoProgress(videoId: video.id) // Touch new store but don't use yet
+                let newProgressRecord = ProgressStore.shared.videoProgress(videoId: video.id)
+                let isCompletedInNewStore = newProgressRecord?.completed ?? false
                 
-                if let progress = progress, hasOldProgress {
+                // Show completion badge prominently if completed in new store
+                if isCompletedInNewStore {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                            .font(.subheadline)
+                        Text("Completed")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.green)
+                        Spacer()
+                        if let completedAt = newProgressRecord?.completedAt {
+                            Text(completedAt, format: .dateTime.month().day())
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else if let progress = progress, hasOldProgress {
+                    // Show regular progress for non-completed videos
                     HStack(spacing: 8) {
                         ProgressView(value: Double(progress.watchedSeconds) / Double(video.duration))
                             .progressViewStyle(LinearProgressViewStyle(tint: .blue))

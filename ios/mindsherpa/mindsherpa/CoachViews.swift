@@ -212,13 +212,34 @@ struct CourseCardView: View {
     }
     
     private var completionPercentage: Double {
-        course.completionPercentage(with: viewModel.videoProgress)
+        // Use new progress store data if available, fallback to old system
+        return newStoreCompletionPercentage ?? course.completionPercentage(with: viewModel.videoProgress)
     }
     
     private var completedVideoCount: Int {
-        course.videos.filter { video in
+        // Use new progress store data if available, fallback to old system  
+        return newStoreCompletedCount ?? course.videos.filter { video in
             viewModel.videoProgress[video.id]?.isCompleted ?? false
         }.count
+    }
+    
+    // New progress store calculations
+    private var newStoreCompletionPercentage: Double? {
+        let totalVideos = course.videos.count
+        guard totalVideos > 0 else { return 0 }
+        
+        let completedCount = course.videos.filter { video in
+            ProgressStore.shared.videoProgress(videoId: video.id)?.completed ?? false
+        }.count
+        
+        return completedCount > 0 ? Double(completedCount) / Double(totalVideos) * 100.0 : nil
+    }
+    
+    private var newStoreCompletedCount: Int? {
+        let count = course.videos.filter { video in
+            ProgressStore.shared.videoProgress(videoId: video.id)?.completed ?? false
+        }.count
+        return count > 0 ? count : nil
     }
     
     private static func formatHours(_ hours: Double) -> String {

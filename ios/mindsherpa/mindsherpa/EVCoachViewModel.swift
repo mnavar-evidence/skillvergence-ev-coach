@@ -741,6 +741,8 @@ class EVCoachViewModel: ObservableObject {
             lastWatchedAt: Date()
         )
         videoProgress[videoId] = progress
+        
+        // TODO: Add new progress store call in safer way later
 
         // If the video has effectively been completed (e.g. user watched nearly the
         // entire duration), also mark it as completed in the completedVideos set.

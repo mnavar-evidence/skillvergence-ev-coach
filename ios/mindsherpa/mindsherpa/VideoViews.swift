@@ -421,8 +421,22 @@ struct VideoRowView: View {
     @ObservedObject var viewModel: EVCoachViewModel
     
     var progress: VideoProgress? {
-        viewModel.videoProgress[video.id]
+        // Use new store for all videos, fallback to old system
+        if let newRecord = ProgressStore.shared.videoProgress(videoId: video.id) {
+            // Convert new format to old format for UI compatibility
+            return VideoProgress(
+                videoId: newRecord.videoId,
+                watchedSeconds: Int(newRecord.watchedSec),
+                totalDuration: Int(newRecord.watchedSec + 100), // Fake total for testing
+                isCompleted: newRecord.completed,
+                lastWatchedAt: newRecord.updatedAt
+            )
+        } else {
+            // Use old system for all other videos
+            return viewModel.videoProgress[video.id]
+        }
     }
+    
     
     var body: some View {
         HStack(spacing: 12) {
@@ -494,8 +508,11 @@ struct VideoRowView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                 
-                // Progress indicator
-                if let progress = progress, progress.watchedSeconds > 0 {
+                // Progress indicator (check both old and new systems)
+                let hasOldProgress = progress?.watchedSeconds ?? 0 > 0
+                let _ = ProgressStore.shared.videoProgress(videoId: video.id) // Touch new store but don't use yet
+                
+                if let progress = progress, hasOldProgress {
                     HStack(spacing: 8) {
                         ProgressView(value: Double(progress.watchedSeconds) / Double(video.duration))
                             .progressViewStyle(LinearProgressViewStyle(tint: .blue))

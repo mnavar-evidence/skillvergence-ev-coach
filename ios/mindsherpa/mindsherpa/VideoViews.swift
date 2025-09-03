@@ -251,11 +251,22 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
             let player = AVPlayer(url: url)
             controller.player = player
             
-            // Add periodic time observer for progress tracking
-            let interval = CMTime(seconds: 5.0, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+            // Add periodic time observer for progress tracking  
+            let interval = CMTime(seconds: 1.0, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
             player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
                 let watchedSeconds = Int(time.seconds)
                 viewModel.updateVideoProgress(videoId: video.id, watchedSeconds: watchedSeconds, totalDuration: video.duration)
+            }
+            
+            // Add seek event tracking to immediately capture manual scrubbing
+            NotificationCenter.default.addObserver(
+                forName: .AVPlayerItemTimeJumped,
+                object: player.currentItem,
+                queue: .main
+            ) { _ in
+                // Immediately save position when user seeks/scrubs
+                let currentTime = Int(player.currentTime().seconds)
+                viewModel.updateVideoProgress(videoId: video.id, watchedSeconds: currentTime, totalDuration: video.duration)
             }
         }
         

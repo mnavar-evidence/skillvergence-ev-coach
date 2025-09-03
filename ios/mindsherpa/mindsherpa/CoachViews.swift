@@ -44,9 +44,6 @@ struct MediaTabsView: View {
             TabButton(title: "Podcast", isSelected: selectedTab == 1) {
                 selectedTab = 1
             }
-            TabButton(title: "Mind-Map", isSelected: selectedTab == 2) {
-                selectedTab = 2
-            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 10)
@@ -236,6 +233,15 @@ struct CourseCardView: View {
         }.count
     }
     
+    private var hasAnyProgress: Bool {
+        return course.videos.contains { video in
+            if let progress = ProgressStore.shared.videoProgress(videoId: video.id) {
+                return progress.watchedSec > 30 // Show progress if watched more than 30 seconds
+            }
+            return false
+        }
+    }
+    
     private static func formatHours(_ hours: Double) -> String {
         if hours < 1.0 {
             let minutes = Int(hours * 60)
@@ -293,8 +299,8 @@ struct CourseCardView: View {
                 .multilineTextAlignment(.leading)
                 .lineLimit(2)
             
-            // Progress bar if course has progress
-            if completionPercentage > 0 {
+            // Progress bar if course has any progress
+            if hasAnyProgress {
                 VStack(spacing: 4) {
                     HStack {
                         Text("Progress")

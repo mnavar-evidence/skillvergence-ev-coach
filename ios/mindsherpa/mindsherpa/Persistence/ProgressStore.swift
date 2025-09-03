@@ -44,7 +44,7 @@ public class ProgressStore: ObservableObject {
         let existing = snapshot.videos[videoId]
         let previousWatchedSec = existing?.watchedSec ?? 0
         let watchedSec = max(previousWatchedSec, currentTime)
-        let completed = duration - currentTime <= 10 // completed if within 10 seconds of end
+        let completed = duration - currentTime <= 30 || currentTime >= duration * 0.95 // completed if within 30 seconds of end or 95% watched
         
         // Calculate new watching time for daily activity tracking
         let newWatchingTime = max(0, watchedSec - previousWatchedSec)

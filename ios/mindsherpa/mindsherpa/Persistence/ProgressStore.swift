@@ -73,9 +73,9 @@ public class ProgressStore: ObservableObject {
         let isReasonableProgress = isPlaying && timeDiff > 0 && timeDiff <= 3 // Only count when actually playing
         let newWatchingTime = isReasonableProgress ? timeDiff : 0
         
-        // Use max of accumulated time vs current position to prevent over-counting
+        // Use accumulated time but never let it decrease when scrubbing backward
         let accumulatedTime = previousWatchedSec + newWatchingTime
-        let watchedSec = min(accumulatedTime, currentTime) // Cap at current position
+        let watchedSec = min(max(accumulatedTime, previousWatchedSec), duration) // Never decrease, cap at duration
         
         // Completion based on actual watch time percentage, not position
         let watchPercentage = duration > 0 ? watchedSec / duration : 0
@@ -176,9 +176,10 @@ public class ProgressStore: ObservableObject {
             if progress.completed {
                 totalXP += 50
             } else if progress.watchedSec > 60 {
-                // Partial XP for videos watched >1 minute (10-40 XP based on percentage)
-                let watchPercentage = progress.lastPositionSec / max(progress.watchedSec, 1)
-                let partialXP = min(Int(watchPercentage * 40), 40)
+                // Partial XP for videos watched >1 minute (10-40 XP based on actual watch percentage)
+                // Need video duration for proper calculation - use watchedSec as approximation
+                let watchPercentage = min(progress.watchedSec / max(progress.lastPositionSec, 1), 1.0)
+                let partialXP = max(10, min(Int(watchPercentage * 40), 40))
                 totalXP += partialXP
             }
         }

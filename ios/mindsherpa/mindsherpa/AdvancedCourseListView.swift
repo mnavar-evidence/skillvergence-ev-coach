@@ -612,25 +612,7 @@ struct SixDigitCodeView: View {
                 TextField("", text: Binding(
                     get: { digits[index] },
                     set: { newValue in
-                        // Only allow single digits
-                        let filtered = newValue.filter { $0.isNumber }
-                        let limited = String(filtered.prefix(1))
-                        
-                        digits[index] = limited
-                        
-                        // Auto-advance focus
-                        if !limited.isEmpty && index < 5 {
-                            focusedField = index + 1
-                        } else if limited.isEmpty && index > 0 {
-                            focusedField = index - 1
-                        }
-                        
-                        // Update bound code
-                        let newCode = digits.joined()
-                        if newCode != code {
-                            code = newCode
-                            onCodeChanged()
-                        }
+                        handleDigitInput(at: index, input: newValue)
                     }
                 ))
                 .frame(width: 40, height: 50)
@@ -651,19 +633,87 @@ struct SixDigitCodeView: View {
                 .onTapGesture {
                     focusedField = index
                 }
+                .onChange(of: focusedField) { _, newFocus in
+                    // Clear selection when focus changes to prevent cursor issues
+                    if newFocus != index && !digits[index].isEmpty {
+                        // This helps prevent cursor getting stuck
+                    }
+                }
             }
         }
         .onAppear {
             // Initialize from existing code if any
-            if !code.isEmpty {
-                let codeArray = Array(code)
-                for i in 0..<min(codeArray.count, 6) {
-                    digits[i] = String(codeArray[i])
+            initializeDigits()
+            // Focus on first empty field
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                focusedField = findFirstEmptyField()
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .keyboard) {
+                HStack {
+                    Spacer()
+                    Button("Done") {
+                        focusedField = nil
+                    }
                 }
             }
-            // Focus on first field
-            focusedField = 0
         }
+    }
+    
+    private func handleDigitInput(at index: Int, input: String) {
+        // Handle backspace (empty input)
+        if input.isEmpty {
+            digits[index] = ""
+            // Move to previous field
+            if index > 0 {
+                focusedField = index - 1
+            }
+            updateCode()
+            return
+        }
+        
+        // Handle digit input
+        let filtered = input.filter { $0.isNumber }
+        if let lastChar = filtered.last {
+            digits[index] = String(lastChar)
+            
+            // Move to next field if available
+            if index < 5 {
+                focusedField = index + 1
+            } else {
+                // All fields filled, dismiss keyboard
+                focusedField = nil
+            }
+            
+            updateCode()
+        }
+    }
+    
+    private func updateCode() {
+        let newCode = digits.joined()
+        if newCode != code {
+            code = newCode
+            onCodeChanged()
+        }
+    }
+    
+    private func initializeDigits() {
+        if !code.isEmpty {
+            let codeArray = Array(code)
+            for i in 0..<min(codeArray.count, 6) {
+                digits[i] = String(codeArray[i])
+            }
+        }
+    }
+    
+    private func findFirstEmptyField() -> Int {
+        for i in 0..<6 {
+            if digits[i].isEmpty {
+                return i
+            }
+        }
+        return 0
     }
 }
 

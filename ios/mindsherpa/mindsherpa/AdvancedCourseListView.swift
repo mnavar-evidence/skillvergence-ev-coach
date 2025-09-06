@@ -51,13 +51,16 @@ struct AdvancedCourseListView: View {
                 }
             }
             .sheet(item: $selectedCourse) { course in
-                // Course 5 advanced videos are free for anyone who completed basic Course 5
-                if course.prerequisiteCourseId == "course_5" && course.isUnlocked {
-                    UnifiedVideoPlayer(advancedCourse: course)
-                } else if subscriptionManager.hasActiveSubscription {
-                    UnifiedVideoPlayer(advancedCourse: course)
+                // Course 5 has multiple modules - show module list
+                if course.prerequisiteCourseId == "course_5" {
+                    Course5ModuleListView(course: course)
                 } else {
-                    PremiumPaywallView()
+                    // Other courses have single advanced videos
+                    if course.isUnlocked && subscriptionManager.hasActiveSubscription {
+                        UnifiedVideoPlayer(advancedCourse: course)
+                    } else {
+                        PremiumPaywallView()
+                    }
                 }
             }
             .sheet(isPresented: $subscriptionManager.showPaywall) {
@@ -92,6 +95,176 @@ struct AdvancedCourseListView: View {
         } else {
             subscriptionManager.requestAdvancedAccess()
         }
+    }
+}
+
+// MARK: - Course 5 Module List View
+struct Course5ModuleListView: View {
+    let course: AdvancedCourse
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @State private var selectedModule: Course5Module?
+    
+    // Course 5 modules data
+    private let course5Modules = [
+        Course5Module(
+            id: "5-1",
+            title: "5.1 Introduction to Electric Vehicles",
+            description: "Comprehensive exploration of EV history, powertrain fundamentals, and charging infrastructure standards.",
+            muxPlaybackId: "lJjDsHFQ1J5c9tcfy3Bh6OP00SbOQcWMEJ243Lk102Yyk",
+            estimatedMinutes: 90,
+            xpReward: 150
+        ),
+        Course5Module(
+            id: "5-2", 
+            title: "5.2 Electric Vehicle Energy Storage Systems",
+            description: "Advanced study of battery chemistry, cell technology, and thermal management systems.",
+            muxPlaybackId: "00KESDsUll4nd8vc88PV01OpJqH7tKC01kqNAgydDmdbx8",
+            estimatedMinutes: 90,
+            xpReward: 150
+        ),
+        Course5Module(
+            id: "5-3",
+            title: "5.3 EV Architecture, Motors & Controllers", 
+            description: "Master-level analysis of EV powertrain architectures and motor control systems.",
+            muxPlaybackId: "5UtPR00oJZQUAJrnv701jdM7S02zmkCBWYI02lGqMiwbAn4",
+            estimatedMinutes: 90,
+            xpReward: 150
+        )
+    ]
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Course header
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text(course.title)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Spacer()
+                        Text("\(course5Modules.count) modules")
+                            .font(.caption)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.orange.opacity(0.15))
+                            .foregroundColor(.orange)
+                            .cornerRadius(12)
+                    }
+                    
+                    Text(course.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(.gray.opacity(0.05))
+                
+                // Module list
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(course5Modules) { module in
+                            Course5ModuleCard(module: module) {
+                                selectedModule = module
+                            }
+                        }
+                    }
+                    .padding()
+                }
+                
+                Spacer()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .sheet(item: $selectedModule) { module in
+            // Convert Course5Module to AdvancedCourse for UnifiedVideoPlayer
+            let advancedCourse = AdvancedCourse(
+                id: "adv_\(module.id)",
+                title: module.title,
+                description: module.description,
+                prerequisiteCourseId: "course_5",
+                muxPlaybackId: module.muxPlaybackId,
+                estimatedHours: Double(module.estimatedMinutes) / 60.0,
+                certificateType: .evFundamentalsAdvanced,
+                xpReward: module.xpReward,
+                skillLevel: .master
+            )
+            
+            UnifiedVideoPlayer(advancedCourse: advancedCourse)
+        }
+    }
+}
+
+// MARK: - Course 5 Module Data Model
+struct Course5Module: Identifiable {
+    let id: String
+    let title: String
+    let description: String
+    let muxPlaybackId: String
+    let estimatedMinutes: Int
+    let xpReward: Int
+    
+    var formattedDuration: String {
+        return "\(estimatedMinutes) min"
+    }
+}
+
+// MARK: - Course 5 Module Card
+struct Course5ModuleCard: View {
+    let module: Course5Module
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(module.title)
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                            .multilineTextAlignment(.leading)
+                        
+                        Text("Advanced Module • \(module.formattedDuration)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(spacing: 4) {
+                        Image(systemName: "star.fill")
+                            .font(.title2)
+                            .foregroundColor(.orange)
+                        
+                        Text("\(module.xpReward) XP")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.orange)
+                    }
+                }
+                
+                Text(module.description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(.gray.opacity(0.05))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(.orange.opacity(0.3), lineWidth: 1)
+            )
+            .cornerRadius(12)
+        }
+        .buttonStyle(.plain)
     }
 }
 

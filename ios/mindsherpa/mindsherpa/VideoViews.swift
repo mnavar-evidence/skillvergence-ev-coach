@@ -411,13 +411,14 @@ struct CourseDetailView: View {
     }
     
     private func formatHours(_ hours: Double) -> String {
-        let roundedHours = hours.rounded()
-        if roundedHours == 1 {
-            return "1h"
-        } else if roundedHours < 1 {
+        if hours < 1.0 {
             let minutes = Int(hours * 60)
             return "\(minutes)m"
+        } else if hours == 1.0 {
+            return "1h"
         } else {
+            // Only round when >= 1 hour to avoid showing 1h when it's really 46 minutes
+            let roundedHours = hours.rounded()
             return "\(Int(roundedHours))h"
         }
     }

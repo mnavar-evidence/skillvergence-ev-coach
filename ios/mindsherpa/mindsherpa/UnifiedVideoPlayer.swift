@@ -87,21 +87,17 @@ struct UnifiedVideoPlayer: View {
     
     // Initialize with either basic video or advanced course
     init(video: Video) {
-        print("🎬 UnifiedVideoPlayer init with video: \(video.id) - \(video.title)")
         self.video = video
         self.advancedCourse = nil
     }
     
     init(advancedCourse: AdvancedCourse) {
-        print("🎬 UnifiedVideoPlayer init with advanced course: \(advancedCourse.id) - \(advancedCourse.title)")
         self.video = nil
         self.advancedCourse = advancedCourse
     }
     
     var body: some View {
-        let _ = print("🎬 UnifiedVideoPlayer body rendered - videoId: \(videoId), playbackId: \(playbackId.isEmpty ? "EMPTY" : "SET")")
-        
-        return VStack(spacing: 0) {
+        VStack(spacing: 0) {
             // Video Player Area
             ZStack {
                 if let playerViewController = playerViewController {
@@ -243,12 +239,9 @@ struct UnifiedVideoPlayer: View {
     
     private func setupPlayer() {
         guard !playbackId.isEmpty else {
-            print("❌ No Mux playback ID available for video: \(videoId)")
             isLoading = false
             return
         }
-        
-        print("🎬 Setting up Unified Mux Player with ID: \(playbackId)")
         
         Task {
             do {
@@ -280,7 +273,6 @@ struct UnifiedVideoPlayer: View {
                 loadSavedProgress()
                 
             } catch {
-                print("❌ Failed to setup Unified Mux Player: \(error)")
                 await MainActor.run {
                     self.isLoading = false
                 }
@@ -333,8 +325,6 @@ struct UnifiedVideoPlayer: View {
     }
     
     private func cleanupPlayer() {
-        print("🧹 Cleaning up Unified Mux Player")
-        
         // Stop progress timer
         stopProgressTimer()
         
@@ -393,15 +383,12 @@ struct UnifiedVideoPlayer: View {
                 let seekTime = CMTime(seconds: savedTime, preferredTimescale: 1)
                 player.seek(to: seekTime)
                 
-                print("⏯️ Resumed video at \(Int(savedTime)) seconds")
             }
         }
     }
     
     private func saveProgress() {
         // Progress is automatically saved via updateProgress() method
-        print("💾 Saving video progress: \(currentTime)s of \(duration)s")
-        
         // Ensure final progress update
         if currentTime > 0 && duration > 0 {
             progressStore.updateVideoProgress(
@@ -418,14 +405,8 @@ struct UnifiedVideoPlayer: View {
         // Calculate XP award
         let baseXP = isAdvancedCourse ? (advancedCourse?.xpReward ?? 150) : 50
         let tierMultiplier = SubscriptionManager.shared.currentTier.xpMultiplier
-        let xpAwarded = Int(Double(baseXP) * tierMultiplier)
+        let _ = Int(Double(baseXP) * tierMultiplier)
         
-        let videoType = isAdvancedCourse ? "Advanced course" : "Course video"
-        print("\(videoType) completed! Awarded \(xpAwarded) XP")
-        
-        if isAdvancedCourse, let certificate = advancedCourse?.certificateType {
-            print("🏆 Certificate earned: \(certificate.displayName)")
-        }
     }
     
     private func formatTime(_ time: Double) -> String {

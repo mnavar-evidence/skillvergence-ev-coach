@@ -81,11 +81,6 @@ public class ProgressStore: ObservableObject {
         let watchPercentage = duration > 0 ? watchedSec / duration : 0
         let completed = watchPercentage >= 0.85 || (duration - currentTime <= 30 && watchPercentage >= 0.70)
         
-        // Debug logging (remove in production)
-        print("📹 Progress Update - Video: \(videoId.prefix(8))")
-        print("   Position: \(Int(previousLastPosition))s → \(Int(currentTime))s (diff: \(String(format: "%.1f", timeDiff))s)")
-        print("   Playing: \(isPlaying) | Reasonable: \(isReasonableProgress) | New time: +\(String(format: "%.1f", newWatchingTime))s")
-        print("   Watched: \(Int(previousWatchedSec))s → \(Int(watchedSec))s (\(Int(watchPercentage*100))%) | Completed: \(completed)")
         
         let record = VideoProgressRecord(
             videoId: videoId,

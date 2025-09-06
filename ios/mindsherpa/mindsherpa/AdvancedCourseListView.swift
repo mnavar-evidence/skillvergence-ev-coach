@@ -31,10 +31,23 @@ struct AdvancedCourseListView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Text("Advanced Courses")
                         .font(.headline)
                         .fontWeight(.semibold)
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Text("5 courses")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(.gray.opacity(0.15))
+                        )
                 }
             }
             .sheet(item: $selectedCourse) { course in

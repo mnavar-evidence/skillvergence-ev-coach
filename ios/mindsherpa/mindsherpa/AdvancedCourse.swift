@@ -144,79 +144,57 @@ extension AdvancedCourse {
     static let sampleAdvancedCourses: [AdvancedCourse] = [
         AdvancedCourse(
             id: "adv_1",
-            title: "Advanced EV Fundamentals Deep Dive",
-            description: "Master-level understanding of electric vehicle principles, advanced motor theory, and cutting-edge EV technology.",
-            prerequisiteCourseId: "course_1", // Requires basic Course 1 (1.1-1.7) completion
+            title: "EV Safety Pyramid - Advanced Certification",
+            description: "Master-level 7-module certification covering advanced EV safety protocols, risk assessment, and professional safety management. Maps to 7 individual advanced modules from basic EV Safety Pyramid course.",
+            prerequisiteCourseId: "course_1", // Requires basic Course 1 (1.1-1.7) completion - maps to 7 advanced modules
             muxPlaybackId: "6nHzce7SgTCbcBD00UoMqPdZqobvlBMyJUqnhvzsvIns",
-            estimatedHours: 3.5,
+            estimatedHours: 7.0, // 7 modules × 1 hour each
             certificateType: .evFundamentalsAdvanced,
-            xpReward: 200,
+            xpReward: 700, // 7 modules × 100 XP each
             skillLevel: .expert
         ),
         AdvancedCourse(
             id: "adv_2", 
-            title: "Battery Systems Expert Certification",
-            description: "Deep technical dive into battery chemistry, thermal management, and advanced BMS diagnostics.",
-            prerequisiteCourseId: "course_2", // Requires basic Course 2 (2.1-2.4) completion
+            title: "High Voltage Hazards - Expert Certification",
+            description: "Advanced 4-module certification covering expert-level high voltage safety protocols, hazard mitigation, and professional risk management strategies. Maps to 4 individual advanced modules.",
+            prerequisiteCourseId: "course_2", // Requires basic Course 2 (2.1-2.4) completion - maps to 4 advanced modules
             muxPlaybackId: "UPHJQd9u5KDcadeIUwbeRk2q700ZVxJlhJ4UpA1e37aU",
-            estimatedHours: 4.0,
+            estimatedHours: 4.0, // 4 modules × 1 hour each
             certificateType: .batterySystemsExpert,
-            xpReward: 250,
+            xpReward: 400, // 4 modules × 100 XP each
             skillLevel: .expert
         ),
         AdvancedCourse(
             id: "adv_3",
-            title: "Charging Infrastructure Specialist",
-            description: "Master DC fast charging, grid integration, and advanced charging system troubleshooting.",
-            prerequisiteCourseId: "course_3", // Requires basic Course 3 (3.1-3.2) completion
+            title: "Electrical Shock Protection - Master Certification",
+            description: "Expert-level 2-module certification covering advanced electrical shock protection systems, professional grounding techniques, and master-class safety implementations. Maps to 2 individual advanced modules.",
+            prerequisiteCourseId: "course_3", // Requires basic Course 3 (3.1-3.2) completion - maps to 2 advanced modules
             muxPlaybackId: "noM3WWJr6Q43t6eGJ6JJ5VUzNnSv2IW3UcNs2601b02is", 
-            estimatedHours: 3.0,
+            estimatedHours: 2.0, // 2 modules × 1 hour each
             certificateType: .chargingInfrastructureSpecialist,
-            xpReward: 200,
+            xpReward: 200, // 2 modules × 100 XP each
             skillLevel: .expert
         ),
         AdvancedCourse(
             id: "adv_4",
-            title: "Advanced Motor Control Systems",
-            description: "Expert-level motor control algorithms, inverter design, and performance optimization techniques.",
-            prerequisiteCourseId: "course_4", // Requires basic Course 4 (4.1-4.2) completion
+            title: "High Voltage PPE - Professional Certification",
+            description: "Advanced 2-module certification covering professional-grade PPE selection, expert safety equipment usage, and master-level protection protocols for EV technicians. Maps to 2 individual advanced modules.",
+            prerequisiteCourseId: "course_4", // Requires basic Course 4 (4.1-4.2) completion - maps to 2 advanced modules
             muxPlaybackId: "cZ5rxX2013jHbgsxIBDKEHtdJyB4aTYNkLG5hB4GWmm4",
-            estimatedHours: 3.5,
+            estimatedHours: 2.0, // 2 modules × 1 hour each
             certificateType: .motorControlAdvanced,
-            xpReward: 225,
+            xpReward: 200, // 2 modules × 100 XP each
             skillLevel: .master
         ),
         AdvancedCourse(
-            id: "adv_5_1",
-            title: "Introduction to Electric Vehicles - Advanced Deep Dive", 
-            description: "Comprehensive exploration of EV history, powertrain fundamentals, charging infrastructure standards, and environmental impact analysis. Master the evolution from conventional to electric vehicles and understand key EV components at an expert level.",
-            prerequisiteCourseId: "course_5", // Requires basic Course 5 (5.1-5.3) completion
+            id: "adv_5",
+            title: "Inside an Electric Car - Complete Technical Mastery", 
+            description: "Comprehensive 3-module advanced series covering EV fundamentals, energy storage systems, and motor control architecture. Master the complete technical journey from basic EV principles to advanced powertrain design.",
+            prerequisiteCourseId: "course_5", // Requires basic Course 5 (5.1-5.3) completion - maps to 3 advanced modules
             muxPlaybackId: "lJjDsHFQ1J5c9tcfy3Bh6OP00SbOQcWMEJ243Lk102Yyk",
-            estimatedHours: 1.5,
+            estimatedHours: 4.5, // 3 modules × 1.5 hours each
             certificateType: .evFundamentalsAdvanced,
-            xpReward: 150,
-            skillLevel: .expert
-        ),
-        AdvancedCourse(
-            id: "adv_5_2",
-            title: "Electric Vehicle Energy Storage Systems - Expert Level",
-            description: "Advanced study of battery chemistry, cell technology, and thermal management systems. Deep dive into lithium-ion, LFP, and NMC technologies, BMS architecture, energy density concepts, and future battery innovations.",
-            prerequisiteCourseId: "course_5", // Requires basic Course 5 (5.1-5.3) completion
-            muxPlaybackId: "00KESDsUll4nd8vc88PV01OpJqH7tKC01kqNAgydDmdbx8",
-            estimatedHours: 1.5,
-            certificateType: .batterySystemsExpert,
-            xpReward: 150,
-            skillLevel: .expert
-        ),
-        AdvancedCourse(
-            id: "adv_5_3",
-            title: "EV Architecture, Motors & Controllers - Master Class",
-            description: "Master-level analysis of EV powertrain architectures, motor control systems, and regenerative braking. Explore permanent magnet vs induction motors, power electronics, efficiency optimization, and performance characteristics of advanced drivetrains.",
-            prerequisiteCourseId: "course_5", // Requires basic Course 5 (5.1-5.3) completion
-            muxPlaybackId: "5UtPR00oJZQUAJrnv701jdM7S02zmkCBWYI02lGqMiwbAn4",
-            estimatedHours: 1.5,
-            certificateType: .motorControlAdvanced,
-            xpReward: 150,
+            xpReward: 450, // 3 modules × 150 XP each
             skillLevel: .master
         )
     ]

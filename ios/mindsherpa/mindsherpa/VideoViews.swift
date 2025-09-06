@@ -568,7 +568,7 @@ struct VideoRowView: View {
                     Spacer()
                     // Progress bar at bottom of thumbnail
                     if let progressRecord = ProgressStore.shared.videoProgress(videoId: videoId) {
-                        let progress = progressRecord.completed ? 1.0 : (progressRecord.lastPositionSec > 0 ? progressRecord.lastPositionSec / Double(videoDuration) : 0.0)
+                        let progress = progressRecord.completed ? 1.0 : (progressRecord.lastPositionSec > 0 && videoDuration > 0 ? progressRecord.lastPositionSec / Double(videoDuration) : 0.0)
                         if progress > 0 {
                             GeometryReader { geometry in
                                 HStack(spacing: 0) {
@@ -618,7 +618,7 @@ struct VideoRowView: View {
                                     .foregroundColor(.green)
                                     .fontWeight(.medium)
                             }
-                        } else if progressRecord.lastPositionSec > 0 {
+                        } else if progressRecord.lastPositionSec > 0 && videoDuration > 0 {
                             Text("\(Int(progressRecord.lastPositionSec / Double(videoDuration) * 100))%")
                                 .font(.caption)
                                 .foregroundColor(.blue)

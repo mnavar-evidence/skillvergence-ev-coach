@@ -896,14 +896,11 @@ class EVCoachViewModel: ObservableObject {
         
         // Add current video context if available
         if let currentVideo = currentVideo {
-            contextParts.append("Current video: \(currentVideo.title) - \(currentVideo.description)")
+            contextParts.append("Currently watching: \(currentVideo.title)")
         }
         
-        // Add course titles and descriptions
-        let courseContext = courses.map { "Course: \($0.title) - \($0.description)" }.joined(separator: ". ")
-        if !courseContext.isEmpty {
-            contextParts.append(courseContext)
-        }
+        // Add focused context about EV training
+        contextParts.append("You are an AI assistant for an EV technician training app covering high voltage safety, electrical fundamentals, EV system components, charging systems, and advanced EV technologies.")
         
         return contextParts.joined(separator: ". ")
     }

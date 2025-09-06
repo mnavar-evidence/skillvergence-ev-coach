@@ -218,7 +218,7 @@ struct UnifiedVideoPlayer: View {
                                 .foregroundColor(.secondary)
                         }
                         
-                        ProgressView(value: currentTime, total: duration)
+                        ProgressView(value: min(currentTime, duration), total: duration)
                             .progressViewStyle(LinearProgressViewStyle(tint: isAdvancedCourse ? .orange : .blue))
                             .scaleEffect(y: 0.8)
                     }

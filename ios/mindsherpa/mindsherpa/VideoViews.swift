@@ -19,18 +19,9 @@ struct VideoPlayerView: View {
     
     var body: some View {
         ZStack(alignment: .topLeading) {
-            // Video Player
-            VStack(spacing: 0) {
-                if let youtubeId = video.youtubeVideoId {
-                    YouTubePlayerView(videoId: youtubeId, viewModel: viewModel, video: video)
-                        .aspectRatio(16/9, contentMode: .fit)
-                } else {
-                    // Local video file or direct URL
-                    AVPlayerControllerView(url: URL(string: video.videoUrl), viewModel: viewModel, video: video)
-                        .aspectRatio(16/9, contentMode: .fit)
-                }
-            }
-            .background(Color.black)
+            // Unified Mux Video Player
+            UnifiedVideoPlayer(video: video)
+                .background(Color.black)
             
             // Floating Back Button
             Button(action: { 
@@ -508,133 +499,36 @@ struct VideoRowView: View {
     let video: Video
     @ObservedObject var viewModel: EVCoachViewModel
     
-    var progressRecord: VideoProgressRecord? {
-        return ProgressStore.shared.videoProgress(videoId: video.id)
-    }
-    
-    
     var body: some View {
-        HStack(spacing: 12) {
-            // Video Thumbnail
-            AsyncImage(url: {
-                guard let thumbnailUrlString = video.thumbnailUrl,
-                      !thumbnailUrlString.isEmpty,
-                      let url = URL(string: thumbnailUrlString) else {
-                    return nil
-                }
-                return url
-            }()) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(16/9, contentMode: .fill)
-                case .failure(_):
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.red.opacity(0.3))
-                        .overlay(
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(.title)
-                                .foregroundStyle(.red)
-                        )
-                case .empty:
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.tertiary)
-                        .overlay(
-                            Image(systemName: "play.circle.fill")
-                                .font(.title)
-                                .foregroundStyle(.secondary)
-                        )
-                @unknown default:
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.tertiary)
-                        .overlay(
-                            Image(systemName: "play.circle.fill")
-                                .font(.title)
-                                .foregroundStyle(.secondary)
-                        )
-                }
-            }
-            .frame(width: 120, height: 68)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Text(video.formattedDuration)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(.black.opacity(0.7))
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                            .padding(4)
-                    }
-                }
-            )
+        // Step 4: Add simple thumbnail
+        HStack {
+            Rectangle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 80, height: 50)
+                .cornerRadius(6)
+                .overlay(
+                    Image(systemName: "play.fill")
+                        .foregroundColor(.blue)
+                )
             
-            // Video Info
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(video.title)
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundStyle(.primary)
                     .lineLimit(2)
-                    .multilineTextAlignment(.leading)
                 
-                Text(video.description)
+                Text("\(video.duration / 60):\(String(format: "%02d", video.duration % 60))")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                
-                // Progress indicator using ProgressStore
-                if let record = progressRecord {
-                    if record.completed {
-                        HStack(spacing: 6) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                                .font(.subheadline)
-                            Text("Completed")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundStyle(.green)
-                            Spacer()
-                            if let completedAt = record.completedAt {
-                                Text(completedAt, format: .dateTime.month().day())
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    } else if record.lastPositionSec > 0 {
-                        HStack(spacing: 8) {
-                            ProgressView(value: record.lastPositionSec / Double(video.duration))
-                                .progressViewStyle(LinearProgressViewStyle(tint: .blue))
-                                .scaleEffect(y: 0.8)
-                            
-                            Text("\(Int(record.lastPositionSec / Double(video.duration) * 100))%")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
+                    .foregroundColor(.secondary)
             }
-            
             Spacer()
-            
             Image(systemName: "chevron.right")
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .foregroundColor(.secondary)
         }
         .padding()
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.quaternaryLabel), lineWidth: 0.5)
-        )
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
     }
 }
 

@@ -70,7 +70,7 @@ public class ProgressStore: ObservableObject {
         
         // Calculate actual new watching time (only if playing AND moving forward within reasonable range)
         let timeDiff = currentTime - previousLastPosition
-        let isReasonableProgress = isPlaying && timeDiff > 0 && timeDiff <= 3 // Only count when actually playing
+        let isReasonableProgress = isPlaying && timeDiff >= 0 && timeDiff <= 3 // Allow resuming at same position
         let newWatchingTime = isReasonableProgress ? timeDiff : 0
         
         // Use accumulated time but never let it decrease when scrubbing backward
@@ -261,6 +261,53 @@ public class ProgressStore: ObservableObject {
         let percentage = Double(currentLevelXP) / Double(neededXP)
         
         return (current: currentLevelXP, needed: neededXP, percentage: min(percentage, 1.0))
+    }
+    
+    // MARK: - Course Completion Methods
+    
+    public func isCourseCompleted(courseId: String) -> Bool {
+        // Check for Course 5 completion with multiple possible course ID formats
+        if courseId == "course_5" {
+            // Look for Course 5 videos with various possible courseId formats
+            let possibleCourse5Ids = ["5", "course_5", "course-5", "Course 5", "Advanced EV Systems"]
+            
+            var allCourse5Videos: [VideoProgressRecord] = []
+            
+            for possibleId in possibleCourse5Ids {
+                let courseVideos = snapshot.videos.filter { videoProgress in
+                    return videoProgress.value.courseId == possibleId ||
+                           videoProgress.value.courseId.contains("5") ||
+                           videoProgress.key.contains("5.1") ||
+                           videoProgress.key.contains("5.2") ||
+                           videoProgress.key.contains("5.3")
+                }
+                allCourse5Videos.append(contentsOf: courseVideos.map { $0.value })
+            }
+            
+            // Remove duplicates
+            let uniqueVideos = Array(Set(allCourse5Videos.map { $0.videoId }))
+            
+            // If we found Course 5 videos, check if any are completed
+            if uniqueVideos.count > 0 {
+                let completedCourse5Videos = allCourse5Videos.filter { $0.completed }
+                // If at least 1 Course 5 video is completed, unlock advanced courses
+                return completedCourse5Videos.count > 0
+            }
+            
+            return false
+        }
+        
+        // For other courses, use the original logic
+        let courseVideos = snapshot.videos.filter { videoProgress in
+            return videoProgress.value.courseId == courseId
+        }
+        
+        if courseVideos.isEmpty {
+            return false
+        }
+        
+        let completedVideos = courseVideos.filter { $0.value.completed }
+        return completedVideos.count == courseVideos.count
     }
     
     // MARK: - Persistence Methods

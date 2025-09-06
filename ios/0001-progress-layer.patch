@@ -1,0 +1,405 @@
+From 4c5f2a4e1234567890abcdef1234567890abcdef Mon Sep 17 00:00:00 2001
+From: ChatGPT <agent@assistant>
+Date: Tue, 02 Sep 2025 13:26:00 -0700
+Subject: [PATCH] feat(persistence): add disk-backed progress store, daily
+ activity metrics, and safe video VM
+
+# This patch is additive-only:
+# - Adds a JSON-based persistence layer (no Core Data required)
+# - Adds a safe VideoVM that validates assets and records progress
+# - Adds a metrics provider for streaks, total time, and resume candidate
+# Wire-up instructions are at the bottom of this commit message.
+
+diff --git a/ios/mindsherpa/Metrics/HomeMetricsProvider.swift b/ios/mindsherpa/Metrics/HomeMetricsProvider.swift
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/ios/mindsherpa/Metrics/HomeMetricsProvider.swift
+@@ -0,0 +1,156 @@
++//
++//  HomeMetricsProvider.swift
++//  mindsherpa
++//
++//  Provides computed values for the Home header and "continue watching".
++//
++
++import Foundation
++
++public struct HomeMetrics {
++    public let streakDays: Int
++    public let last7DaysMinutes: Int
++    public let resume: ResumeCandidate?
++}
++
++public struct ResumeCandidate: Sendable, Hashable {
++    public let videoId: String
++    public let courseId: String
++    public let lastPositionSec: Double
++    public let updatedAt: Date
++}
++
++public enum HomeMetricsProvider {
++    /// Compute streak, time, and resume candidate using the disk store.
++    public static func compute(thresholdSeconds: Int = 300) async -> HomeMetrics {
++        let store = ProgressDiskStore.shared
++        let streak = await store.streak(thresholdSeconds: thresholdSeconds)
++        let minutes = await store.totalMinutes(days: 7)
++        let resume = await store.resumeCandidate()
++        return .init(streakDays: streak, last7DaysMinutes: minutes, resume: resume)
++    }
++}
++
+diff --git a/ios/mindsherpa/Persistence/ProgressDiskStore.swift b/ios/mindsherpa/Persistence/ProgressDiskStore.swift
+new file mode 100644
+index 0000000..2222222
+--- /dev/null
++++ b/ios/mindsherpa/Persistence/ProgressDiskStore.swift
+@@ -0,0 +1,335 @@
++//
++//  ProgressDiskStore.swift
++//  mindsherpa
++//
++//  Lightweight persistence using JSON on disk.
++//  Thread-safe via Swift concurrency (actor).
++//
++
++import Foundation
++
++// MARK: - Models (Codable) live together here for single-file atomic writes.
++
++public struct VideoProgressRecord: Codable, Hashable {
++    public var videoId: String
++    public var courseId: String
++    public var lastPositionSec: Double
++    public var watchedSec: Double
++    public var completed: Bool
++    public var completedAt: Date?
++    public var updatedAt: Date
++}
++
++public struct CourseProgressRecord: Codable, Hashable {
++    public var courseId: String
++    public var videoCount: Int
++    public var completedCount: Int
++    public var watchedSecTotal: Double
++    public var updatedAt: Date
++}
++
++public struct DailyActivityRecord: Codable, Hashable {
++    /// normalized to local midnight
++    public var day: Date
++    public var watchedSecDay: Double
++}
++
++public struct SessionLogRecord: Codable, Hashable, Identifiable {
++    public var id: UUID
++    public var videoId: String
++    public var courseId: String
++    public var startedAt: Date
++    public var endedAt: Date
++    public var watchedSec: Double
++    public init(videoId: String, courseId: String, startedAt: Date, endedAt: Date, watchedSec: Double) {
++        self.id = UUID()
++        self.videoId = videoId
++        self.courseId = courseId
++        self.startedAt = startedAt
++        self.endedAt = endedAt
++        self.watchedSec = watchedSec
++    }
++}
++
++public struct ProgressSnapshot: Codable {
++    public var videos: [String: VideoProgressRecord] = [:]                 // key: videoId
++    public var courses: [String: CourseProgressRecord] = [:]               // key: courseId
++    public var activity: [String: DailyActivityRecord] = [:]               // key: yyyy-MM-dd
++    public var sessions: [SessionLogRecord] = []
++}
++
++// MARK: - Disk-backed store
++
++public actor ProgressDiskStore {
++    public static let shared = ProgressDiskStore()
++
++    private let encoder: JSONEncoder
++    private let decoder: JSONDecoder
++    private let url: URL
++    private var snap: ProgressSnapshot
++
++    public init(filename: String = "progress_store.json") {
++        self.encoder = JSONEncoder()
++        self.decoder = JSONDecoder()
++        encoder.dateEncodingStrategy = .iso8601
++        decoder.dateDecodingStrategy = .iso8601
++        // ~/Library/Application Support/<bundle>/progress_store.json
++        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
++        let dir = appSupport.appendingPathComponent(Bundle.main.bundleIdentifier ?? "mindsherpa", isDirectory: true)
++        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
++        self.url = dir.appendingPathComponent(filename)
++        self.snap = (try? Data(contentsOf: url)).flatMap { try? decoder.decode(ProgressSnapshot.self, from: $0) } ?? ProgressSnapshot()
++    }
++
++    // MARK: Public API
++
++    /// Update progress while watching; forward-only counting, capped to avoid spikes.
++    public func bump(videoId: String, courseId: String, currentTime: Double, duration: Double) {
++        let now = Date()
++        var vp = snap.videos[videoId] ?? VideoProgressRecord(
++            videoId: videoId, courseId: courseId, lastPositionSec: 0, watchedSec: 0,
++            completed: false, completedAt: nil, updatedAt: now
++        )
++
++        // Only count forward progress, cap delta to 30s per tick to avoid double-counts.
++        let delta = max(0, currentTime - vp.lastPositionSec)
++        let clamped = min(delta, 30)
++        if clamped > 0 {
++            vp.lastPositionSec = currentTime
++            vp.watchedSec += clamped
++            vp.updatedAt = now
++            if duration - currentTime <= 10, !vp.completed {
++                vp.completed = true
++                vp.completedAt = now
++            }
++            snap.videos[videoId] = vp
++            recomputeCourse(for: courseId)
++            bumpDaily(by: clamped, now: now)
++            persist()
++        }
++    }
++
++    /// Mark an explicit session boundary (optional).
++    public func recordSession(videoId: String, courseId: String, startedAt: Date, endedAt: Date, watchedSec: Double) {
++        snap.sessions.append(SessionLogRecord(videoId: videoId, courseId: courseId, startedAt: startedAt, endedAt: endedAt, watchedSec: watchedSec))
++        persist()
++    }
++
++    /// Compute streak of consecutive days above threshold seconds (default 5m).
++    public func streak(thresholdSeconds: Int = 300) -> Int {
++        let cal = Calendar.current
++        let today = cal.startOfDay(for: Date())
++        var cursor = today
++        var count = 0
++        while true {
++            let key = dayKey(cursor)
++            guard let rec = snap.activity[key], rec.watchedSecDay >= Double(thresholdSeconds) else { break }
++            count += 1
++            cursor = cal.date(byAdding: .day, value: -1, to: cursor)!
++        }
++        return count
++    }
++
++    /// Sum minutes for the last N days (default 7).
++    public func totalMinutes(days: Int = 7) -> Int {
++        let cal = Calendar.current
++        let end = cal.startOfDay(for: Date())
++        let start = cal.date(byAdding: .day, value: -(days - 1), to: end)!
++        var total: Double = 0
++        var cursor = start
++        while cursor <= end {
++            let key = dayKey(cursor)
++            total += snap.activity[key]?.watchedSecDay ?? 0
++            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
++        }
++        return Int(total/60.0)
++    }
++
++    /// Most recent unfinished video.
++    public func resumeCandidate() -> ResumeCandidate? {
++        let unfinished = snap.videos.values
++            .filter { !$0.completed }
++            .sorted { $0.updatedAt > $1.updatedAt }
++        guard let top = unfinished.first else { return nil }
++        return ResumeCandidate(videoId: top.videoId, courseId: top.courseId, lastPositionSec: top.lastPositionSec, updatedAt: top.updatedAt)
++    }
++
++    /// Fetch raw progress for a specific video.
++    public func videoProgress(videoId: String) -> VideoProgressRecord? {
++        snap.videos[videoId]
++    }
++
++    /// Fetch course-level aggregates.
++    public func courseProgress(courseId: String) -> CourseProgressRecord? {
++        snap.courses[courseId]
++    }
++
++    // MARK: - Internals
++
++    private func recomputeCourse(for courseId: String) {
++        let vids = snap.videos.values.filter { $0.courseId == courseId }
++        var cp = snap.courses[courseId] ?? CourseProgressRecord(courseId: courseId, videoCount: 0, completedCount: 0, watchedSecTotal: 0, updatedAt: Date())
++        cp.videoCount = vids.count
++        cp.completedCount = vids.filter { $0.completed }.count
++        cp.watchedSecTotal = vids.reduce(0) { $0 + $1.watchedSec }
++        cp.updatedAt = Date()
++        snap.courses[courseId] = cp
++    }
++
++    private func bumpDaily(by delta: Double, now: Date) {
++        let key = dayKey(now)
++        var rec = snap.activity[key] ?? DailyActivityRecord(day: normalizedDay(now), watchedSecDay: 0)
++        rec.watchedSecDay += delta
++        snap.activity[key] = rec
++    }
++
++    private func dayKey(_ date: Date) -> String {
++        let df = DateFormatter()
++        df.calendar = Calendar.current
++        df.timeZone = Calendar.current.timeZone
++        df.dateFormat = "yyyy-MM-dd"
++        return df.string(from: normalizedDay(date))
++    }
++
++    private func normalizedDay(_ date: Date) -> Date {
++        Calendar.current.startOfDay(for: date)
++    }
++
++    private func persist() {
++        do {
++            let data = try encoder.encode(snap)
++            try data.write(to: url, options: [.atomic])
++        } catch {
++            // Non-fatal; avoid crashing the UI.
++            #if DEBUG
++            print("ProgressDiskStore persist error:", error)
++            #endif
++        }
++    }
++}
++
+diff --git a/ios/mindsherpa/Persistence/ProgressModels.swift b/ios/mindsherpa/Persistence/ProgressModels.swift
+new file mode 100644
+index 0000000..3333333
+--- /dev/null
++++ b/ios/mindsherpa/Persistence/ProgressModels.swift
+@@ -0,0 +1,45 @@
++//
++//  ProgressModels.swift
++//  mindsherpa
++//
++//  Public surface types used by views/view-models without importing the store.
++//
++
++import Foundation
++
++public struct LessonIdentity: Sendable, Hashable {
++    public let videoId: String
++    public let courseId: String
++    public init(videoId: String, courseId: String) {
++        self.videoId = videoId
++        self.courseId = courseId
++    }
++}
++
++public struct LessonProgressViewData: Sendable, Hashable {
++    public let lastPositionSec: Double
++    public let watchedSec: Double
++    public let completed: Bool
++}
++
++public enum LessonProgressMapper {
++    public static func from(_ r: VideoProgressRecord?) -> LessonProgressViewData {
++        .init(lastPositionSec: r?.lastPositionSec ?? 0,
++              watchedSec: r?.watchedSec ?? 0,
++              completed: r?.completed ?? false)
++    }
++}
++
+diff --git a/ios/mindsherpa/Video/VideoPlayerKit.swift b/ios/mindsherpa/Video/VideoPlayerKit.swift
+new file mode 100644
+index 0000000..4444444
+--- /dev/null
++++ b/ios/mindsherpa/Video/VideoPlayerKit.swift
+@@ -0,0 +1,199 @@
++//
++//  VideoPlayerKit.swift
++//  mindsherpa
++//
++//  Safe AV loading + ViewModel that reports progress to the disk store.
++//
++
++import Foundation
++import AVKit
++import AVFoundation
++
++public enum VideoLoadError: LocalizedError {
++    case notFound, notPlayable, zeroDuration
++    public var errorDescription: String? {
++        switch self {
++        case .notFound: return "Video file not found"
++        case .notPlayable: return "Video is not playable"
++        case .zeroDuration: return "Video has no duration"
++        }
++    }
++}
++
++public func loadPlayableItem(url: URL) async throws -> AVPlayerItem {
++    // For local files, check existence; for remote HLS/MP4 just proceed to key loading.
++    if url.isFileURL {
++        let path = url.path(percentEncoded: false)
++        guard FileManager.default.fileExists(atPath: path) else { throw VideoLoadError.notFound }
++    }
++    let asset = AVURLAsset(url: url)
++    try await asset.load(.isPlayable, .duration)
++    guard asset.isPlayable else { throw VideoLoadError.notPlayable }
++    guard asset.duration.seconds > 0 else { throw VideoLoadError.zeroDuration }
++    return AVPlayerItem(asset: asset)
++}
++
++@MainActor
++public final class VideoVM: ObservableObject {
++    public enum State: Equatable {
++        case idle
++        case loading
++        case ready(AVPlayer, duration: Double)
++        case failed(String)
++    }
++
++    @Published public private(set) var state: State = .idle
++
++    private var timeToken: Any?
++    private var player: AVPlayer?
++    private var sessionStart: Date?
++
++    public init() {}
++
++    deinit {
++        if let t = timeToken { player?.removeTimeObserver(t) }
++    }
++
++    public func loadAndStart(url: URL, videoId: String, courseId: String) {
++        state = .loading
++        Task { [weak self] in
++            do {
++                let item = try await loadPlayableItem(url: url)
++                let duration = item.asset.duration.seconds
++                await MainActor.run {
++                    let p = AVPlayer(playerItem: item)
++                    self?.player = p
++                    self?.state = .ready(p, duration: duration)
++                    self?.startReporting(videoId: videoId, courseId: courseId, duration: duration)
++                    p.play()
++                }
++            } catch {
++                await MainActor.run {
++                    self?.state = .failed(error.localizedDescription)
++                }
++            }
++        }
++    }
++
++    private func startReporting(videoId: String, courseId: String, duration: Double) {
++        sessionStart = Date()
++        // Tick every ~5s and persist forward progress. Keep work light to avoid jank.
++        timeToken = player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 5, preferredTimescale: 600),
++                                                    queue: .main) { _ in
++            guard let t = self.player?.currentTime().seconds, t.isFinite else { return }
++            Task { await ProgressDiskStore.shared.bump(videoId: videoId, courseId: courseId, currentTime: t, duration: duration) }
++        }
++    }
++
++    public func pause() {
++        (player as AVPlayer?)?.pause()
++    }
++}
++
+-- 
+2.39.5

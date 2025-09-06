@@ -35,12 +35,12 @@ struct ContentView: View {
                         .tag(0)
                     PodcastView(viewModel: viewModel)
                         .tag(1)
-                    Text("Mind Map View - Coming Soon")
+                    AdvancedCourseListView()
                         .tag(2)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 .onChange(of: selectedTab) { oldValue, newValue in
-                    let tabNames = ["Video", "Podcast", "Mind-Map"]
+                    let tabNames = ["Video", "Podcast", "Premium"]
                     let tabName = tabNames[safe: newValue] ?? "Unknown"
                     analyticsManager.track(.tabSwitched(from: oldValue, to: newValue, tabName: tabName))
                     previousTab = newValue

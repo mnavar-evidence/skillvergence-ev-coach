@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		057CA3B42E6A3D780077FF95 /* MuxPlayerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 057CA3B32E6A3D780077FF95 /* MuxPlayerSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		05E47D8F2E5E737F0055B115 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				057CA3B42E6A3D780077FF95 /* MuxPlayerSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = mindsherpa;
 			packageProductDependencies = (
+				057CA3B32E6A3D780077FF95 /* MuxPlayerSwift */,
 			);
 			productName = mindsherpa;
 			productReference = 05E47D812E5E737D0055B115 /* mindsherpa.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 05E47D782E5E737D0055B115;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				057CA3B22E6A3D3E0077FF95 /* XCRemoteSwiftPackageReference "mux-player-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 05E47D822E5E737D0055B115 /* Products */;
 			projectDirPath = "";
@@ -558,6 +567,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		057CA3B22E6A3D3E0077FF95 /* XCRemoteSwiftPackageReference "mux-player-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/muxinc/mux-player-swift";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		057CA3B32E6A3D780077FF95 /* MuxPlayerSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 057CA3B22E6A3D3E0077FF95 /* XCRemoteSwiftPackageReference "mux-player-swift" */;
+			productName = MuxPlayerSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 05E47D792E5E737D0055B115 /* Project object */;
 }

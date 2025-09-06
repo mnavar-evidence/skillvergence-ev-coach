@@ -102,16 +102,15 @@ struct Video: Codable, Identifiable {
     let title: String
     let description: String
     let duration: Int // Duration in seconds (backend provides this)
-    let videoUrl: String // Supports YouTube URLs and local files
+    let videoUrl: String // Supports YouTube URLs and local files (legacy)
+    let muxPlaybackId: String? // Mux playback ID for streaming
     let sequenceOrder: Int?
     let courseId: String?
     
     // Enhanced properties with defaults - these won't be in JSON from backend
     var thumbnailUrl: String? { 
-        if let youtubeId = youtubeVideoId {
-            return "https://img.youtube.com/vi/\(youtubeId)/hqdefault.jpg"
-        }
-        return nil
+        // Use uploaded video thumbnails
+        return "https://skillvergence.mindsherpa.ai/assets/videos/thumbnails/\(id).jpg"
     }
     var transcript: String? { nil }
     var quiz: Quiz? { nil }
@@ -126,7 +125,7 @@ struct Video: Codable, Identifiable {
     
     // Custom CodingKeys to exclude progress properties from JSON decoding
     private enum CodingKeys: String, CodingKey {
-        case id, title, description, duration, videoUrl, sequenceOrder, courseId
+        case id, title, description, duration, videoUrl, muxPlaybackId, sequenceOrder, courseId
     }
     
     var formattedDuration: String {
@@ -140,14 +139,7 @@ struct Video: Codable, Identifiable {
         return min(Double(watchedSeconds) / Double(duration) * 100, 100)
     }
     
-    var youtubeVideoId: String? {
-        if videoUrl.contains("youtube.com/watch?v=") {
-            return videoUrl.components(separatedBy: "v=").last?.components(separatedBy: "&").first
-        } else if videoUrl.contains("youtu.be/") {
-            return videoUrl.components(separatedBy: "youtu.be/").last?.components(separatedBy: "?").first
-        }
-        return nil
-    }
+    // Legacy YouTube support removed - all videos now use Mux
     
     private func generateEndOfVideoQuiz() -> EndOfVideoQuiz? {
         // Generate end-of-video quiz based on video content

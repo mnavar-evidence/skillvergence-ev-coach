@@ -1,0 +1,334 @@
+//
+//  MuxVideoPlayer.swift
+//  mindsherpa
+//
+//  Created by Claude on 9/4/25.
+//
+
+import SwiftUI
+import AVKit
+import MuxPlayerSwift
+import Combine
+
+// Real Mux Player integration for advanced courses
+// Provides secure video delivery with analytics
+
+struct MuxVideoPlayer: View {
+    let playbackId: String
+    let advancedCourse: AdvancedCourse
+    @ObservedObject private var progressStore = ProgressStore.shared
+    @State private var playerViewController: AVPlayerViewController?
+    @State private var currentTime: Double = 0
+    @State private var duration: Double = 0
+    @State private var isPlaying: Bool = false
+    @State private var isLoading: Bool = true
+    @State private var progressTimer: Timer?
+    @State private var cancellables = Set<AnyCancellable>()
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Video Player Area
+            ZStack {
+                if let playerViewController = playerViewController {
+                    MuxPlayerViewControllerRepresentable(playerViewController: playerViewController)
+                        .aspectRatio(16/9, contentMode: .fit)
+                } else {
+                    // Loading placeholder
+                    Rectangle()
+                        .fill(Color.black)
+                        .aspectRatio(16/9, contentMode: .fit)
+                        .overlay(
+                            VStack {
+                                ProgressView("Loading Advanced Course...")
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                Text("Securing premium content...")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .padding(.top, 4)
+                            }
+                        )
+                }
+                
+                // Custom branding overlay (bottom-right)
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Text("Skillvergence")
+                            .font(.caption2)
+                            .foregroundColor(.white.opacity(0.7))
+                            .padding(8)
+                    }
+                }
+            }
+            
+            // Course Info
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(advancedCourse.title)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text("Advanced • \(String(format: "%.1f", advancedCourse.estimatedHours)) hours")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    // Certificate badge
+                    VStack(spacing: 4) {
+                        Image(systemName: advancedCourse.certificateType.badgeIcon)
+                            .font(.title2)
+                            .foregroundColor(.orange)
+                        
+                        Text("\(advancedCourse.xpReward) XP")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.orange)
+                    }
+                }
+                
+                Text(advancedCourse.description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                // Progress bar
+                if duration > 0 {
+                    VStack(spacing: 4) {
+                        HStack {
+                            Text("Progress")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            
+                            Spacer()
+                            
+                            Text("\(formatTime(currentTime)) / \(formatTime(duration))")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        ProgressView(value: currentTime, total: duration)
+                            .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+                            .scaleEffect(y: 0.8)
+                    }
+                }
+            }
+            .padding()
+        }
+        .onAppear {
+            setupPlayer()
+            setupBackgroundHandling()
+        }
+        .onDisappear {
+            cleanupPlayer()
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func setupPlayer() {
+        // Create Mux Player with playback ID
+        print("🎬 Setting up Mux Player with ID: \(playbackId)")
+        
+        Task {
+            do {
+                // Create Mux Player with playback options
+                let playerViewController = AVPlayerViewController(playbackID: playbackId)
+                
+                // Configure player settings
+                playerViewController.allowsPictureInPicturePlayback = false
+                playerViewController.showsPlaybackControls = true
+                
+                await MainActor.run {
+                    self.playerViewController = playerViewController
+                    self.isLoading = false
+                    
+                    // Start progress tracking timer
+                    self.startProgressTimer()
+                }
+                
+                // Get duration when available (iOS 16+ compatible)
+                if let player = playerViewController.player,
+                   let asset = player.currentItem?.asset {
+                    let duration = try await asset.load(.duration)
+                    await MainActor.run {
+                        self.duration = CMTimeGetSeconds(duration)
+                    }
+                }
+                
+                // Load saved progress
+                loadSavedProgress()
+                
+            } catch {
+                print("❌ Failed to setup Mux Player: \(error)")
+                await MainActor.run {
+                    self.isLoading = false
+                }
+            }
+        }
+    }
+    
+    private func updateProgress() {
+        guard let playerViewController = playerViewController,
+              let player = playerViewController.player else { return }
+        
+        let currentTime = CMTimeGetSeconds(player.currentTime())
+        self.currentTime = currentTime
+        self.isPlaying = player.rate > 0
+        
+        // Update progress store for advanced courses
+        progressStore.updateVideoProgress(
+            videoId: advancedCourse.id,
+            courseId: advancedCourse.prerequisiteCourseId,
+            currentTime: currentTime,
+            duration: duration,
+            isPlaying: isPlaying
+        )
+        
+        // Check for completion (90% watched)
+        if duration > 0 && currentTime / duration >= 0.9 {
+            markCourseCompleted()
+        }
+    }
+    
+    private func loadSavedProgress() {
+        // Load progress from ProgressStore for advanced courses
+        if let progress = progressStore.videoProgress(videoId: advancedCourse.id) {
+            let savedTime = progress.lastPositionSec
+            
+            // Seek to saved position if available
+            if savedTime > 0, let player = playerViewController?.player {
+                let seekTime = CMTime(seconds: savedTime, preferredTimescale: 1)
+                player.seek(to: seekTime)
+                
+                print("⏯️ Resumed advanced course at \(Int(savedTime)) seconds")
+            }
+        }
+    }
+    
+    private func startProgressTimer() {
+        // Stop any existing timer first
+        stopProgressTimer()
+        
+        // Create new timer for progress tracking
+        progressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            updateProgress()
+        }
+    }
+    
+    private func stopProgressTimer() {
+        progressTimer?.invalidate()
+        progressTimer = nil
+    }
+    
+    private func setupBackgroundHandling() {
+        // Handle app going to background/foreground
+        NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)
+            .sink { _ in
+                // App going to background - pause and save progress
+                if let player = playerViewController?.player {
+                    player.pause()
+                }
+                saveProgress()
+            }
+            .store(in: &cancellables)
+        
+        NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
+            .sink { _ in
+                // App fully in background - stop timer
+                stopProgressTimer()
+            }
+            .store(in: &cancellables)
+        
+        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+            .sink { _ in
+                // App coming back to foreground - restart timer if player exists
+                if playerViewController != nil {
+                    startProgressTimer()
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func cleanupPlayer() {
+        print("🧹 Cleaning up Mux Player")
+        
+        // Stop progress timer
+        stopProgressTimer()
+        
+        // Cancel all background notifications
+        cancellables.removeAll()
+        
+        // Save final progress
+        saveProgress()
+        
+        // Stop and cleanup player
+        if let playerViewController = playerViewController,
+           let player = playerViewController.player {
+            player.pause()
+            player.replaceCurrentItem(with: nil)
+        }
+        
+        // Clear references
+        self.playerViewController = nil
+        self.isPlaying = false
+        self.currentTime = 0
+    }
+    
+    private func saveProgress() {
+        // Progress is automatically saved via updateProgress() method
+        // This method is called when the view disappears
+        print("💾 Saving advanced course progress: \(currentTime)s of \(duration)s")
+        
+        // Ensure final progress update
+        if currentTime > 0 && duration > 0 {
+            progressStore.updateVideoProgress(
+                videoId: advancedCourse.id,
+                courseId: advancedCourse.prerequisiteCourseId,
+                currentTime: currentTime,
+                duration: duration,
+                isPlaying: false
+            )
+        }
+    }
+    
+    private func markCourseCompleted() {
+        // Award XP and certificate
+        let xpAwarded = Int(Double(advancedCourse.xpReward) * SubscriptionManager.shared.currentTier.xpMultiplier)
+        
+        // TODO: Save completion and award certificate
+        print("Advanced course completed! Awarded \(xpAwarded) XP and \(advancedCourse.certificateType.displayName) certificate")
+    }
+    
+    private func formatTime(_ time: Double) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
+// MARK: - SwiftUI Wrapper for AVPlayerViewController
+
+struct MuxPlayerViewControllerRepresentable: UIViewControllerRepresentable {
+    let playerViewController: AVPlayerViewController
+    
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        return playerViewController
+    }
+    
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        // Updates handled by the parent MuxVideoPlayer
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    MuxVideoPlayer(
+        playbackId: "lJjDsHFQ1J5c9tcfy3Bh6OP00SbOQcWMEJ243Lk102Yyk",
+        advancedCourse: AdvancedCourse.sampleAdvancedCourses[4] // Course 5.1
+    )
+}

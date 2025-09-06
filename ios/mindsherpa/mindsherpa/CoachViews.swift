@@ -173,6 +173,17 @@ struct LevelDetailsView: View {
             .navigationTitle("Your Progress")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        let level = progressStore.getCurrentLevel()
+                        let xp = progressStore.getTotalXP()
+                        let levelName = progressStore.getLevelTitle()
+                        ShareManager.shared.shareLevelAchievement(level: level, xp: xp, levelName: levelName)
+                    }) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         dismiss()
@@ -264,6 +275,9 @@ struct MediaTabsView: View {
             TabButton(title: "Podcast", isSelected: selectedTab == 1) {
                 selectedTab = 1
             }
+            TabButton(title: "Premium", isSelected: selectedTab == 2) {
+                selectedTab = 2
+            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 10)
@@ -277,15 +291,22 @@ struct TabButton: View {
     
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(isSelected ? .white : .primary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(
-                    isSelected ? Color.accentColor : Color.clear
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 20))
+            HStack(spacing: 4) {
+                if title == "Premium" {
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(isSelected ? .white : .orange)
+                }
+                Text(title)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(isSelected ? .white : .primary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(
+                isSelected ? Color.accentColor : Color.clear
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 20))
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.2), value: isSelected)
@@ -322,20 +343,22 @@ struct CoachHeaderView: View {
                 
                 Spacer()
                 
-                // Fast Track Button
-                Button {
-                    // Action for fast track
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "bolt.fill")
-                            .font(.caption)
-                        Text("Fast-Track 20m")
-                            .font(.caption.weight(.medium))
+                // Share streak button (only show if user has a streak > 1)
+                let currentStreak = progressStore.getCurrentStreak()
+                if currentStreak > 1 {
+                    Button {
+                        ShareManager.shared.shareLearningStreak(streakDays: currentStreak)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.caption)
+                            Text("\(currentStreak) days")
+                                .font(.caption.weight(.medium))
+                        }
                     }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-                .symbolRenderingMode(.hierarchical)
             }
             
             // Progress Metrics
@@ -683,6 +706,22 @@ struct CourseCardView: View {
                         .font(.caption)
                 }
                 .foregroundStyle(.secondary)
+                
+                // Share button for completed courses
+                if completionPercentage >= 100 {
+                    Button(action: {
+                        ShareManager.shared.shareCourseCompletion(
+                            courseName: course.title,
+                            totalVideos: course.videos.count,
+                            totalHours: course.estimatedHours
+                        )
+                    }) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                    }
+                    .buttonStyle(.plain)
+                }
                 
                 Image(systemName: "chevron.right")
                     .font(.caption)

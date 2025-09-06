@@ -392,7 +392,20 @@ struct CoursePrerequisiteView: View {
     
     private var prerequisiteCourseName: String {
         let courseNumber = course.prerequisiteCourseId.replacingOccurrences(of: "course_", with: "")
-        return "Course \(courseNumber)"
+        switch courseNumber {
+        case "1":
+            return "Basic Course - High Voltage Safety Foundation"
+        case "2":
+            return "Basic Course - Electrical Fundamentals"
+        case "3":
+            return "Basic Course - EV System Components"
+        case "4":
+            return "Basic Course - EV Charging Systems"
+        case "5":
+            return "Basic Course - Advanced EV Systems"
+        default:
+            return "Basic Course \(courseNumber)"
+        }
     }
     
     var body: some View {

@@ -203,6 +203,12 @@ struct PodcastCardView: View {
                         Text(formatDuration(podcast.duration))
                             .font(.caption)
                         
+                        if podcast.isMuxPodcast {
+                            Image(systemName: "waveform")
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                        }
+                        
                         if let progress = progress, progress.playbackPosition > 0 {
                             Spacer()
                             Text("Played \(formatDuration(progress.playbackPosition))")
@@ -395,12 +401,6 @@ struct PodcastPlayerView: View {
         isLoadingAudio = true
         audioError = nil
         
-        guard let url = URL(string: podcast.audioUrl) else { 
-            audioError = "Invalid audio URL"
-            isLoadingAudio = false
-            return 
-        }
-        
         // Configure audio session for playback on physical devices
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
@@ -409,7 +409,34 @@ struct PodcastPlayerView: View {
             print("Failed to set up audio session: \(error)")
         }
         
-        player = AVPlayer(url: url)
+        // Handle Mux URLs vs traditional URLs
+        if podcast.isMuxPodcast {
+            // For Mux podcasts, create AVPlayer using Mux streaming
+            guard let muxId = podcast.muxPlaybackId else {
+                audioError = "Invalid Mux playback ID"
+                isLoadingAudio = false
+                return
+            }
+            
+            // Create Mux player for audio streaming
+            do {
+                // Use Mux HLS URL for audio streaming
+                let muxHLSUrl = URL(string: "https://stream.mux.com/\(muxId).m3u8")!
+                player = AVPlayer(url: muxHLSUrl)
+            } catch {
+                audioError = "Failed to create Mux player: \(error.localizedDescription)"
+                isLoadingAudio = false
+                return
+            }
+        } else {
+            // Traditional audio URL handling
+            guard let url = URL(string: podcast.audioUrl) else { 
+                audioError = "Invalid audio URL"
+                isLoadingAudio = false
+                return 
+            }
+            player = AVPlayer(url: url)
+        }
         
         // Observe time updates
         timeObserver = player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 1, preferredTimescale: 600), queue: .main) { time in

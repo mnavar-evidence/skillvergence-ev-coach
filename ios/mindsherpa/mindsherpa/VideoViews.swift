@@ -484,15 +484,15 @@ struct VideoListView: View {
             ScrollView {
                 LazyVStack(spacing: 12) {
                     ForEach(videos, id: \.id) { video in
-                        NavigationLink(value: video) {
+                        NavigationLink {
+                            VideoPage(video: video, viewModel: viewModel)
+                        } label: {
                             VideoRowView(video: video)
                         }
+                        .buttonStyle(.plain)
                     }
                 }
             }
-        }
-        .navigationDestination(for: Video.self) { video in
-            VideoPage(video: video, viewModel: viewModel)
         }
     }
 }
@@ -572,6 +572,13 @@ struct VideoRowView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator), lineWidth: 0.5)
+        )
     }
 }
 

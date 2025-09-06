@@ -51,20 +51,18 @@ struct AdvancedCourseListView: View {
                 }
             }
             .sheet(item: $selectedCourse) { course in
-                // Course 5 has multiple modules - show module list
-                if course.prerequisiteCourseId == "course_5" {
-                    Course5ModuleListView(course: course)
-                } else {
-                    // Other courses have single advanced videos
-                    if course.isUnlocked && subscriptionManager.hasActiveSubscription {
-                        UnifiedVideoPlayer(advancedCourse: course)
+                // Check if course is purchased/unlocked
+                if subscriptionManager.isCourseUnlocked(courseId: course.id) {
+                    // Course is unlocked - show content
+                    if course.prerequisiteCourseId == "course_5" {
+                        Course5ModuleListView(course: course)
                     } else {
-                        PremiumPaywallView()
+                        UnifiedVideoPlayer(advancedCourse: course)
                     }
+                } else {
+                    // Course is locked - show paywall for this specific course
+                    CoursePaywallView(course: course)
                 }
-            }
-            .sheet(isPresented: $subscriptionManager.showPaywall) {
-                PremiumPaywallView()
             }
         }
     }
@@ -87,13 +85,18 @@ struct AdvancedCourseListView: View {
     }
     
     private func handleCourseSelection(_ course: AdvancedCourse) {
-        // Course 5 advanced videos are free for anyone who completed basic Course 5
-        if course.prerequisiteCourseId == "course_5" && course.isUnlocked {
-            selectedCourse = course
-        } else if subscriptionManager.hasActiveSubscription && course.isUnlocked {
+        // Check if prerequisite is completed first
+        if !course.isUnlocked {
+            // Prerequisite not completed - show message or handle differently
+            return
+        }
+        
+        // Check if this specific course is purchased
+        if subscriptionManager.isCourseUnlocked(courseId: course.id) {
             selectedCourse = course
         } else {
-            subscriptionManager.requestAdvancedAccess()
+            // Show paywall for this specific course
+            selectedCourse = course // This will trigger the paywall in the sheet
         }
     }
 }
@@ -339,22 +342,15 @@ struct AdvancedCourseCard: View {
     }
     
     @MainActor private var isUnlocked: Bool {
-        // For Course 5 advanced videos: unlock if basic Course 5 is completed (no subscription needed)
-        // For other advanced courses: require subscription AND prerequisite completion
-        
-        if course.prerequisiteCourseId == "course_5" {
-            // Course 5 advanced videos are free for anyone who completed basic Course 5
-            return course.isUnlocked
-        } else {
-            // Other advanced courses require subscription + prerequisite completion
-            return subscriptionManager.hasActiveSubscription && course.isUnlocked
-        }
+        // Check if prerequisite course is completed AND course is purchased
+        return course.isUnlocked && subscriptionManager.isCourseUnlocked(courseId: course.id)
     }
 }
 
-// MARK: - Placeholder Paywall View
+// MARK: - Course-Specific Paywall View
 
-struct PremiumPaywallView: View {
+struct CoursePaywallView: View {
+    let course: AdvancedCourse
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @State private var authorizationCode = ""
@@ -362,36 +358,54 @@ struct PremiumPaywallView: View {
     @State private var errorMessage = ""
     @State private var isValidating = false
     
-    private let masterCode = "654321"
+    // Unique codes for each course (in production, these would come from a server)
+    private var courseUnlockCodes: [String: String] {
+        [
+            "adv_1": "100001", // Course 1.0 High Voltage Vehicle Safety
+            "adv_2": "200002", // Course 2.0 Electrical Level 1
+            "adv_3": "300003", // Course 3.0 Electrical Level 2
+            "adv_4": "400004", // Course 4.0 Electric Vehicle Supply Equipment
+            "adv_5": "500005"  // Course 5.0 Introduction to Electric Vehicles
+        ]
+    }
     
     var body: some View {
         NavigationView {
             VStack(spacing: 24) {
-                // Header
+                // Header with course-specific info
                 VStack(spacing: 12) {
-                    Image(systemName: "key.fill")
+                    Image(systemName: course.certificateType.badgeIcon)
                         .font(.system(size: 48))
                         .foregroundColor(.orange)
                     
-                    Text("Access Advanced Courses")
+                    Text("Purchase Course")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    Text("Enter your authorization code to unlock expert-level content")
+                    Text(course.title)
                         .font(.headline)
+                        .fontWeight(.semibold)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Enter your purchase code to unlock this course")
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                 }
                 
-                // Features
-                VStack(alignment: .leading, spacing: 16) {
-                    ForEach(SubscriptionTier.premium.features, id: \.self) { feature in
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
-                            Text(feature)
-                                .font(.subheadline)
-                        }
+                // Course details
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "clock")
+                        Text("\(String(format: "%.1f", course.estimatedHours)) hours of content")
+                    }
+                    HStack {
+                        Image(systemName: "star.fill")
+                        Text("\(course.xpReward) XP reward")
+                    }
+                    HStack {
+                        Image(systemName: course.certificateType.badgeIcon)
+                        Text(course.skillLevel.displayName)
                     }
                 }
                 .padding()
@@ -403,7 +417,7 @@ struct PremiumPaywallView: View {
                 // Authorization Code Input
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Authorization Code")
+                        Text("Course Purchase Code")
                             .font(.subheadline)
                             .fontWeight(.medium)
                         
@@ -430,14 +444,14 @@ struct PremiumPaywallView: View {
                             .foregroundColor(.red)
                     }
                     
-                    Button(action: validateAuthorizationCode) {
+                    Button(action: validateCourseCode) {
                         HStack {
                             if isValidating {
                                 ProgressView()
                                     .scaleEffect(0.8)
                                     .tint(.white)
                             }
-                            Text(isValidating ? "Validating..." : "Unlock Courses")
+                            Text(isValidating ? "Validating..." : "Unlock Course")
                                 .font(.headline)
                         }
                     }
@@ -465,19 +479,19 @@ struct PremiumPaywallView: View {
         }
     }
     
-    private func validateAuthorizationCode() {
+    private func validateCourseCode() {
         isValidating = true
         
         // Simulate network delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            if authorizationCode == masterCode {
-                // Valid code - grant premium access
-                subscriptionManager.grantPremiumAccess()
+            if let expectedCode = courseUnlockCodes[course.id], authorizationCode == expectedCode {
+                // Valid code - unlock this specific course
+                subscriptionManager.unlockCourse(courseId: course.id)
                 dismiss()
             } else {
                 // Invalid code
                 showError = true
-                errorMessage = "Invalid authorization code. Please try again."
+                errorMessage = "Invalid purchase code for this course. Please check your code and try again."
             }
             isValidating = false
         }

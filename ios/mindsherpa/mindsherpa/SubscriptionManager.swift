@@ -22,6 +22,10 @@ class SubscriptionManager: ObservableObject {
     // Authorization code access
     private let authorizationAccessKey = "premium_authorization_granted"
     
+    // Individual course unlock tracking
+    @Published var unlockedCourses: Set<String> = []
+    private let unlockedCoursesKey = "unlocked_courses"
+    
     // MARK: - Subscription Products
     private var subscriptionProducts: [Product] = []
     private let productIds = [
@@ -32,6 +36,9 @@ class SubscriptionManager: ObservableObject {
     private init() {
         // Check for existing authorization access
         checkAuthorizationAccess()
+        
+        // Load unlocked courses
+        loadUnlockedCourses()
         
         Task {
             await loadProducts()
@@ -144,6 +151,35 @@ class SubscriptionManager: ObservableObject {
         if hasAuthorizationAccess {
             hasActiveSubscription = true
             currentTier = .premium
+        }
+    }
+    
+    // MARK: - Course-Specific Unlock Methods
+    
+    func isCourseUnlocked(courseId: String) -> Bool {
+        return unlockedCourses.contains(courseId)
+    }
+    
+    func unlockCourse(courseId: String) {
+        unlockedCourses.insert(courseId)
+        saveUnlockedCourses()
+    }
+    
+    func lockCourse(courseId: String) {
+        unlockedCourses.remove(courseId)
+        saveUnlockedCourses()
+    }
+    
+    private func loadUnlockedCourses() {
+        if let data = UserDefaults.standard.data(forKey: unlockedCoursesKey),
+           let courses = try? JSONDecoder().decode(Set<String>.self, from: data) {
+            unlockedCourses = courses
+        }
+    }
+    
+    private func saveUnlockedCourses() {
+        if let data = try? JSONEncoder().encode(unlockedCourses) {
+            UserDefaults.standard.set(data, forKey: unlockedCoursesKey)
         }
     }
 }

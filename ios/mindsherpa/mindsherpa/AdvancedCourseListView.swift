@@ -633,12 +633,6 @@ struct SixDigitCodeView: View {
                 .onTapGesture {
                     focusedField = index
                 }
-                .onChange(of: focusedField) { _, newFocus in
-                    // Clear selection when focus changes to prevent cursor issues
-                    if newFocus != index && !digits[index].isEmpty {
-                        // This helps prevent cursor getting stuck
-                    }
-                }
             }
         }
         .onAppear {
@@ -649,15 +643,9 @@ struct SixDigitCodeView: View {
                 focusedField = findFirstEmptyField()
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .keyboard) {
-                HStack {
-                    Spacer()
-                    Button("Done") {
-                        focusedField = nil
-                    }
-                }
-            }
+        .onTapGesture {
+            // Dismiss keyboard when tapping outside fields
+            focusedField = nil
         }
     }
     
@@ -665,28 +653,33 @@ struct SixDigitCodeView: View {
         // Handle backspace (empty input)
         if input.isEmpty {
             digits[index] = ""
-            // Move to previous field
-            if index > 0 {
-                focusedField = index - 1
-            }
             updateCode()
+            // Move to previous field after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                if index > 0 {
+                    focusedField = index - 1
+                }
+            }
             return
         }
         
-        // Handle digit input
-        let filtered = input.filter { $0.isNumber }
-        if let lastChar = filtered.last {
-            digits[index] = String(lastChar)
-            
-            // Move to next field if available
-            if index < 5 {
-                focusedField = index + 1
-            } else {
-                // All fields filled, dismiss keyboard
-                focusedField = nil
-            }
-            
+        // Handle digit input - only take numeric characters
+        let numericOnly = input.filter { $0.isNumber }
+        
+        if !numericOnly.isEmpty {
+            // Take only the first digit if multiple entered
+            digits[index] = String(numericOnly.first!)
             updateCode()
+            
+            // Move to next field after a short delay to prevent conflicts
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                if index < 5 {
+                    focusedField = index + 1
+                } else {
+                    // All fields filled, dismiss keyboard
+                    focusedField = nil
+                }
+            }
         }
     }
     

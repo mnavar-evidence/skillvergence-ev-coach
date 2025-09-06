@@ -466,14 +466,14 @@ struct CoursePaywallView: View {
     @State private var errorMessage = ""
     @State private var isValidating = false
     
-    // Unique codes for each course (in production, these would come from a server)
-    private var courseUnlockCodes: [String: String] {
+    // Course unlock codes (individual + universal test codes)
+    private var courseUnlockCodes: [String: [String]] {
         [
-            "adv_1": "100001", // Course 1.0 High Voltage Vehicle Safety
-            "adv_2": "200002", // Course 2.0 Electrical Level 1
-            "adv_3": "300003", // Course 3.0 Electrical Level 2
-            "adv_4": "400004", // Course 4.0 Electric Vehicle Supply Equipment
-            "adv_5": "500005"  // Course 5.0 Introduction to Electric Vehicles
+            "adv_1": ["100001", "654321"], // Course 1.0 High Voltage Vehicle Safety
+            "adv_2": ["200002", "654322"], // Course 2.0 Electrical Level 1
+            "adv_3": ["300003", "654323"], // Course 3.0 Electrical Level 2
+            "adv_4": ["400004", "654324"], // Course 4.0 Electric Vehicle Supply Equipment
+            "adv_5": ["500005", "654325"]  // Course 5.0 Introduction to Electric Vehicles
         ]
     }
     
@@ -583,7 +583,8 @@ struct CoursePaywallView: View {
         
         // Simulate network delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            if let expectedCode = courseUnlockCodes[course.id], authorizationCode == expectedCode {
+            if let expectedCodes = courseUnlockCodes[course.id], 
+               expectedCodes.contains(authorizationCode) {
                 // Valid code - unlock this specific course
                 subscriptionManager.unlockCourse(courseId: course.id)
                 dismiss()

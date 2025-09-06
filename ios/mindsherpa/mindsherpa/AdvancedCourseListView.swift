@@ -309,7 +309,7 @@ struct AdvancedCourseCard: View {
                                     .font(.caption2)
                                     .foregroundColor(.blue)
                             }
-                            Text("C5: \(course.isUnlocked ? "✓" : "✗")")
+                            Text("\(course.prerequisiteCourseId.replacingOccurrences(of: "course_", with: "C")): \(course.isUnlocked ? "✓" : "✗")")
                                 .font(.caption2)
                                 .foregroundColor(.purple)
                         }

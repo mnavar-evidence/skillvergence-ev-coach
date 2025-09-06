@@ -529,21 +529,12 @@ struct CoursePaywallView: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
                         
-                        TextField("Enter 6-digit code", text: $authorizationCode)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.center)
-                            .font(.title2)
-                            .onChange(of: authorizationCode) { oldValue, newValue in
-                                // Limit to 6 digits
-                                if newValue.count > 6 {
-                                    authorizationCode = String(newValue.prefix(6))
-                                }
-                                // Clear error when user types
-                                if showError {
-                                    showError = false
-                                }
+                        SixDigitCodeView(code: $authorizationCode, onCodeChanged: {
+                            // Clear error when user types
+                            if showError {
+                                showError = false
                             }
+                        })
                     }
                     
                     if showError {
@@ -602,6 +593,76 @@ struct CoursePaywallView: View {
                 errorMessage = "Invalid purchase code for this course. Please check your code and try again."
             }
             isValidating = false
+        }
+    }
+}
+
+// MARK: - Six Digit Code Entry View
+
+struct SixDigitCodeView: View {
+    @Binding var code: String
+    let onCodeChanged: () -> Void
+    
+    @State private var digits: [String] = ["", "", "", "", "", ""]
+    @FocusState private var focusedField: Int?
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ForEach(0..<6, id: \.self) { index in
+                TextField("", text: Binding(
+                    get: { digits[index] },
+                    set: { newValue in
+                        // Only allow single digits
+                        let filtered = newValue.filter { $0.isNumber }
+                        let limited = String(filtered.prefix(1))
+                        
+                        digits[index] = limited
+                        
+                        // Auto-advance focus
+                        if !limited.isEmpty && index < 5 {
+                            focusedField = index + 1
+                        } else if limited.isEmpty && index > 0 {
+                            focusedField = index - 1
+                        }
+                        
+                        // Update bound code
+                        let newCode = digits.joined()
+                        if newCode != code {
+                            code = newCode
+                            onCodeChanged()
+                        }
+                    }
+                ))
+                .frame(width: 40, height: 50)
+                .multilineTextAlignment(.center)
+                .font(.title2)
+                .fontWeight(.semibold)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .focused($focusedField, equals: index)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.systemBackground))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(focusedField == index ? Color.orange : Color(.systemGray4), lineWidth: 2)
+                        )
+                )
+                .onTapGesture {
+                    focusedField = index
+                }
+            }
+        }
+        .onAppear {
+            // Initialize from existing code if any
+            if !code.isEmpty {
+                let codeArray = Array(code)
+                for i in 0..<min(codeArray.count, 6) {
+                    digits[i] = String(codeArray[i])
+                }
+            }
+            // Focus on first field
+            focusedField = 0
         }
     }
 }

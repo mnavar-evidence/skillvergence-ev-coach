@@ -51,16 +51,21 @@ struct AdvancedCourseListView: View {
                 }
             }
             .sheet(item: $selectedCourse) { course in
-                // Check if course is purchased/unlocked
                 if subscriptionManager.isCourseUnlocked(courseId: course.id) {
-                    // Course is unlocked - show content
-                    if course.prerequisiteCourseId == "course_5" {
-                        Course5ModuleListView(course: course)
+                    // Course is purchased - check if prerequisite is completed
+                    if course.isUnlocked {
+                        // Both purchased and prerequisite complete - show content
+                        if course.prerequisiteCourseId == "course_5" {
+                            Course5ModuleListView(course: course)
+                        } else {
+                            UnifiedVideoPlayer(advancedCourse: course)
+                        }
                     } else {
-                        UnifiedVideoPlayer(advancedCourse: course)
+                        // Purchased but prerequisite incomplete - show prerequisite message
+                        CoursePrerequisiteView(course: course)
                     }
                 } else {
-                    // Course is locked - show paywall for this specific course
+                    // Not purchased - show paywall
                     CoursePaywallView(course: course)
                 }
             }
@@ -85,19 +90,8 @@ struct AdvancedCourseListView: View {
     }
     
     private func handleCourseSelection(_ course: AdvancedCourse) {
-        // Check if prerequisite is completed first
-        if !course.isUnlocked {
-            // Prerequisite not completed - show message or handle differently
-            return
-        }
-        
-        // Check if this specific course is purchased
-        if subscriptionManager.isCourseUnlocked(courseId: course.id) {
-            selectedCourse = course
-        } else {
-            // Show paywall for this specific course
-            selectedCourse = course // This will trigger the paywall in the sheet
-        }
+        // Always allow users to see the paywall, regardless of prerequisite status
+        selectedCourse = course
     }
 }
 
@@ -296,10 +290,14 @@ struct AdvancedCourseCard: View {
                     Spacer()
                     
                     VStack(spacing: 4) {
-                        Image(systemName: isUnlocked ? "play.circle.fill" : "lock.fill")
+                        Image(systemName: courseStatusIcon)
                             .font(.title2)
-                            .foregroundColor(isUnlocked ? .green : .gray)
+                            .foregroundColor(courseStatusColor)
                         
+                        Text(courseStatusText)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .foregroundColor(courseStatusColor)
                         
                         Text("\(course.xpReward) XP")
                             .font(.caption2)
@@ -344,6 +342,116 @@ struct AdvancedCourseCard: View {
     @MainActor private var isUnlocked: Bool {
         // Check if prerequisite course is completed AND course is purchased
         return course.isUnlocked && subscriptionManager.isCourseUnlocked(courseId: course.id)
+    }
+    
+    @MainActor private var courseStatusIcon: String {
+        let isPurchased = subscriptionManager.isCourseUnlocked(courseId: course.id)
+        let prerequisiteComplete = course.isUnlocked
+        
+        if isPurchased && prerequisiteComplete {
+            return "play.circle.fill"  // Ready to play
+        } else if isPurchased {
+            return "checkmark.circle.fill"  // Purchased but prerequisite needed
+        } else {
+            return "lock.fill"  // Not purchased
+        }
+    }
+    
+    @MainActor private var courseStatusColor: Color {
+        let isPurchased = subscriptionManager.isCourseUnlocked(courseId: course.id)
+        let prerequisiteComplete = course.isUnlocked
+        
+        if isPurchased && prerequisiteComplete {
+            return .green  // Ready to play
+        } else if isPurchased {
+            return .blue  // Purchased but prerequisite needed
+        } else {
+            return .gray  // Not purchased
+        }
+    }
+    
+    @MainActor private var courseStatusText: String {
+        let isPurchased = subscriptionManager.isCourseUnlocked(courseId: course.id)
+        let prerequisiteComplete = course.isUnlocked
+        
+        if isPurchased && prerequisiteComplete {
+            return "Ready"
+        } else if isPurchased {
+            return "Owned"
+        } else {
+            return "Locked"
+        }
+    }
+}
+
+// MARK: - Course Prerequisite View
+
+struct CoursePrerequisiteView: View {
+    let course: AdvancedCourse
+    @Environment(\.dismiss) private var dismiss
+    
+    private var prerequisiteCourseName: String {
+        let courseNumber = course.prerequisiteCourseId.replacingOccurrences(of: "course_", with: "")
+        return "Course \(courseNumber)"
+    }
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 24) {
+                // Header
+                VStack(spacing: 12) {
+                    Image(systemName: "checkmark.circle")
+                        .font(.system(size: 48))
+                        .foregroundColor(.green)
+                    
+                    Text("Course Purchased!")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    
+                    Text(course.title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .multilineTextAlignment(.center)
+                }
+                
+                // Prerequisite requirement
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.orange)
+                    
+                    Text("Prerequisite Required")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    Text("To access this advanced course, you must first complete \(prerequisiteCourseName).")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Once you complete the prerequisite course, this advanced content will be available.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray6))
+                )
+                
+                Spacer()
+            }
+            .padding()
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 

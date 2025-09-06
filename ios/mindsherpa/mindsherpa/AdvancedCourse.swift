@@ -144,7 +144,7 @@ extension AdvancedCourse {
     static let sampleAdvancedCourses: [AdvancedCourse] = [
         AdvancedCourse(
             id: "adv_1",
-            title: "EV Safety Pyramid - Advanced Certification",
+            title: "1.0 High Voltage Vehicle Safety",
             description: "Master-level 7-module certification covering advanced EV safety protocols, risk assessment, and professional safety management. Maps to 7 individual advanced modules from basic EV Safety Pyramid course.",
             prerequisiteCourseId: "course_1", // Requires basic Course 1 (1.1-1.7) completion - maps to 7 advanced modules
             muxPlaybackId: "6nHzce7SgTCbcBD00UoMqPdZqobvlBMyJUqnhvzsvIns",
@@ -155,7 +155,7 @@ extension AdvancedCourse {
         ),
         AdvancedCourse(
             id: "adv_2", 
-            title: "High Voltage Hazards - Expert Certification",
+            title: "2.0 Electrical Level 1 - Medium Heavy Duty",
             description: "Advanced 4-module certification covering expert-level high voltage safety protocols, hazard mitigation, and professional risk management strategies. Maps to 4 individual advanced modules.",
             prerequisiteCourseId: "course_2", // Requires basic Course 2 (2.1-2.4) completion - maps to 4 advanced modules
             muxPlaybackId: "UPHJQd9u5KDcadeIUwbeRk2q700ZVxJlhJ4UpA1e37aU",
@@ -166,7 +166,7 @@ extension AdvancedCourse {
         ),
         AdvancedCourse(
             id: "adv_3",
-            title: "Electrical Shock Protection - Master Certification",
+            title: "3.0 Electrical Level 2 - Medium Heavy Duty",
             description: "Expert-level 2-module certification covering advanced electrical shock protection systems, professional grounding techniques, and master-class safety implementations. Maps to 2 individual advanced modules.",
             prerequisiteCourseId: "course_3", // Requires basic Course 3 (3.1-3.2) completion - maps to 2 advanced modules
             muxPlaybackId: "noM3WWJr6Q43t6eGJ6JJ5VUzNnSv2IW3UcNs2601b02is", 
@@ -177,7 +177,7 @@ extension AdvancedCourse {
         ),
         AdvancedCourse(
             id: "adv_4",
-            title: "High Voltage PPE - Professional Certification",
+            title: "4.0 Electric Vehicle Supply Equipment",
             description: "Advanced 2-module certification covering professional-grade PPE selection, expert safety equipment usage, and master-level protection protocols for EV technicians. Maps to 2 individual advanced modules.",
             prerequisiteCourseId: "course_4", // Requires basic Course 4 (4.1-4.2) completion - maps to 2 advanced modules
             muxPlaybackId: "cZ5rxX2013jHbgsxIBDKEHtdJyB4aTYNkLG5hB4GWmm4",
@@ -188,7 +188,7 @@ extension AdvancedCourse {
         ),
         AdvancedCourse(
             id: "adv_5",
-            title: "Inside an Electric Car - Complete Technical Mastery", 
+            title: "5.0 Introduction to Electric Vehicles", 
             description: "Comprehensive 3-module advanced series covering EV fundamentals, energy storage systems, and motor control architecture. Master the complete technical journey from basic EV principles to advanced powertrain design.",
             prerequisiteCourseId: "course_5", // Requires basic Course 5 (5.1-5.3) completion - maps to 3 advanced modules
             muxPlaybackId: "lJjDsHFQ1J5c9tcfy3Bh6OP00SbOQcWMEJ243Lk102Yyk",

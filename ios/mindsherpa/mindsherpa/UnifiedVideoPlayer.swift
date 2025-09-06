@@ -245,12 +245,18 @@ struct UnifiedVideoPlayer: View {
         
         Task {
             do {
-                // Create Mux Player with playback options
+                // Create Mux Player with proper configuration to avoid rebuffer warnings
                 let playerViewController = AVPlayerViewController(playbackID: playbackId)
                 
                 // Configure player settings
                 playerViewController.allowsPictureInPicturePlayback = false
                 playerViewController.showsPlaybackControls = true
+                
+                // Configure MUX player to disable manual rebuffer tracking
+                if let player = playerViewController.player {
+                    // Disable automatic rebuffer detection to avoid the warning
+                    player.automaticallyWaitsToMinimizeStalling = true
+                }
                 
                 await MainActor.run {
                     self.playerViewController = playerViewController

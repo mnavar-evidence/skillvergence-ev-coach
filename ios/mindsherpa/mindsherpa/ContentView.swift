@@ -26,6 +26,11 @@ struct ContentView: View {
                 // Top Section: Coach & Progress
                 CoachHeaderView(viewModel: viewModel)
                 
+                // DEBUG: AsyncImage Test Button
+                NavigationLink("🔧 Test AsyncImage", destination: VideoRowViewTest())
+                    .font(.caption)
+                    .padding(.vertical, 4)
+                
                 // Media Tabs
                 MediaTabsView(selectedTab: $selectedTab)
                 

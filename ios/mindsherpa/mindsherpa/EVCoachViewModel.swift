@@ -97,7 +97,7 @@ struct Course: Codable, Identifiable {
     
 }
 
-struct Video: Codable, Identifiable {
+struct Video: Codable, Identifiable, Hashable {
     let id: String
     let title: String
     let description: String

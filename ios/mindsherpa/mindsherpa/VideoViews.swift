@@ -481,12 +481,48 @@ struct VideoListView: View {
                 .font(.headline)
                 .fontWeight(.semibold)
             
-            VStack(spacing: 12) {
-                ForEach(videos, id: \.id) { video in
-                    NavigationLink(destination: VideoPage(video: video, viewModel: viewModel)) {
-                        VideoRowView(video: video, viewModel: viewModel)
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(videos, id: \.id) { video in
+                        NavigationLink(value: video) {
+                            VideoRowView(video: video)
+                        }
                     }
-                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+        }
+        .navigationDestination(for: Video.self) { video in
+            VideoPage(video: video, viewModel: viewModel)
+        }
+    }
+}
+
+// MARK: - Remote Image View (AsyncImage alternative)
+
+struct RemoteImageView: View {
+    let url: URL?
+    @State private var uiImage: UIImage?
+
+    var body: some View {
+        Group {
+            if let uiImage = uiImage {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                Rectangle().fill(Color.gray.opacity(0.3))
+            }
+        }
+        .onAppear {
+            guard let url = url, uiImage == nil else { return }
+            Task {
+                do {
+                    let (data, _) = try await URLSession.shared.data(from: url)
+                    if let img = UIImage(data: data) {
+                        await MainActor.run { self.uiImage = img }
+                    }
+                } catch {
+                    // Keep placeholder on error
                 }
             }
         }
@@ -496,39 +532,20 @@ struct VideoListView: View {
 // MARK: - Video Row View
 
 struct VideoRowView: View {
-    let video: Video
-    @ObservedObject var viewModel: EVCoachViewModel
+    // Store only the properties we need, avoid the full Video object
+    let videoId: String
+    let videoTitle: String
+    let videoDuration: Int
+    
+    init(video: Video) {
+        // Extract only the stored properties, avoid computed properties
+        self.videoId = video.id
+        self.videoTitle = video.title
+        self.videoDuration = video.duration
+    }
     
     var body: some View {
-        // Step 4: Add simple thumbnail
-        HStack {
-            Rectangle()
-                .fill(Color.gray.opacity(0.3))
-                .frame(width: 80, height: 50)
-                .cornerRadius(6)
-                .overlay(
-                    Image(systemName: "play.fill")
-                        .foregroundColor(.blue)
-                )
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(video.title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .lineLimit(2)
-                
-                Text("\(video.duration / 60):\(String(format: "%02d", video.duration % 60))")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
+        Text(videoTitle)
     }
 }
 

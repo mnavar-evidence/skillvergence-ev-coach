@@ -545,7 +545,33 @@ struct VideoRowView: View {
     }
     
     var body: some View {
-        Text(videoTitle)
+        // Baby step 2: Add duration and play icon
+        HStack {
+            Rectangle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 80, height: 50)
+                .cornerRadius(6)
+                .overlay(
+                    Image(systemName: "play.fill")
+                        .foregroundColor(.blue)
+                )
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(videoTitle)
+                    .font(.subheadline)
+                    .lineLimit(2)
+                
+                Text("\(videoDuration / 60):\(String(format: "%02d", videoDuration % 60))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
     }
 }
 

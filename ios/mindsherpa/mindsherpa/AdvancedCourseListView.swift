@@ -297,23 +297,6 @@ struct AdvancedCourseCard: View {
                             .font(.title2)
                             .foregroundColor(isUnlocked ? .green : .gray)
                         
-                        #if DEBUG
-                        // Debug info
-                        VStack(spacing: 2) {
-                            if course.prerequisiteCourseId == "course_5" {
-                                Text("Free C5")
-                                    .font(.caption2)
-                                    .foregroundColor(.green)
-                            } else {
-                                Text("Sub: \(subscriptionManager.hasActiveSubscription ? "✓" : "✗")")
-                                    .font(.caption2)
-                                    .foregroundColor(.blue)
-                            }
-                            Text("\(course.prerequisiteCourseId.replacingOccurrences(of: "course_", with: "C")): \(course.isUnlocked ? "✓" : "✗")")
-                                .font(.caption2)
-                                .foregroundColor(.purple)
-                        }
-                        #endif
                         
                         Text("\(course.xpReward) XP")
                             .font(.caption2)

@@ -547,23 +547,85 @@ struct VideoRowView: View {
     var body: some View {
         // Baby step 2: Add duration and play icon
         HStack {
-            Rectangle()
-                .fill(Color.gray.opacity(0.3))
-                .frame(width: 80, height: 50)
-                .cornerRadius(6)
-                .overlay(
-                    Image(systemName: "play.fill")
-                        .foregroundColor(.blue)
-                )
+            AsyncImage(url: URL(string: "https://skillvergence.mindsherpa.ai/assets/videos/thumbnails/\(videoId).jpg")) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                case .failure(_), .empty:
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                @unknown default:
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                }
+            }
+            .frame(width: 80, height: 50)
+            .cornerRadius(6)
+            .overlay(
+                VStack {
+                    Spacer()
+                    // Progress bar at bottom of thumbnail
+                    if let progressRecord = ProgressStore.shared.videoProgress(videoId: videoId) {
+                        let progress = progressRecord.completed ? 1.0 : (progressRecord.lastPositionSec > 0 ? progressRecord.lastPositionSec / Double(videoDuration) : 0.0)
+                        if progress > 0 {
+                            GeometryReader { geometry in
+                                HStack(spacing: 0) {
+                                    Rectangle()
+                                        .fill(progressRecord.completed ? Color.green : Color.blue)
+                                        .frame(width: geometry.size.width * progress)
+                                    Rectangle()
+                                        .fill(Color.black.opacity(0.3))
+                                        .frame(width: geometry.size.width * (1 - progress))
+                                }
+                            }
+                            .frame(height: 2)
+                            .cornerRadius(1)
+                            .padding(.horizontal, 2)
+                            .padding(.bottom, 2)
+                        }
+                    }
+                }
+            )
+            .overlay(
+                Image(systemName: "play.fill")
+                    .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
+            )
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(videoTitle)
                     .font(.subheadline)
                     .lineLimit(2)
                 
-                Text("\(videoDuration / 60):\(String(format: "%02d", videoDuration % 60))")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                HStack {
+                    Text("\(videoDuration / 60):\(String(format: "%02d", videoDuration % 60))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    // Progress indicator
+                    if let progressRecord = ProgressStore.shared.videoProgress(videoId: videoId) {
+                        if progressRecord.completed {
+                            HStack(spacing: 4) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                    .font(.caption)
+                                Text("100%")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                                    .fontWeight(.medium)
+                            }
+                        } else if progressRecord.lastPositionSec > 0 {
+                            Text("\(Int(progressRecord.lastPositionSec / Double(videoDuration) * 100))%")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                                .fontWeight(.medium)
+                        }
+                    }
+                }
             }
             
             Spacer()

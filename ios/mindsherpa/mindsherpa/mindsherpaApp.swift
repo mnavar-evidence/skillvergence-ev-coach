@@ -25,6 +25,9 @@ struct mindsherpaApp: App {
         
         // Initialize analytics
         AnalyticsManager.shared.track(.appLaunched)
+        
+        // Test Step 1: Basic mapping structure
+        BasicToAdvancedMapping.testMapping()
     }
     
     var body: some Scene {

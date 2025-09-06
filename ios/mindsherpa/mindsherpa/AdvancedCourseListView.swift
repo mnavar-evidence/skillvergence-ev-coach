@@ -31,8 +31,10 @@ struct AdvancedCourseListView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    subscriptionBadge
+                ToolbarItem(placement: .principal) {
+                    Text("Advanced Courses")
+                        .font(.headline)
+                        .fontWeight(.semibold)
                 }
             }
             .sheet(item: $selectedCourse) { course in

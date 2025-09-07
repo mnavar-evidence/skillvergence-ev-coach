@@ -205,13 +205,15 @@ extension ProgressStore {
     func getCourseCompletionDetails() -> [(courseId: String, completed: Bool, videosCompleted: Int, totalVideos: Int)] {
         let advancedCourseIds = ["adv_1", "adv_2", "adv_3", "adv_4", "adv_5"]
         let courseNames = ["1", "2", "3", "4", "5"] // For display mapping
+        let moduleCounts = [7, 4, 2, 2, 3] // Actual module counts for each advanced course
         
-        return zip(advancedCourseIds, courseNames).map { (advancedId, basicId) in
+        return zip(zip(advancedCourseIds, courseNames), moduleCounts).map { (courseInfo, moduleCount) in
+            let (advancedId, basicId) = courseInfo
             // TODO: Check if advanced course is completed
             // This requires integration with advanced course completion tracking
             let isCompleted = false // Placeholder until advanced course tracking is implemented
             
-            return (courseId: basicId, completed: isCompleted, videosCompleted: 0, totalVideos: 1)
+            return (courseId: basicId, completed: isCompleted, videosCompleted: 0, totalVideos: moduleCount)
         }
     }
 }

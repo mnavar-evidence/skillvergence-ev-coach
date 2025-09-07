@@ -528,35 +528,37 @@ struct PodcastPlayerView: View {
         
         // Enable play command
         commandCenter.playCommand.isEnabled = true
-        commandCenter.playCommand.addTarget { [weak self] _ in
-            self?.player?.play()
-            self?.isPlaying = true
-            self?.updateNowPlayingInfo()
+        commandCenter.playCommand.addTarget { _ in
+            guard let player = self.player else { return .commandFailed }
+            player.play()
+            self.isPlaying = true
+            self.updateNowPlayingInfo()
             return .success
         }
         
         // Enable pause command
         commandCenter.pauseCommand.isEnabled = true
-        commandCenter.pauseCommand.addTarget { [weak self] _ in
-            self?.player?.pause()
-            self?.isPlaying = false
-            self?.updateNowPlayingInfo()
+        commandCenter.pauseCommand.addTarget { _ in
+            guard let player = self.player else { return .commandFailed }
+            player.pause()
+            self.isPlaying = false
+            self.updateNowPlayingInfo()
             return .success
         }
         
         // Enable skip backward command
         commandCenter.skipBackwardCommand.isEnabled = true
         commandCenter.skipBackwardCommand.preferredIntervals = [15]
-        commandCenter.skipBackwardCommand.addTarget { [weak self] _ in
-            self?.seekBackward()
+        commandCenter.skipBackwardCommand.addTarget { _ in
+            self.seekBackward()
             return .success
         }
         
         // Enable skip forward command
         commandCenter.skipForwardCommand.isEnabled = true
         commandCenter.skipForwardCommand.preferredIntervals = [15]
-        commandCenter.skipForwardCommand.addTarget { [weak self] _ in
-            self?.seekForward()
+        commandCenter.skipForwardCommand.addTarget { _ in
+            self.seekForward()
             return .success
         }
         
@@ -568,7 +570,7 @@ struct PodcastPlayerView: View {
         var nowPlayingInfo = [String: Any]()
         
         nowPlayingInfo[MPMediaItemPropertyTitle] = podcast.title
-        nowPlayingInfo[MPMediaItemPropertyArtist] = podcast.courseTitle ?? "MindSherpa Podcast"
+        nowPlayingInfo[MPMediaItemPropertyArtist] = "MindSherpa EV Training"
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
         nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0

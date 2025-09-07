@@ -419,15 +419,9 @@ struct PodcastPlayerView: View {
             }
             
             // Create Mux player for audio streaming
-            do {
-                // Use Mux HLS URL for audio streaming
-                let muxHLSUrl = URL(string: "https://stream.mux.com/\(muxId).m3u8")!
-                player = AVPlayer(url: muxHLSUrl)
-            } catch {
-                audioError = "Failed to create Mux player: \(error.localizedDescription)"
-                isLoadingAudio = false
-                return
-            }
+            // Use Mux HLS URL for audio streaming
+            let muxHLSUrl = URL(string: "https://stream.mux.com/\(muxId).m3u8")!
+            player = AVPlayer(url: muxHLSUrl)
         } else {
             // Traditional audio URL handling
             guard let url = URL(string: podcast.audioUrl) else { 

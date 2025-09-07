@@ -93,28 +93,35 @@ struct LevelDetailsView: View {
                     
                     // Current Status
                     VStack(spacing: 16) {
-                        Image(systemName: "star.circle.fill")
+                        Image(systemName: progressStore.getCurrentXPLevel().icon)
                             .font(.system(size: 60))
                             .foregroundStyle(.orange)
                         
-                        Text(progressStore.getLevelTitle())
+                        Text(progressStore.getCurrentXPLevel().displayName)
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text("Level \(progressStore.getCurrentLevel())")
+                        Text("\(progressStore.getTotalXP()) XP")
                             .font(.title3)
                             .foregroundStyle(.secondary)
                         
-                        let progress = progressStore.getXPProgressInCurrentLevel()
+                        let progress = progressStore.getXPProgressToNextLevel()
                         VStack(spacing: 8) {
                             ProgressView(value: progress.percentage)
                                 .progressViewStyle(LinearProgressViewStyle(tint: .orange))
                                 .scaleEffect(y: 2)
                             
                             HStack {
-                                Text("\(progressStore.getTotalXP()) XP")
+                                Text("\(progress.current)/\(progress.needed) XP")
                                 Spacer()
-                                Text("\(progressStore.getXPForNextLevel()) XP")
+                                let currentLevel = progressStore.getCurrentXPLevel()
+                                if currentLevel != .diamond {
+                                    let nextLevelIndex = XPLevel.allCases.firstIndex(of: currentLevel)! + 1
+                                    let nextLevel = XPLevel.allCases[nextLevelIndex]
+                                    Text("→ \(nextLevel.displayName)")
+                                } else {
+                                    Text("Max Level!")
+                                }
                             }
                             .font(.caption)
                             .foregroundStyle(.secondary)

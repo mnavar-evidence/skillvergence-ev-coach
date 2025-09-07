@@ -629,7 +629,7 @@ struct SixDigitCodeView: View {
                 .focused($isTextFieldFocused)
                 .opacity(0)
                 .frame(height: 0)
-                .onChange(of: internalCode) { newValue in
+                .onChange(of: internalCode) { oldValue, newValue in
                     handleCodeChange(newValue)
                 }
             

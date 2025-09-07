@@ -617,110 +617,98 @@ struct SixDigitCodeView: View {
     @Binding var code: String
     let onCodeChanged: () -> Void
     
-    @State private var digits: [String] = ["", "", "", "", "", ""]
-    @FocusState private var focusedField: Int?
+    @State private var internalCode = ""
+    @FocusState private var isTextFieldFocused: Bool
     
     var body: some View {
-        HStack(spacing: 12) {
-            ForEach(0..<6, id: \.self) { index in
-                TextField("", text: Binding(
-                    get: { digits[index] },
-                    set: { newValue in
-                        handleDigitInput(at: index, input: newValue)
-                    }
-                ))
-                .frame(width: 40, height: 50)
-                .multilineTextAlignment(.center)
-                .font(.title2)
-                .fontWeight(.semibold)
+        VStack(spacing: 12) {
+            // Hidden text field for actual input
+            TextField("", text: $internalCode)
                 .keyboardType(.numberPad)
                 .textContentType(.oneTimeCode)
-                .focused($focusedField, equals: index)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(.systemBackground))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(focusedField == index ? Color.orange : Color(.systemGray4), lineWidth: 2)
-                        )
-                )
-                .onTapGesture {
-                    focusedField = index
+                .focused($isTextFieldFocused)
+                .opacity(0)
+                .frame(height: 0)
+                .onChange(of: internalCode) { newValue in
+                    handleCodeChange(newValue)
                 }
+            
+            // Visual digit display
+            HStack(spacing: 12) {
+                ForEach(0..<6, id: \.self) { index in
+                    DigitBox(
+                        digit: getDigitAt(index),
+                        isFocused: isTextFieldFocused && index == min(internalCode.count, 5)
+                    )
+                }
+            }
+            .onTapGesture {
+                isTextFieldFocused = true
             }
         }
         .onAppear {
-            // Initialize from existing code if any
-            initializeDigits()
-            // Focus on first empty field
+            // Initialize internal code from binding
+            internalCode = code
+            // Auto-focus when view appears
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                focusedField = findFirstEmptyField()
-            }
-        }
-        .onTapGesture {
-            // Dismiss keyboard when tapping outside fields
-            focusedField = nil
-        }
-    }
-    
-    private func handleDigitInput(at index: Int, input: String) {
-        // Handle backspace (empty input)
-        if input.isEmpty {
-            digits[index] = ""
-            updateCode()
-            // Move to previous field after a short delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                if index > 0 {
-                    focusedField = index - 1
-                }
-            }
-            return
-        }
-        
-        // Handle digit input - only take numeric characters
-        let numericOnly = input.filter { $0.isNumber }
-        
-        if !numericOnly.isEmpty {
-            // Take only the first digit if multiple entered
-            digits[index] = String(numericOnly.first!)
-            updateCode()
-            
-            // Move to next field after a short delay to prevent conflicts
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                if index < 5 {
-                    focusedField = index + 1
-                } else {
-                    // All fields filled, dismiss keyboard
-                    focusedField = nil
-                }
+                isTextFieldFocused = true
             }
         }
     }
     
-    private func updateCode() {
-        let newCode = digits.joined()
-        if newCode != code {
-            code = newCode
+    private func handleCodeChange(_ newValue: String) {
+        // Only allow numeric input and limit to 6 digits
+        let numericOnly = newValue.filter { $0.isNumber }
+        let limitedCode = String(numericOnly.prefix(6))
+        
+        if limitedCode != internalCode {
+            internalCode = limitedCode
+        }
+        
+        // Update the binding
+        if limitedCode != code {
+            code = limitedCode
             onCodeChanged()
         }
     }
     
-    private func initializeDigits() {
-        if !code.isEmpty {
-            let codeArray = Array(code)
-            for i in 0..<min(codeArray.count, 6) {
-                digits[i] = String(codeArray[i])
-            }
+    private func getDigitAt(_ index: Int) -> String {
+        if index < internalCode.count {
+            return String(internalCode[internalCode.index(internalCode.startIndex, offsetBy: index)])
         }
+        return ""
     }
+}
+
+struct DigitBox: View {
+    let digit: String
+    let isFocused: Bool
     
-    private func findFirstEmptyField() -> Int {
-        for i in 0..<6 {
-            if digits[i].isEmpty {
-                return i
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(.systemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isFocused ? Color.orange : Color(.systemGray4), lineWidth: 2)
+                )
+                .frame(width: 40, height: 50)
+            
+            if digit.isEmpty {
+                // Show cursor when focused and empty
+                if isFocused {
+                    Rectangle()
+                        .fill(Color.orange)
+                        .frame(width: 2, height: 20)
+                        .opacity(0.8)
+                }
+            } else {
+                Text(digit)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
             }
         }
-        return 0
     }
 }
 

@@ -173,6 +173,63 @@ struct LevelDetailsView: View {
                             XPLevelProgressRow(level: .diamond, xp: "10000+ XP", isCurrentOrPast: totalXP >= XPLevel.diamond.minXP, isCurrent: currentLevel == .diamond)
                         }
                     }
+                    
+                    Divider()
+                    
+                    // Professional Certification Section
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Professional Certification")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                        
+                        // Current Certification Status
+                        let certificationLevel = progressStore.getCurrentCertificationLevel()
+                        let completedCourses = progressStore.getCompletedCoursesCount()
+                        
+                        HStack(spacing: 16) {
+                            Image(systemName: certificationLevel.icon)
+                                .font(.system(size: 40))
+                                .foregroundStyle(certificationLevel == .none ? .gray : .blue)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(certificationLevel.displayName)
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                
+                                Text("\(completedCourses)/5 courses completed")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                
+                                if certificationLevel != .certified {
+                                    let nextLevel = getNextCertificationLevel(current: certificationLevel)
+                                    let coursesNeeded = nextLevel.coursesRequired - completedCourses
+                                    Text("\(coursesNeeded) more course\(coursesNeeded == 1 ? "" : "s") for \(nextLevel.shortName)")
+                                        .font(.caption)
+                                        .foregroundStyle(.blue)
+                                }
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        
+                        // Course Completion Progress
+                        VStack(spacing: 8) {
+                            let courseDetails = progressStore.getCourseCompletionDetails()
+                            
+                            ForEach(Array(courseDetails.enumerated()), id: \.offset) { index, detail in
+                                CourseCompletionRow(
+                                    courseNumber: Int(detail.courseId) ?? 1,
+                                    courseName: getCourseName(for: detail.courseId),
+                                    isCompleted: detail.completed,
+                                    videosCompleted: detail.videosCompleted,
+                                    totalVideos: detail.totalVideos
+                                )
+                            }
+                        }
+                    }
                 }
                 .padding()
             }
@@ -307,6 +364,57 @@ struct XPLevelProgressRow: View {
             }
             
             Spacer()
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+struct CourseCompletionRow: View {
+    let courseNumber: Int
+    let courseName: String
+    let isCompleted: Bool
+    let videosCompleted: Int
+    let totalVideos: Int
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(isCompleted ? .green : .gray.opacity(0.3))
+                    .frame(width: 32, height: 32)
+                
+                if isCompleted {
+                    Image(systemName: "checkmark")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                } else {
+                    Text("\(courseNumber)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(courseName)
+                    .font(.subheadline)
+                    .fontWeight(isCompleted ? .semibold : .regular)
+                    .foregroundStyle(isCompleted ? .primary : .secondary)
+                
+                Text("\(videosCompleted)/\(totalVideos) videos completed")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Spacer()
+            
+            if !isCompleted && videosCompleted > 0 {
+                Text("\(Int(Double(videosCompleted)/Double(totalVideos) * 100))%")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.blue)
+            }
         }
         .padding(.vertical, 2)
     }
@@ -447,6 +555,26 @@ struct CoachHeaderView: View {
         }
     }
     
+    private func getNextCertificationLevel(current: CertificationLevel) -> CertificationLevel {
+        let allLevels = CertificationLevel.allCases
+        if let currentIndex = allLevels.firstIndex(of: current),
+           currentIndex < allLevels.count - 1 {
+            return allLevels[currentIndex + 1]
+        }
+        return .certified // Already at max
+    }
+    
+    private func getCourseName(for courseId: String) -> String {
+        switch courseId {
+        case "1": return "High Voltage Safety Foundation"
+        case "2": return "Electrical Fundamentals"
+        case "3": return "EV System Components"
+        case "4": return "EV Charging Systems"
+        case "5": return "Advanced EV Systems"
+        default: return "Course \(courseId)"
+        }
+    }
+
     private func getNextLevelTitle() -> String {
         let nextLevel = progressStore.getCurrentLevel() + 1
         switch nextLevel {

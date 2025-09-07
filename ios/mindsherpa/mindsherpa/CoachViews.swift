@@ -255,6 +255,27 @@ struct LevelDetailsView: View {
             }
         }
     }
+    
+    // Helper functions for certification level management
+    private func getNextCertificationLevel(current: CertificationLevel) -> CertificationLevel {
+        let allLevels = CertificationLevel.allCases
+        if let currentIndex = allLevels.firstIndex(of: current),
+           currentIndex < allLevels.count - 1 {
+            return allLevels[currentIndex + 1]
+        }
+        return .certified // Already at max
+    }
+    
+    private func getCourseName(for courseId: String) -> String {
+        switch courseId {
+        case "1": return "High Voltage Safety Foundation"
+        case "2": return "Electrical Fundamentals"
+        case "3": return "EV System Components"
+        case "4": return "EV Charging Systems"
+        case "5": return "Advanced EV Systems"
+        default: return "Course \(courseId)"
+        }
+    }
 }
 
 struct XPSourceRow: View {
@@ -555,26 +576,6 @@ struct CoachHeaderView: View {
         }
     }
     
-    private func getNextCertificationLevel(current: CertificationLevel) -> CertificationLevel {
-        let allLevels = CertificationLevel.allCases
-        if let currentIndex = allLevels.firstIndex(of: current),
-           currentIndex < allLevels.count - 1 {
-            return allLevels[currentIndex + 1]
-        }
-        return .certified // Already at max
-    }
-    
-    private func getCourseName(for courseId: String) -> String {
-        switch courseId {
-        case "1": return "High Voltage Safety Foundation"
-        case "2": return "Electrical Fundamentals"
-        case "3": return "EV System Components"
-        case "4": return "EV Charging Systems"
-        case "5": return "Advanced EV Systems"
-        default: return "Course \(courseId)"
-        }
-    }
-
     private func getNextLevelTitle() -> String {
         let nextLevel = progressStore.getCurrentLevel() + 1
         switch nextLevel {

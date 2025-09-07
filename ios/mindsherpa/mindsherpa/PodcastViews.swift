@@ -131,7 +131,7 @@ struct PodcastArtworkPlaceholder: View {
         default:
             return (
                 LinearGradient(colors: [.purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing),
-                "podcast.fill"
+                "waveform"
             )
         }
     }

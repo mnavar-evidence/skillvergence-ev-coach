@@ -238,6 +238,18 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         let controller = AVPlayerViewController()
         
+        // Configure player settings for proper fullscreen support
+        controller.allowsPictureInPicturePlayback = false
+        controller.showsPlaybackControls = true
+        controller.entersFullScreenWhenPlaybackBegins = false
+        controller.exitsFullScreenWhenPlaybackEnds = false
+        controller.videoGravity = .resizeAspect
+        
+        // Enable landscape fullscreen
+        if #available(iOS 16.0, *) {
+            controller.allowsVideoFrameAnalysis = false
+        }
+        
         if let url = url {
             let player = AVPlayer(url: url)
             controller.player = player
@@ -266,7 +278,10 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        // Update if needed
+        // Ensure consistent configuration for fullscreen support
+        if uiViewController.videoGravity != .resizeAspect {
+            uiViewController.videoGravity = .resizeAspect
+        }
     }
 }
 

@@ -248,9 +248,16 @@ struct UnifiedVideoPlayer: View {
                 // Create Mux Player with proper configuration to avoid rebuffer warnings
                 let playerViewController = AVPlayerViewController(playbackID: playbackId)
                 
-                // Configure player settings
+                // Configure player settings for proper fullscreen support
                 playerViewController.allowsPictureInPicturePlayback = false
                 playerViewController.showsPlaybackControls = true
+                playerViewController.entersFullScreenWhenPlaybackBegins = false
+                playerViewController.exitsFullScreenWhenPlaybackEnds = false
+                
+                // Enable landscape fullscreen
+                if #available(iOS 16.0, *) {
+                    playerViewController.allowsVideoFrameAnalysis = false
+                }
                 
                 // Configure MUX player to disable manual rebuffer tracking
                 if let player = playerViewController.player {
@@ -428,11 +435,23 @@ struct UnifiedPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     let playerViewController: AVPlayerViewController
     
     func makeUIViewController(context: Context) -> AVPlayerViewController {
+        // Additional configuration for fullscreen support
+        playerViewController.videoGravity = .resizeAspect
+        
         return playerViewController
     }
     
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        // Updates handled by the parent UnifiedVideoPlayer
+        // Ensure consistent configuration
+        if uiViewController.videoGravity != .resizeAspect {
+            uiViewController.videoGravity = .resizeAspect
+        }
+    }
+    
+    // Handle view controller lifecycle for better fullscreen support
+    static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: ()) {
+        // Clean up any observers or delegates when the view is dismantled
+        uiViewController.player?.pause()
     }
 }
 

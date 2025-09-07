@@ -193,19 +193,25 @@ extension ProgressStore {
         return completedCount
     }
     
-    // Professional-grade course completion - requires ALL videos in course to be completed
+    // Professional certification comes from completing ADVANCED courses, not basic courses
     func isProfessionalCourseCompleted(courseId: String) -> Bool {
-        let progress = getBasicCourseProgress(courseNumber: courseId)
-        return progress.isFullyCompleted
+        // Check if the corresponding advanced course is completed
+        // This should check advanced course completion via SubscriptionManager or similar
+        // For now, return false since advanced course completion tracking needs to be implemented
+        return false
     }
     
-    // Get detailed course completion status for UI
+    // Get advanced course completion status for professional certification
     func getCourseCompletionDetails() -> [(courseId: String, completed: Bool, videosCompleted: Int, totalVideos: Int)] {
-        let courseIds = ["1", "2", "3", "4", "5"]
+        let advancedCourseIds = ["adv_1", "adv_2", "adv_3", "adv_4", "adv_5"]
+        let courseNames = ["1", "2", "3", "4", "5"] // For display mapping
         
-        return courseIds.map { courseId in
-            let progress = getBasicCourseProgress(courseNumber: courseId)
-            return (courseId: courseId, completed: progress.isFullyCompleted, videosCompleted: progress.completed, totalVideos: progress.total)
+        return zip(advancedCourseIds, courseNames).map { (advancedId, basicId) in
+            // TODO: Check if advanced course is completed
+            // This requires integration with advanced course completion tracking
+            let isCompleted = false // Placeholder until advanced course tracking is implemented
+            
+            return (courseId: basicId, completed: isCompleted, videosCompleted: 0, totalVideos: 1)
         }
     }
 }

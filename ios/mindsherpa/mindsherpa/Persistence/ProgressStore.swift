@@ -305,40 +305,6 @@ public class ProgressStore: ObservableObject {
         return completedVideos.count == courseVideos.count
     }
     
-    // Get basic course video progress for professional certification
-    public func getBasicCourseProgress(courseNumber: String) -> (completed: Int, total: Int, isFullyCompleted: Bool) {
-        // Expected video counts for each basic course
-        let expectedCounts: [String: Int] = [
-            "1": 7,  // Videos 1-1 through 1-7
-            "2": 4,  // Videos 2-1 through 2-4
-            "3": 2,  // Videos 3-1 through 3-2
-            "4": 2,  // Videos 4-1 through 4-2
-            "5": 3   // Videos 5-1 through 5-3
-        ]
-        
-        guard let expectedCount = expectedCounts[courseNumber] else {
-            return (completed: 0, total: 0, isFullyCompleted: false)
-        }
-        
-        // Look for videos with pattern like "1-1", "1-2", etc.
-        var completedCount = 0
-        var foundVideos = 0
-        
-        for videoNumber in 1...expectedCount {
-            let videoId = "\(courseNumber)-\(videoNumber)"
-            if let videoProgress = snapshot.videos[videoId] {
-                foundVideos += 1
-                if videoProgress.completed || (videoProgress.watchedDuration > 0 && videoProgress.totalDuration > 0 && 
-                   Double(videoProgress.watchedDuration) / Double(videoProgress.totalDuration) >= 0.85) {
-                    completedCount += 1
-                }
-            }
-        }
-        
-        let isFullyCompleted = completedCount >= expectedCount
-        return (completed: completedCount, total: max(foundVideos, expectedCount), isFullyCompleted: isFullyCompleted)
-    }
-    
     // MARK: - Persistence Methods
     
     private func loadFromDisk() {

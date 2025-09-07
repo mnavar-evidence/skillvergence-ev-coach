@@ -267,13 +267,14 @@ struct LevelDetailsView: View {
     }
     
     private func getCourseName(for courseId: String) -> String {
+        // Professional certification shows ADVANCED course names, not basic course names
         switch courseId {
-        case "1": return "High Voltage Safety Foundation"
-        case "2": return "Electrical Fundamentals"
-        case "3": return "EV System Components"
-        case "4": return "EV Charging Systems"
-        case "5": return "Advanced EV Systems"
-        default: return "Course \(courseId)"
+        case "1": return "1.0 High Voltage Vehicle Safety (Advanced)"
+        case "2": return "2.0 Electrical Level 1 - Medium Heavy Duty (Advanced)"
+        case "3": return "3.0 Electrical Level 2 - Medium Heavy Duty (Advanced)"
+        case "4": return "4.0 Electric Vehicle Supply Equipment (Advanced)"
+        case "5": return "5.0 Introduction to Electric Vehicles (Advanced)"
+        default: return "Advanced Course \(courseId)"
         }
     }
 }

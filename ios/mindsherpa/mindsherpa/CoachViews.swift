@@ -248,6 +248,40 @@ struct LevelDetailsView: View {
                                 )
                             }
                         }
+                        
+                        Divider()
+                            .padding(.vertical, 8)
+                        
+                        // Advanced Course Overview
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Advanced Course Catalog")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.secondary)
+                            
+                            VStack(spacing: 6) {
+                                AdvancedCourseRow(courseNumber: 1, title: "1.0 High Voltage Safety", modules: 7, duration: "1:18:03")
+                                AdvancedCourseRow(courseNumber: 2, title: "2.0 Electrical Level 1", modules: 4, duration: "3:53:40")
+                                AdvancedCourseRow(courseNumber: 3, title: "3.0 Electrical Level 2", modules: 2, duration: "2:30:32")
+                                AdvancedCourseRow(courseNumber: 4, title: "4.0 EV Supply Equipment", modules: 2, duration: "1:12:19")
+                                AdvancedCourseRow(courseNumber: 5, title: "5.0 EV Architecture", modules: 3, duration: "2:32:42")
+                            }
+                            
+                            HStack {
+                                Spacer()
+                                VStack(alignment: .trailing, spacing: 2) {
+                                    Text("Total: 18 modules")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(.secondary)
+                                    Text("11:27:16")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.primary)
+                                }
+                            }
+                            .padding(.top, 4)
+                        }
                     }
                 }
                 .padding()
@@ -508,6 +542,52 @@ struct CourseCompletionRow: View {
             }
         }
         .padding(.vertical, 2)
+    }
+}
+
+struct AdvancedCourseRow: View {
+    let courseNumber: Int
+    let title: String
+    let modules: Int
+    let duration: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(.blue.opacity(0.1))
+                    .frame(width: 32, height: 32)
+                
+                Text("\(courseNumber)")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.blue)
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.primary)
+                
+                HStack(spacing: 8) {
+                    Text("\(modules) modules")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    Text("•")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    Text(duration)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 1)
     }
 }
 

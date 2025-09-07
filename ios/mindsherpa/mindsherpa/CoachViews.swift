@@ -163,15 +163,14 @@ struct LevelDetailsView: View {
                             .fontWeight(.semibold)
                         
                         VStack(spacing: 8) {
-                            LevelProgressRow(level: 1, title: "EV Apprentice", xp: "0-99 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 1)
-                            LevelProgressRow(level: 2, title: "Tech Trainee", xp: "100-249 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 2)
-                            LevelProgressRow(level: 3, title: "Junior Technician", xp: "250-499 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 3)
-                            LevelProgressRow(level: 4, title: "EV Technician", xp: "500-799 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 4)
-                            LevelProgressRow(level: 5, title: "Senior Tech", xp: "800-1199 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 5)
-                            LevelProgressRow(level: 6, title: "EV Specialist", xp: "1200-1699 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 6)
-                            LevelProgressRow(level: 7, title: "Master Tech", xp: "1700-2299 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 7)
-                            LevelProgressRow(level: 8, title: "EV Expert", xp: "2300-2999 XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 8)
-                            LevelProgressRow(level: 9, title: "EV Master", xp: "3000+ XP", isCurrentOrPast: progressStore.getCurrentLevel() >= 9)
+                            let currentLevel = progressStore.getCurrentXPLevel()
+                            let totalXP = progressStore.getTotalXP()
+                            
+                            XPLevelProgressRow(level: .bronze, xp: "0-999 XP", isCurrentOrPast: totalXP >= XPLevel.bronze.minXP, isCurrent: currentLevel == .bronze)
+                            XPLevelProgressRow(level: .silver, xp: "1000-2499 XP", isCurrentOrPast: totalXP >= XPLevel.silver.minXP, isCurrent: currentLevel == .silver)
+                            XPLevelProgressRow(level: .gold, xp: "2500-4999 XP", isCurrentOrPast: totalXP >= XPLevel.gold.minXP, isCurrent: currentLevel == .gold)
+                            XPLevelProgressRow(level: .platinum, xp: "5000-9999 XP", isCurrentOrPast: totalXP >= XPLevel.platinum.minXP, isCurrent: currentLevel == .platinum)
+                            XPLevelProgressRow(level: .diamond, xp: "10000+ XP", isCurrentOrPast: totalXP >= XPLevel.diamond.minXP, isCurrent: currentLevel == .diamond)
                         }
                     }
                 }
@@ -259,6 +258,48 @@ struct LevelProgressRow: View {
                     .font(.subheadline)
                     .fontWeight(isCurrentOrPast ? .semibold : .regular)
                     .foregroundStyle(isCurrentOrPast ? .primary : .secondary)
+                
+                Text(xp)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+struct XPLevelProgressRow: View {
+    let level: XPLevel
+    let xp: String
+    let isCurrentOrPast: Bool
+    let isCurrent: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(isCurrent ? .orange : (isCurrentOrPast ? .green : .gray.opacity(0.3)))
+                    .frame(width: 32, height: 32)
+                
+                if isCurrentOrPast {
+                    Image(systemName: isCurrent ? level.icon : "checkmark")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                } else {
+                    Image(systemName: level.icon)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(level.displayName)
+                    .font(.subheadline)
+                    .fontWeight(isCurrent ? .semibold : (isCurrentOrPast ? .medium : .regular))
+                    .foregroundStyle(isCurrent ? .primary : (isCurrentOrPast ? .primary : .secondary))
                 
                 Text(xp)
                     .font(.caption)

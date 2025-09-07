@@ -208,7 +208,7 @@ extension ProgressStore {
         let moduleCounts = [7, 4, 2, 2, 3] // Actual module counts for each advanced course
         
         return zip(zip(advancedCourseIds, courseNames), moduleCounts).map { (courseInfo, moduleCount) in
-            let (advancedId, basicId) = courseInfo
+            let (_, basicId) = courseInfo
             // TODO: Check if advanced course is completed
             // This requires integration with advanced course completion tracking
             let isCompleted = false // Placeholder until advanced course tracking is implemented

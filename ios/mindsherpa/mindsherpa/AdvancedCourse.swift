@@ -148,7 +148,7 @@ extension AdvancedCourse {
             description: "Master-level 7-module certification covering advanced EV safety protocols, risk assessment, and professional safety management. Maps to 7 individual advanced modules from basic EV Safety Pyramid course.",
             prerequisiteCourseId: "course_1", // Requires basic Course 1 (1.1-1.7) completion - maps to 7 advanced modules
             muxPlaybackId: "6nHzce7SgTCbcBD00UoMqPdZqobvlBMyJUqnhvzsvIns",
-            estimatedHours: 1.33, // 7 modules, 79 mins 39 seconds total
+            estimatedHours: 1.30, // 7 modules, 1:18:03 (78 mins 3 seconds total)
             certificateType: .evFundamentalsAdvanced,
             xpReward: 700, // 7 modules × 100 XP each
             skillLevel: .expert
@@ -159,7 +159,7 @@ extension AdvancedCourse {
             description: "Advanced 4-module certification covering expert-level high voltage safety protocols, hazard mitigation, and professional risk management strategies. Maps to 4 individual advanced modules.",
             prerequisiteCourseId: "course_2", // Requires basic Course 2 (2.1-2.4) completion - maps to 4 advanced modules
             muxPlaybackId: "UPHJQd9u5KDcadeIUwbeRk2q700ZVxJlhJ4UpA1e37aU",
-            estimatedHours: 4.31, // 4 modules, 258 mins 38 seconds total
+            estimatedHours: 3.89, // 4 modules, 3:53:40 (233 mins 40 seconds total)
             certificateType: .batterySystemsExpert,
             xpReward: 400, // 4 modules × 100 XP each
             skillLevel: .expert
@@ -170,7 +170,7 @@ extension AdvancedCourse {
             description: "Expert-level 2-module certification covering advanced electrical shock protection systems, professional grounding techniques, and master-class safety implementations. Maps to 2 individual advanced modules.",
             prerequisiteCourseId: "course_3", // Requires basic Course 3 (3.1-3.2) completion - maps to 2 advanced modules
             muxPlaybackId: "noM3WWJr6Q43t6eGJ6JJ5VUzNnSv2IW3UcNs2601b02is", 
-            estimatedHours: 1.41, // 2 modules, 84 mins 37 seconds total
+            estimatedHours: 2.51, // 2 modules, 2:30:32 (150 mins 32 seconds total)
             certificateType: .chargingInfrastructureSpecialist,
             xpReward: 200, // 2 modules × 100 XP each
             skillLevel: .expert
@@ -181,7 +181,7 @@ extension AdvancedCourse {
             description: "Advanced 2-module certification covering professional-grade PPE selection, expert safety equipment usage, and master-level protection protocols for EV technicians. Maps to 2 individual advanced modules.",
             prerequisiteCourseId: "course_4", // Requires basic Course 4 (4.1-4.2) completion - maps to 2 advanced modules
             muxPlaybackId: "cZ5rxX2013jHbgsxIBDKEHtdJyB4aTYNkLG5hB4GWmm4",
-            estimatedHours: 0.74, // 2 modules, 44 mins 18 seconds total
+            estimatedHours: 1.21, // 2 modules, 1:12:19 (72 mins 19 seconds total)
             certificateType: .motorControlAdvanced,
             xpReward: 200, // 2 modules × 100 XP each
             skillLevel: .master
@@ -192,7 +192,7 @@ extension AdvancedCourse {
             description: "Comprehensive 3-module advanced series covering EV fundamentals, energy storage systems, and motor control architecture. Master the complete technical journey from basic EV principles to advanced powertrain design.",
             prerequisiteCourseId: "course_5", // Requires basic Course 5 (5.1-5.3) completion - maps to 3 advanced modules
             muxPlaybackId: "lJjDsHFQ1J5c9tcfy3Bh6OP00SbOQcWMEJ243Lk102Yyk",
-            estimatedHours: 1.79, // 3 modules, 107 mins 12 seconds total
+            estimatedHours: 2.54, // 3 modules, 2:32:42 (152 mins 42 seconds total)
             certificateType: .evFundamentalsAdvanced,
             xpReward: 300, // 3 modules × 100 XP each
             skillLevel: .master

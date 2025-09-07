@@ -102,6 +102,7 @@ struct UnifiedVideoPlayer: View {
             ZStack {
                 if let playerViewController = playerViewController {
                     UnifiedPlayerViewControllerRepresentable(playerViewController: playerViewController)
+                        .frame(minHeight: 200)
                         .aspectRatio(16/9, contentMode: .fit)
                 } else if playbackId.isEmpty {
                     // No Mux ID available - show error
@@ -253,11 +254,18 @@ struct UnifiedVideoPlayer: View {
                 playerViewController.showsPlaybackControls = true
                 playerViewController.entersFullScreenWhenPlaybackBegins = false
                 playerViewController.exitsFullScreenWhenPlaybackEnds = false
+                playerViewController.canStartPictureInPictureAutomaticallyFromInline = false
+                
+                // Force specific video gravity
+                playerViewController.videoGravity = .resizeAspect
                 
                 // Enable landscape fullscreen
                 if #available(iOS 16.0, *) {
                     playerViewController.allowsVideoFrameAnalysis = false
                 }
+                
+                // Ensure player doesn't get deallocated
+                playerViewController.player?.automaticallyWaitsToMinimizeStalling = true
                 
                 // Configure MUX player to disable manual rebuffer tracking
                 if let player = playerViewController.player {
@@ -435,6 +443,9 @@ struct UnifiedPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     let playerViewController: AVPlayerViewController
     
     func makeUIViewController(context: Context) -> AVPlayerViewController {
+        // Store reference in coordinator to prevent deallocation
+        context.coordinator.retainedPlayerViewController = playerViewController
+        
         // Additional configuration for fullscreen support
         playerViewController.videoGravity = .resizeAspect
         
@@ -442,16 +453,28 @@ struct UnifiedPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        // Ensure we're working with the same instance
+        guard uiViewController === context.coordinator.retainedPlayerViewController else {
+            return
+        }
+        
         // Ensure consistent configuration
         if uiViewController.videoGravity != .resizeAspect {
             uiViewController.videoGravity = .resizeAspect
         }
     }
     
-    // Handle view controller lifecycle for better fullscreen support
-    static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: ()) {
-        // Clean up any observers or delegates when the view is dismantled
-        uiViewController.player?.pause()
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+    
+    class Coordinator {
+        var retainedPlayerViewController: AVPlayerViewController?
+        
+        deinit {
+            retainedPlayerViewController?.player?.pause()
+            retainedPlayerViewController = nil
+        }
     }
 }
 

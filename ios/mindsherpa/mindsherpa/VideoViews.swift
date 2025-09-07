@@ -243,6 +243,7 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
         controller.showsPlaybackControls = true
         controller.entersFullScreenWhenPlaybackBegins = false
         controller.exitsFullScreenWhenPlaybackEnds = false
+        controller.canStartPictureInPictureAutomaticallyFromInline = false
         controller.videoGravity = .resizeAspect
         
         // Enable landscape fullscreen

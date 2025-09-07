@@ -195,22 +195,17 @@ extension ProgressStore {
     
     // Professional-grade course completion - requires ALL videos in course to be completed
     func isProfessionalCourseCompleted(courseId: String) -> Bool {
-        // For now, use the existing isCourseCompleted method but make it stricter
-        // We'll improve this logic later when we can access video data properly
-        return isCourseCompleted(courseId: "course_\(courseId)")
+        let progress = getBasicCourseProgress(courseNumber: courseId)
+        return progress.isFullyCompleted
     }
     
     // Get detailed course completion status for UI
     func getCourseCompletionDetails() -> [(courseId: String, completed: Bool, videosCompleted: Int, totalVideos: Int)] {
         let courseIds = ["1", "2", "3", "4", "5"]
-        let expectedCounts = [7, 4, 2, 2, 3]
         
-        return zip(courseIds, expectedCounts).map { (courseId, expectedCount) in
-            let isCompleted = isProfessionalCourseCompleted(courseId: courseId)
-            // For now, use simplified logic - we'll enhance this later
-            let videosCompleted = isCompleted ? expectedCount : 0
-            
-            return (courseId: courseId, completed: isCompleted, videosCompleted: videosCompleted, totalVideos: expectedCount)
+        return courseIds.map { courseId in
+            let progress = getBasicCourseProgress(courseNumber: courseId)
+            return (courseId: courseId, completed: progress.isFullyCompleted, videosCompleted: progress.completed, totalVideos: progress.total)
         }
     }
 }

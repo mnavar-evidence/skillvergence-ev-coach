@@ -215,6 +215,25 @@ struct LevelDetailsView: View {
                         .background(.ultraThinMaterial)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         
+                        // Certification Progression Roadmap
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Certification Pathway")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.secondary)
+                            
+                            VStack(spacing: 8) {
+                                CertificationProgressRow(level: .none, requirements: "Start learning", isCurrentOrPast: true, isCurrent: certificationLevel == .none, completedCourses: completedCourses)
+                                CertificationProgressRow(level: .foundation, requirements: "1 course", isCurrentOrPast: completedCourses >= 1, isCurrent: certificationLevel == .foundation, completedCourses: completedCourses)
+                                CertificationProgressRow(level: .associate, requirements: "2 courses", isCurrentOrPast: completedCourses >= 2, isCurrent: certificationLevel == .associate, completedCourses: completedCourses)
+                                CertificationProgressRow(level: .professional, requirements: "4 courses", isCurrentOrPast: completedCourses >= 4, isCurrent: certificationLevel == .professional, completedCourses: completedCourses)
+                                CertificationProgressRow(level: .certified, requirements: "5 courses", isCurrentOrPast: completedCourses >= 5, isCurrent: certificationLevel == .certified, completedCourses: completedCourses)
+                            }
+                        }
+                        
+                        Divider()
+                            .padding(.vertical, 8)
+                        
                         // Course Completion Progress
                         VStack(spacing: 8) {
                             let courseDetails = progressStore.getCourseCompletionDetails()
@@ -386,6 +405,56 @@ struct XPLevelProgressRow: View {
             }
             
             Spacer()
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+struct CertificationProgressRow: View {
+    let level: CertificationLevel
+    let requirements: String
+    let isCurrentOrPast: Bool
+    let isCurrent: Bool
+    let completedCourses: Int
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(isCurrent ? .orange : (isCurrentOrPast ? .green : .gray.opacity(0.3)))
+                    .frame(width: 32, height: 32)
+                
+                if isCurrentOrPast {
+                    Image(systemName: isCurrent ? level.icon : "checkmark")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                } else {
+                    Image(systemName: level.icon)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(level.displayName)
+                    .font(.subheadline)
+                    .fontWeight(isCurrent ? .semibold : (isCurrentOrPast ? .medium : .regular))
+                    .foregroundStyle(isCurrent ? .primary : (isCurrentOrPast ? .primary : .secondary))
+                
+                Text(requirements)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Spacer()
+            
+            if isCurrent && level != .none {
+                Text("\(completedCourses)/\(level.coursesRequired)")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.orange)
+            }
         }
         .padding(.vertical, 2)
     }

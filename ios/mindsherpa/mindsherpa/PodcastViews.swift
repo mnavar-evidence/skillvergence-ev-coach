@@ -8,6 +8,7 @@
 import SwiftUI
 import AVKit
 import AVFoundation
+import MediaPlayer
 
 struct PodcastView: View {
     @ObservedObject var viewModel: EVCoachViewModel
@@ -401,9 +402,9 @@ struct PodcastPlayerView: View {
         isLoadingAudio = true
         audioError = nil
         
-        // Configure audio session for playback on physical devices
+        // Configure audio session for background playback
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.allowAirPlay, .allowBluetoothA2DP])
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             print("Failed to set up audio session: \(error)")
@@ -442,7 +443,13 @@ struct PodcastPlayerView: View {
                 playbackPosition: Int(currentTime),
                 totalDuration: Int(duration)
             )
+            
+            // Update now playing info with current time
+            updateNowPlayingInfo()
         }
+        
+        // Setup Media Player Command Center for lock screen controls
+        setupMediaPlayerCommandCenter()
         
         // Get duration
         if let item = player?.currentItem {
@@ -473,6 +480,14 @@ struct PodcastPlayerView: View {
         }
         player?.pause()
         player = nil
+        
+        // Clear now playing info and command center
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        let commandCenter = MPRemoteCommandCenter.shared()
+        commandCenter.playCommand.removeTarget(nil)
+        commandCenter.pauseCommand.removeTarget(nil)
+        commandCenter.skipBackwardCommand.removeTarget(nil)
+        commandCenter.skipForwardCommand.removeTarget(nil)
     }
     
     private func togglePlayPause() {
@@ -484,6 +499,7 @@ struct PodcastPlayerView: View {
             player.play()
         }
         isPlaying.toggle()
+        updateNowPlayingInfo()
     }
     
     private func seekBackward() {
@@ -505,6 +521,64 @@ struct PodcastPlayerView: View {
         let minutes = totalSeconds / 60
         let remainingSeconds = totalSeconds % 60
         return String(format: "%d:%02d", minutes, remainingSeconds)
+    }
+    
+    private func setupMediaPlayerCommandCenter() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+        
+        // Enable play command
+        commandCenter.playCommand.isEnabled = true
+        commandCenter.playCommand.addTarget { [weak self] _ in
+            self?.player?.play()
+            self?.isPlaying = true
+            self?.updateNowPlayingInfo()
+            return .success
+        }
+        
+        // Enable pause command
+        commandCenter.pauseCommand.isEnabled = true
+        commandCenter.pauseCommand.addTarget { [weak self] _ in
+            self?.player?.pause()
+            self?.isPlaying = false
+            self?.updateNowPlayingInfo()
+            return .success
+        }
+        
+        // Enable skip backward command
+        commandCenter.skipBackwardCommand.isEnabled = true
+        commandCenter.skipBackwardCommand.preferredIntervals = [15]
+        commandCenter.skipBackwardCommand.addTarget { [weak self] _ in
+            self?.seekBackward()
+            return .success
+        }
+        
+        // Enable skip forward command
+        commandCenter.skipForwardCommand.isEnabled = true
+        commandCenter.skipForwardCommand.preferredIntervals = [15]
+        commandCenter.skipForwardCommand.addTarget { [weak self] _ in
+            self?.seekForward()
+            return .success
+        }
+        
+        // Set up Now Playing info
+        updateNowPlayingInfo()
+    }
+    
+    private func updateNowPlayingInfo() {
+        var nowPlayingInfo = [String: Any]()
+        
+        nowPlayingInfo[MPMediaItemPropertyTitle] = podcast.title
+        nowPlayingInfo[MPMediaItemPropertyArtist] = podcast.courseTitle ?? "MindSherpa Podcast"
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+        
+        // Set artwork if available (you can add podcast artwork here)
+        // nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: CGSize(width: 300, height: 300)) { _ in
+        //     // Return podcast artwork image here
+        // }
+        
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
 }
 

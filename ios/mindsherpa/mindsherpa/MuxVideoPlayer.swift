@@ -155,6 +155,9 @@ struct MuxVideoPlayer: View {
                 playerViewController.exitsFullScreenWhenPlaybackEnds = false
                 playerViewController.canStartPictureInPictureAutomaticallyFromInline = false
                 
+                // Always show play button for better UX
+                playerViewController.requiresLinearPlayback = false
+                
                 // Force specific video gravity
                 playerViewController.videoGravity = .resizeAspect
                 
@@ -169,6 +172,11 @@ struct MuxVideoPlayer: View {
                 await MainActor.run {
                     self.playerViewController = playerViewController
                     self.isLoading = false
+                    
+                    // Ensure controls are visible initially for better UX
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        playerViewController.showsPlaybackControls = true
+                    }
                     
                     // Start progress tracking timer
                     self.startProgressTimer()

@@ -247,6 +247,9 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
         controller.canStartPictureInPictureAutomaticallyFromInline = false
         controller.videoGravity = .resizeAspect
         
+        // Always show play button for better UX
+        controller.requiresLinearPlayback = false
+        
         // Enable landscape fullscreen
         if #available(iOS 16.0, *) {
             controller.allowsVideoFrameAnalysis = false
@@ -281,6 +284,11 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
                 // Immediately save position when user seeks/scrubs (regardless of play state)
                 let currentTime = Int(player.currentTime().seconds)
                 viewModel.updateVideoProgress(videoId: video.id, watchedSeconds: currentTime, totalDuration: video.duration, isPlaying: true)
+            }
+            
+            // Ensure controls are visible initially for better UX
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                controller.showsPlaybackControls = true
             }
         }
         

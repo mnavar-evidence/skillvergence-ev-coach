@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVKit
+import AVFoundation
 import MuxPlayerSwift
 import Combine
 
@@ -136,6 +137,14 @@ struct MuxVideoPlayer: View {
         
         Task {
             do {
+                // Configure audio session for video playback
+                do {
+                    try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay, .allowBluetoothA2DP])
+                    try AVAudioSession.sharedInstance().setActive(true)
+                } catch {
+                    print("Failed to set up audio session for video: \(error)")
+                }
+                
                 // Create Mux Player with playback options
                 let playerViewController = AVPlayerViewController(playbackID: playbackId)
                 

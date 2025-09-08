@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVKit
+import AVFoundation
 import WebKit
 
 // MARK: - VideoPlayerView
@@ -252,6 +253,14 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
         }
         
         if let url = url {
+            // Configure audio session for video playback
+            do {
+                try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay, .allowBluetoothA2DP])
+                try AVAudioSession.sharedInstance().setActive(true)
+            } catch {
+                print("Failed to set up audio session for video: \(error)")
+            }
+            
             let player = AVPlayer(url: url)
             controller.player = player
             

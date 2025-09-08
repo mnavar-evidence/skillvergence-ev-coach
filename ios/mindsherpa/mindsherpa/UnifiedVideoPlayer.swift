@@ -26,6 +26,7 @@ struct UnifiedVideoPlayer: View {
     @State private var isLoading: Bool = true
     @State private var progressTimer: Timer?
     @State private var cancellables = Set<AnyCancellable>()
+    @State private var showCustomPlayButton: Bool = true
     
     // Computed properties for unified handling
     private var playbackId: String {
@@ -102,9 +103,21 @@ struct UnifiedVideoPlayer: View {
             // Video Player Area
             ZStack {
                 if let playerViewController = playerViewController {
-                    UnifiedPlayerViewControllerRepresentable(playerViewController: playerViewController)
-                        .frame(minHeight: 200)
-                        .aspectRatio(16/9, contentMode: .fit)
+                    ZStack {
+                        UnifiedPlayerViewControllerRepresentable(playerViewController: playerViewController)
+                            .frame(minHeight: 200)
+                            .aspectRatio(16/9, contentMode: .fit)
+                        
+                        // Custom play button overlay
+                        if showCustomPlayButton && !isPlaying {
+                            CustomPlayButtonOverlay {
+                                // Start playing when custom play button is tapped
+                                playerViewController.player?.play()
+                                showCustomPlayButton = false
+                                isPlaying = true
+                            }
+                        }
+                    }
                 } else if playbackId.isEmpty {
                     // No Mux ID available - show error
                     Rectangle()
@@ -296,6 +309,9 @@ struct UnifiedVideoPlayer: View {
                     
                     // Start progress tracking timer
                     self.startProgressTimer()
+                    
+                    // Monitor play state to hide custom play button
+                    self.monitorPlaybackState()
                 }
                 
                 // Get duration when available
@@ -447,6 +463,23 @@ struct UnifiedVideoPlayer: View {
         
     }
     
+    private func monitorPlaybackState() {
+        guard let player = playerViewController?.player else { return }
+        
+        // Monitor playback state to hide custom play button when playing
+        player.publisher(for: \.timeControlStatus)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                if status == .playing {
+                    self?.isPlaying = true
+                    self?.showCustomPlayButton = false
+                } else if status == .paused {
+                    self?.isPlaying = false
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
     private func formatTime(_ time: Double) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
@@ -492,6 +525,36 @@ struct UnifiedPlayerViewControllerRepresentable: UIViewControllerRepresentable {
             retainedPlayerViewController?.player?.pause()
             retainedPlayerViewController = nil
         }
+    }
+}
+
+// MARK: - Custom Play Button Overlay
+
+struct CustomPlayButtonOverlay: View {
+    let onPlay: () -> Void
+    
+    var body: some View {
+        ZStack {
+            // Semi-transparent background
+            Color.black.opacity(0.4)
+            
+            // Play button
+            Button(action: onPlay) {
+                ZStack {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 80, height: 80)
+                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                    
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.black)
+                        .offset(x: 2, y: 0) // Slight offset for visual center
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .allowsHitTesting(true)
     }
 }
 

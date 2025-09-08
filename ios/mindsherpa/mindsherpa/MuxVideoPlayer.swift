@@ -357,12 +357,12 @@ struct MuxVideoPlayer: View {
         // Monitor playback state to hide custom play button when playing
         player.publisher(for: \.timeControlStatus)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] status in
+            .sink { status in
                 if status == .playing {
-                    self?.isPlaying = true
-                    self?.showCustomPlayButton = false
+                    self.isPlaying = true
+                    self.showCustomPlayButton = false
                 } else if status == .paused {
-                    self?.isPlaying = false
+                    self.isPlaying = false
                 }
             }
             .store(in: &cancellables)

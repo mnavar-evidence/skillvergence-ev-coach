@@ -231,23 +231,72 @@ struct YouTubePlayerView: UIViewRepresentable {
 
 // MARK: - AVPlayer Controller View
 
+// MARK: - Container VC with Fullscreen Delegate Support for AVPlayer
+
+final class AVPlayerContainerViewController: UIViewController, AVPlayerViewControllerDelegate {
+    let playerViewController: AVPlayerViewController
+    var onFullscreenChange: ((Bool) -> Void)?
+    
+    init(playerViewController: AVPlayerViewController) {
+        self.playerViewController = playerViewController
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        
+        // Add player as child VC
+        addChild(playerViewController)
+        playerViewController.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(playerViewController.view)
+        
+        NSLayoutConstraint.activate([
+            playerViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            playerViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            playerViewController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            playerViewController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        playerViewController.didMove(toParent: self)
+        playerViewController.delegate = self
+    }
+    
+    // MARK: - AVPlayerViewControllerDelegate
+    
+    func playerViewController(_ playerViewController: AVPlayerViewController,
+                              willBeginFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        onFullscreenChange?(true)
+    }
+    
+    func playerViewController(_ playerViewController: AVPlayerViewController,
+                              willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        onFullscreenChange?(false)
+    }
+}
+
 struct AVPlayerControllerView: UIViewControllerRepresentable {
     let url: URL?
     let viewModel: EVCoachViewModel
     let video: Video
+    var onFullscreenChange: ((Bool) -> Void)?
     
-    func makeUIViewController(context: Context) -> AVPlayerViewController {
+    func makeUIViewController(context: Context) -> AVPlayerContainerViewController {
         let controller = AVPlayerViewController()
         
-        // Configure player settings for proper fullscreen support
-        controller.allowsPictureInPicturePlayback = false
+        // Configure player settings ONCE for proper fullscreen support
         controller.showsPlaybackControls = true
         controller.entersFullScreenWhenPlaybackBegins = false
         controller.exitsFullScreenWhenPlaybackEnds = false
         controller.canStartPictureInPictureAutomaticallyFromInline = false
         controller.videoGravity = .resizeAspect
+        controller.allowsPictureInPicturePlayback = false
         
-        // Always show play button for better UX
+        // Don't recreate or reconfigure in updateUIViewController
         controller.requiresLinearPlayback = false
         
         // Enable landscape fullscreen
@@ -292,14 +341,16 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
             }
         }
         
-        return controller
+        let containerVC = AVPlayerContainerViewController(playerViewController: controller)
+        containerVC.onFullscreenChange = onFullscreenChange
+        return containerVC
     }
     
-    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        // Ensure consistent configuration for fullscreen support
-        if uiViewController.videoGravity != .resizeAspect {
-            uiViewController.videoGravity = .resizeAspect
-        }
+    func updateUIViewController(_ uiViewController: AVPlayerContainerViewController, context: Context) {
+        // Don't recreate - just update simple flags if needed
+        uiViewController.playerViewController.showsPlaybackControls = true
+        uiViewController.playerViewController.videoGravity = .resizeAspect
+        uiViewController.onFullscreenChange = onFullscreenChange
     }
 }
 

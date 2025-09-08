@@ -19,7 +19,8 @@ struct UnifiedVideoPlayer: View {
     let advancedCourse: AdvancedCourse?
     
     @ObservedObject private var progressStore = ProgressStore.shared
-    @State private var playerViewController: AVPlayerViewController?
+    @State private var sharedPlayer: AVPlayer?
+    @State private var inlinePlayerViewController: AVPlayerViewController?
     @State private var currentTime: Double = 0
     @State private var duration: Double = 0
     @State private var isPlaying: Bool = false
@@ -27,6 +28,7 @@ struct UnifiedVideoPlayer: View {
     @State private var progressTimer: Timer?
     @State private var cancellables = Set<AnyCancellable>()
     @State private var showCustomPlayButton: Bool = true
+    @State private var showFullscreen: Bool = false
     
     // Computed properties for unified handling
     private var playbackId: String {
@@ -102,27 +104,49 @@ struct UnifiedVideoPlayer: View {
         VStack(spacing: 0) {
             // Video Player Area
             ZStack {
-                if let playerViewController = playerViewController {
+                if let playerViewController = inlinePlayerViewController, let player = sharedPlayer {
                     ZStack {
-                        UnifiedPlayerViewControllerRepresentable(playerViewController: playerViewController)
-                            .frame(minHeight: 200)
-                            .aspectRatio(16/9, contentMode: .fit)
+                        ManualPlayerRepresentable(
+                            playerViewController: playerViewController,
+                            player: player
+                        )
+                        .frame(height: 220)
+                        .background(Color.black)
                         
                         // Custom play button overlay
                         if showCustomPlayButton && !isPlaying {
                             CustomPlayButtonOverlay {
                                 // Start playing when custom play button is tapped
-                                playerViewController.player?.play()
+                                player.play()
                                 showCustomPlayButton = false
                                 isPlaying = true
                             }
+                        }
+                        
+                        // Custom fullscreen button
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Button {
+                                    showFullscreen = true
+                                } label: {
+                                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                        .font(.title3)
+                                        .foregroundColor(.white)
+                                        .padding(8)
+                                        .background(.black.opacity(0.6))
+                                        .clipShape(Circle())
+                                }
+                                .padding()
+                            }
+                            Spacer()
                         }
                     }
                 } else if playbackId.isEmpty {
                     // No Mux ID available - show error
                     Rectangle()
                         .fill(Color.red.opacity(0.1))
-                        .aspectRatio(16/9, contentMode: .fit)
+                        .frame(height: 220)
                         .overlay(
                             VStack {
                                 Image(systemName: "exclamationmark.triangle")
@@ -140,7 +164,7 @@ struct UnifiedVideoPlayer: View {
                     // Loading placeholder
                     Rectangle()
                         .fill(Color.black)
-                        .aspectRatio(16/9, contentMode: .fit)
+                        .frame(height: 220)
                         .overlay(
                             VStack {
                                 ProgressView("Loading video...")
@@ -248,6 +272,9 @@ struct UnifiedVideoPlayer: View {
         .onDisappear {
             cleanupPlayer()
         }
+        .fullScreenCover(isPresented: $showFullscreen) {
+            FullscreenPlayerView(player: sharedPlayer)
+        }
     }
     
     // MARK: - Private Methods
@@ -268,44 +295,40 @@ struct UnifiedVideoPlayer: View {
                     print("Failed to set up audio session for video: \(error)")
                 }
                 
-                // Create Mux Player with proper configuration to avoid rebuffer warnings
-                let playerViewController = AVPlayerViewController(playbackID: playbackId)
-                
-                // Configure player settings for proper fullscreen support
-                playerViewController.allowsPictureInPicturePlayback = false
-                playerViewController.showsPlaybackControls = true
-                playerViewController.entersFullScreenWhenPlaybackBegins = false
-                playerViewController.exitsFullScreenWhenPlaybackEnds = false
-                playerViewController.canStartPictureInPictureAutomaticallyFromInline = false
-                
-                // Always show play button for better UX
-                playerViewController.requiresLinearPlayback = false
-                
-                // Force specific video gravity
-                playerViewController.videoGravity = .resizeAspect
-                
-                // Enable landscape fullscreen
-                if #available(iOS 16.0, *) {
-                    playerViewController.allowsVideoFrameAnalysis = false
+                // Create shared AVPlayer using Mux
+                let muxPlayerViewController = AVPlayerViewController(playbackID: playbackId)
+                guard let player = muxPlayerViewController.player else {
+                    await MainActor.run { self.isLoading = false }
+                    return
                 }
                 
-                // Ensure player doesn't get deallocated
-                playerViewController.player?.automaticallyWaitsToMinimizeStalling = true
+                // Configure the shared player
+                player.automaticallyWaitsToMinimizeStalling = true
                 
-                // Configure MUX player to disable manual rebuffer tracking
-                if let player = playerViewController.player {
-                    // Disable automatic rebuffer detection to avoid the warning
-                    player.automaticallyWaitsToMinimizeStalling = true
+                // Create inline player controller (separate from Mux controller)
+                let inlinePlayerViewController = AVPlayerViewController()
+                
+                // Configure inline player settings - KEEP native controls, disable system fullscreen
+                inlinePlayerViewController.showsPlaybackControls = true  // Keep native controls
+                inlinePlayerViewController.entersFullScreenWhenPlaybackBegins = false
+                inlinePlayerViewController.exitsFullScreenWhenPlaybackEnds = false
+                inlinePlayerViewController.canStartPictureInPictureAutomaticallyFromInline = false
+                inlinePlayerViewController.videoGravity = .resizeAspect
+                inlinePlayerViewController.allowsPictureInPicturePlayback = false
+                inlinePlayerViewController.requiresLinearPlayback = false
+                
+                // Disable fullscreen presentation capability entirely
+                inlinePlayerViewController.modalPresentationStyle = .none
+                
+                // Enable landscape support but disable system fullscreen
+                if #available(iOS 16.0, *) {
+                    inlinePlayerViewController.allowsVideoFrameAnalysis = false
                 }
                 
                 await MainActor.run {
-                    self.playerViewController = playerViewController
+                    self.sharedPlayer = player
+                    self.inlinePlayerViewController = inlinePlayerViewController
                     self.isLoading = false
-                    
-                    // Ensure controls are visible initially for better UX
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        playerViewController.showsPlaybackControls = true
-                    }
                     
                     // Start progress tracking timer
                     self.startProgressTimer()
@@ -315,8 +338,7 @@ struct UnifiedVideoPlayer: View {
                 }
                 
                 // Get duration when available
-                if let player = playerViewController.player,
-                   let asset = player.currentItem?.asset {
+                if let asset = player.currentItem?.asset {
                     let duration = try await asset.load(.duration)
                     await MainActor.run {
                         self.duration = CMTimeGetSeconds(duration)
@@ -354,7 +376,7 @@ struct UnifiedVideoPlayer: View {
         NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)
             .sink { _ in
                 // App going to background - pause and save progress
-                if let player = playerViewController?.player {
+                if let player = sharedPlayer {
                     player.pause()
                 }
                 saveProgress()
@@ -371,7 +393,7 @@ struct UnifiedVideoPlayer: View {
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
             .sink { _ in
                 // App coming back to foreground - restart timer if player exists
-                if playerViewController != nil {
+                if sharedPlayer != nil {
                     startProgressTimer()
                 }
             }
@@ -388,22 +410,21 @@ struct UnifiedVideoPlayer: View {
         // Save final progress
         saveProgress()
         
-        // Stop and cleanup player
-        if let playerViewController = playerViewController,
-           let player = playerViewController.player {
+        // Stop and cleanup shared player
+        if let player = sharedPlayer {
             player.pause()
             player.replaceCurrentItem(with: nil)
         }
         
         // Clear references
-        self.playerViewController = nil
+        self.sharedPlayer = nil
+        self.inlinePlayerViewController = nil
         self.isPlaying = false
         self.currentTime = 0
     }
     
     private func updateProgress() {
-        guard let playerViewController = playerViewController,
-              let player = playerViewController.player else { return }
+        guard let player = sharedPlayer else { return }
         
         let currentTime = CMTimeGetSeconds(player.currentTime())
         self.currentTime = currentTime
@@ -433,10 +454,9 @@ struct UnifiedVideoPlayer: View {
             let savedTime = progress.lastPositionSec
             
             // Seek to saved position if available
-            if savedTime > 0, let player = playerViewController?.player {
+            if savedTime > 0, let player = sharedPlayer {
                 let seekTime = CMTime(seconds: savedTime, preferredTimescale: 1)
                 player.seek(to: seekTime)
-                
             }
         }
     }
@@ -464,7 +484,7 @@ struct UnifiedVideoPlayer: View {
     }
     
     private func monitorPlaybackState() {
-        guard let player = playerViewController?.player else { return }
+        guard let player = sharedPlayer else { return }
         
         // Monitor playback state to hide custom play button when playing
         player.publisher(for: \.timeControlStatus)
@@ -487,46 +507,128 @@ struct UnifiedVideoPlayer: View {
     }
 }
 
-// MARK: - SwiftUI Wrapper for AVPlayerViewController
+// MARK: - Simple Container for Manual Fullscreen
 
-struct UnifiedPlayerViewControllerRepresentable: UIViewControllerRepresentable {
+final class SimplePlayerContainer: UIViewController, AVPlayerViewControllerDelegate {
     let playerViewController: AVPlayerViewController
     
-    func makeUIViewController(context: Context) -> AVPlayerViewController {
-        // Store reference in coordinator to prevent deallocation
-        context.coordinator.retainedPlayerViewController = playerViewController
+    init(playerViewController: AVPlayerViewController) {
+        self.playerViewController = playerViewController
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
         
-        // Additional configuration for fullscreen support
+        // Set delegate to intercept fullscreen attempts
+        playerViewController.delegate = self
+        
+        // Add player as child VC
+        addChild(playerViewController)
+        playerViewController.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(playerViewController.view)
+        
+        NSLayoutConstraint.activate([
+            playerViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            playerViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            playerViewController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            playerViewController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        playerViewController.didMove(toParent: self)
+    }
+    
+    // MARK: - AVPlayerViewControllerDelegate
+    
+    // Block all system fullscreen attempts
+    func playerViewController(_ playerViewController: AVPlayerViewController, willBeginFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        // Prevent the transition by doing nothing - system fullscreen is blocked
+        print("🚫 Blocked system fullscreen attempt")
+    }
+    
+    func playerViewControllerShouldAutomaticallyDismissAtPictureInPictureStart(_ playerViewController: AVPlayerViewController) -> Bool {
+        return false
+    }
+}
+
+// MARK: - Manual Fullscreen Player Representable
+
+struct ManualPlayerRepresentable: UIViewControllerRepresentable {
+    let playerViewController: AVPlayerViewController
+    let player: AVPlayer?
+    
+    func makeUIViewController(context: Context) -> SimplePlayerContainer {
+        // Keep native controls but disable system fullscreen
+        playerViewController.showsPlaybackControls = true
         playerViewController.videoGravity = .resizeAspect
         
-        return playerViewController
-    }
-    
-    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        // Ensure we're working with the same instance
-        guard uiViewController === context.coordinator.retainedPlayerViewController else {
-            return
+        // Assign the shared player
+        if let player = player {
+            playerViewController.player = player
         }
         
-        // Ensure consistent configuration
-        if uiViewController.videoGravity != .resizeAspect {
-            uiViewController.videoGravity = .resizeAspect
-        }
+        return SimplePlayerContainer(playerViewController: playerViewController)
     }
     
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-    
-    class Coordinator {
-        var retainedPlayerViewController: AVPlayerViewController?
-        
-        deinit {
-            retainedPlayerViewController?.player?.pause()
-            retainedPlayerViewController = nil
+    func updateUIViewController(_ uiViewController: SimplePlayerContainer, context: Context) {
+        // Ensure player assignment
+        if let player = player, uiViewController.playerViewController.player !== player {
+            uiViewController.playerViewController.player = player
         }
     }
 }
+
+// MARK: - Fullscreen Player View
+
+struct FullscreenPlayerView: View {
+    @Environment(\.dismiss) private var dismiss
+    let player: AVPlayer?
+    
+    // Create a dedicated fullscreen player controller
+    private let fullscreenPVC: AVPlayerViewController = {
+        let pvc = AVPlayerViewController()
+        pvc.modalPresentationStyle = .fullScreen
+        pvc.showsPlaybackControls = true
+        pvc.videoGravity = .resizeAspect
+        // Disable system fullscreen since we're handling it manually
+        pvc.entersFullScreenWhenPlaybackBegins = false
+        pvc.exitsFullScreenWhenPlaybackEnds = false
+        return pvc
+    }()
+    
+    var body: some View {
+        ZStack {
+            ManualPlayerRepresentable(playerViewController: fullscreenPVC, player: player)
+                .ignoresSafeArea()
+            
+            // Close control
+            VStack {
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(.black.opacity(0.6))
+                            .clipShape(Circle())
+                    }
+                    Spacer()
+                }
+                .padding()
+                Spacer()
+            }
+        }
+        .background(Color.black.ignoresSafeArea())
+    }
+}
+
 
 // MARK: - Custom Play Button Overlay
 

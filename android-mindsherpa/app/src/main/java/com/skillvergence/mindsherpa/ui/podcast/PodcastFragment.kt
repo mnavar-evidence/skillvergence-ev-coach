@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.skillvergence.mindsherpa.R
 import com.skillvergence.mindsherpa.data.model.Podcast
-import com.skillvergence.mindsherpa.ui.video.VideoDetailActivity
 
 /**
  * Podcast Fragment - Matches iOS PodcastView
@@ -140,15 +139,16 @@ class PodcastFragment : Fragment() {
     private fun onPodcastSelected(podcast: Podcast) {
         podcastViewModel.selectPodcast(podcast)
 
-        // Launch audio player activity (using VideoDetailActivity for now since it supports Mux)
-        val intent = VideoDetailActivity.createIntent(
+        // Launch dedicated podcast player activity
+        val intent = PodcastPlayerActivity.createIntent(
             context = requireContext(),
-            videoId = podcast.id,
-            videoTitle = podcast.title,
-            videoDescription = podcast.description,
-            videoDuration = podcast.duration,
-            courseId = podcast.courseId ?: "",
-            muxPlaybackId = podcast.getMuxPlaybackId()
+            podcastId = podcast.id,
+            podcastTitle = podcast.title,
+            podcastDescription = podcast.description,
+            muxPlaybackId = podcast.getMuxPlaybackId(),
+            thumbnailUrl = podcast.resolveThumbnailUrl(),
+            episodeNumber = podcast.episodeNumber,
+            courseTitle = podcastViewModel.getCourseTitle(podcast.courseId ?: "")
         )
         startActivity(intent)
     }

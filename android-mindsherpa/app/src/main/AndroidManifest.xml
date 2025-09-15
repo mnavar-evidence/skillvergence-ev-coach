@@ -40,6 +40,14 @@
             android:label="Video Detail"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.podcast.PodcastPlayerActivity"
+            android:exported="false"
+            android:label="Podcast Player"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop" />
     </application>
 
 </manifest>

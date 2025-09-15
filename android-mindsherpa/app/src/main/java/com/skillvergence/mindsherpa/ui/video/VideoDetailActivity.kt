@@ -158,8 +158,10 @@ class VideoDetailActivity : AppCompatActivity() {
     private fun setupVideoPlayer() {
         if (muxPlaybackId.isNotEmpty()) {
             try {
+                // Force audio stream type to MUSIC for proper routing
+                volumeControlStream = AudioManager.STREAM_MUSIC
+
                 // Create ExoPlayer instance with audio attributes
-                // Let ExoPlayer handle audio focus automatically (like iOS AVPlayerViewController)
                 exoPlayer = ExoPlayer.Builder(this)
                     .setAudioAttributes(
                         androidx.media3.common.AudioAttributes.Builder()
@@ -345,6 +347,12 @@ class VideoDetailActivity : AppCompatActivity() {
         // Check ExoPlayer audio renderer status
         exoPlayer.audioFormat?.let { format ->
             logToFile(this, "🎵 Audio format: ${format.sampleMimeType}, channels: ${format.channelCount}")
+
+            // Force volume settings when audio is detected
+            exoPlayer.volume = 1.0f
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
+                (audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * 0.8).toInt(), 0)
+            logToFile(this, "🔊 Force set ExoPlayer and system volume")
         } ?: logToFile(this, "❌ No audio format detected")
 
         // Check if audio is enabled and volume

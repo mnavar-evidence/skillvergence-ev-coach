@@ -260,12 +260,13 @@ const sampleCourses = [
 // GET /api/courses - Get all courses (with mux support)
 router.get('/', async (req, res) => {
   try {
-    // Process courses to add YouTube video IDs
+    // Process courses to add YouTube video IDs and preserve muxPlaybackId
     const processedCourses = sampleCourses.map(course => ({
       ...course,
       videos: course.videos.map(video => ({
         ...video,
-        youtubeVideoId: extractYouTubeVideoId(video.videoUrl)
+        youtubeVideoId: extractYouTubeVideoId(video.videoUrl),
+        muxPlaybackId: video.muxPlaybackId // Explicitly preserve muxPlaybackId
       }))
     }));
     
@@ -285,12 +286,13 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Course not found' });
     }
     
-    // Process course to add YouTube video IDs
+    // Process course to add YouTube video IDs and preserve muxPlaybackId
     const processedCourse = {
       ...course,
       videos: course.videos.map(video => ({
         ...video,
-        youtubeVideoId: extractYouTubeVideoId(video.videoUrl)
+        youtubeVideoId: extractYouTubeVideoId(video.videoUrl),
+        muxPlaybackId: video.muxPlaybackId // Explicitly preserve muxPlaybackId
       }))
     };
     

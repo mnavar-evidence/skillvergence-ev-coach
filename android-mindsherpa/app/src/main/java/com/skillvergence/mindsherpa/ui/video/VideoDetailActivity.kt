@@ -282,6 +282,7 @@ class VideoDetailActivity : AppCompatActivity() {
                                     logToFile(this@VideoDetailActivity, "🎬 Mux Player ready")
                                     totalDurationSeconds = (duration) / 1000
                                     startProgressTracking()
+                                    testAudioStream() // Test audio format
                                 }
                                 Player.STATE_ENDED -> {
                                     logToFile(this@VideoDetailActivity, "🎬 Video playback ended")
@@ -296,6 +297,14 @@ class VideoDetailActivity : AppCompatActivity() {
                             } else {
                                 stopProgressTracking()
                             }
+                        }
+
+                        override fun onAudioSessionIdChanged(audioSessionId: Int) {
+                            logToFile(this@VideoDetailActivity, "🎵 Audio session ID: $audioSessionId")
+                        }
+
+                        override fun onVolumeChanged(volume: Float) {
+                            logToFile(this@VideoDetailActivity, "🔊 Volume changed: $volume")
                         }
                     })
                 }
@@ -402,6 +411,22 @@ class VideoDetailActivity : AppCompatActivity() {
 
     private fun formatTime(seconds: Long): String {
         return formatTime(seconds.toInt())
+    }
+
+    private fun testAudioStream() {
+        // Test if the Mux HLS stream actually contains audio
+        val muxUrl = "https://stream.mux.com/$muxPlaybackId.m3u8"
+        logToFile(this, "🎵 Testing audio stream: $muxUrl")
+
+        // Check ExoPlayer audio renderer status
+        exoPlayer.audioFormat?.let { format ->
+            logToFile(this, "🎵 Audio format: ${format.sampleMimeType}, channels: ${format.channelCount}")
+        } ?: logToFile(this, "❌ No audio format detected")
+
+        // Check if audio is enabled and volume
+        logToFile(this, "🔊 ExoPlayer volume: ${exoPlayer.volume}")
+        logToFile(this, "🔊 Audio device volume: ${audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)}/${audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}")
+        logToFile(this, "🔊 Audio mode: ${audioManager.mode}")
     }
 
     override fun onPause() {

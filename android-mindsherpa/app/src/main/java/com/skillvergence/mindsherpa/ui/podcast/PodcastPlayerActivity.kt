@@ -20,6 +20,7 @@ import com.mux.player.MuxPlayer
 import com.mux.player.media.MediaItems
 import androidx.media3.common.Player
 import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
 import com.skillvergence.mindsherpa.R
 import com.skillvergence.mindsherpa.data.model.MuxMigrationData
 import kotlinx.coroutines.launch
@@ -51,6 +52,8 @@ class PodcastPlayerActivity : AppCompatActivity() {
 
     // Audio Player
     private var muxPlayer: MuxPlayer? = null
+    private var fallbackExoPlayer: ExoPlayer? = null
+    private var currentPlayer: Player? = null
     private var currentTimeSeconds: Long = 0
     private var totalDurationSeconds: Long = 0
     private var isPlaying: Boolean = false
@@ -217,9 +220,10 @@ class PodcastPlayerActivity : AppCompatActivity() {
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 isUserSeeking = false
-                muxPlayer?.let { player ->
+                val player = currentPlayer ?: muxPlayer ?: fallbackExoPlayer
+                player?.let {
                     val newPosition = (seekBar!!.progress / 100.0 * totalDurationSeconds * 1000).toLong()
-                    player.seekTo(newPosition)
+                    it.seekTo(newPosition)
                     logToFile(this@PodcastPlayerActivity, "🎵 Seeked to: ${formatTime((newPosition / 1000).toInt())}")
                 }
             }
@@ -286,6 +290,8 @@ class PodcastPlayerActivity : AppCompatActivity() {
                 }
                 .build()
 
+            currentPlayer = muxPlayer
+
             // Add player listener
             muxPlayer?.addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
@@ -330,9 +336,11 @@ class PodcastPlayerActivity : AppCompatActivity() {
                 }
 
                 override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                    logToFile(this@PodcastPlayerActivity, "❌ Player error: ${error.message}")
-                    showError("Playback error: ${error.message}")
-                    showLoading(false)
+                    logToFile(this@PodcastPlayerActivity, "❌ Mux Player error: ${error.message}")
+                    logToFile(this@PodcastPlayerActivity, "🔄 Attempting fallback to ExoPlayer...")
+
+                    // Try fallback to basic ExoPlayer
+                    tryFallbackExoPlayer()
                 }
             })
 
@@ -345,7 +353,97 @@ class PodcastPlayerActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
             logToFile(this, "❌ Failed to setup audio player: ${e.message}")
-            showError("Failed to initialize player")
+            logToFile(this, "🔄 Attempting fallback to ExoPlayer...")
+            tryFallbackExoPlayer()
+        }
+    }
+
+    private fun tryFallbackExoPlayer() {
+        try {
+            logToFile(this, "🔄 Setting up fallback ExoPlayer for audio-only playback...")
+
+            // Release Mux Player if it exists
+            muxPlayer?.release()
+            muxPlayer = null
+
+            // Create HLS URL from Mux playback ID
+            val hlsUrl = "https://stream.mux.com/$muxPlaybackId.m3u8"
+            logToFile(this, "🔄 Using HLS URL: $hlsUrl")
+
+            // Create ExoPlayer with audio-focused configuration
+            fallbackExoPlayer = ExoPlayer.Builder(this)
+                .setAudioAttributes(
+                    androidx.media3.common.AudioAttributes.Builder()
+                        .setUsage(androidx.media3.common.C.USAGE_MEDIA)
+                        .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
+                        .build(),
+                    true
+                )
+                .setHandleAudioBecomingNoisy(true)
+                .setWakeMode(androidx.media3.common.C.WAKE_MODE_NETWORK)
+                .build()
+
+            currentPlayer = fallbackExoPlayer
+
+            // Add listener for ExoPlayer
+            fallbackExoPlayer?.addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    when (playbackState) {
+                        Player.STATE_IDLE -> {
+                            logToFile(this@PodcastPlayerActivity, "🔄 ExoPlayer state: IDLE")
+                            showLoading(false)
+                        }
+                        Player.STATE_BUFFERING -> {
+                            logToFile(this@PodcastPlayerActivity, "🔄 ExoPlayer state: BUFFERING")
+                            showLoading(true)
+                        }
+                        Player.STATE_READY -> {
+                            logToFile(this@PodcastPlayerActivity, "🔄 ExoPlayer state: READY")
+                            showLoading(false)
+                            totalDurationSeconds = (fallbackExoPlayer?.duration ?: 0) / 1000
+                            totalTimeText.text = formatTime(totalDurationSeconds.toInt())
+
+                            // Enhanced audio routing for ExoPlayer
+                            ensureAudioRoutingForPodcast()
+                            startProgressTracking()
+                        }
+                        Player.STATE_ENDED -> {
+                            logToFile(this@PodcastPlayerActivity, "🔄 ExoPlayer state: ENDED")
+                            showLoading(false)
+                            onPodcastCompleted()
+                        }
+                    }
+                }
+
+                override fun onIsPlayingChanged(isPlayingNow: Boolean) {
+                    isPlaying = isPlayingNow
+                    updatePlayPauseButton()
+                    logToFile(this@PodcastPlayerActivity, "🔄 ExoPlayer is playing: $isPlayingNow")
+
+                    if (isPlayingNow) {
+                        startProgressTracking()
+                    } else {
+                        stopProgressTracking()
+                    }
+                }
+
+                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                    logToFile(this@PodcastPlayerActivity, "❌ ExoPlayer error: ${error.message}")
+                    showError("Audio playback failed: ${error.message}")
+                    showLoading(false)
+                }
+            })
+
+            // Create media item and prepare
+            val mediaItem = MediaItem.fromUri(hlsUrl)
+            fallbackExoPlayer?.setMediaItem(mediaItem)
+            fallbackExoPlayer?.prepare()
+
+            logToFile(this, "🔄 Fallback ExoPlayer setup completed")
+
+        } catch (e: Exception) {
+            logToFile(this, "❌ Fallback ExoPlayer setup failed: ${e.message}")
+            showError("Failed to initialize audio player")
             showLoading(false)
         }
     }
@@ -358,47 +456,101 @@ class PodcastPlayerActivity : AppCompatActivity() {
             audioManager.mode = AudioManager.MODE_NORMAL
             audioManager.isSpeakerphoneOn = false
 
-            // Ensure reasonable volume level
+            // Debug current audio state
+            logToFile(this, "🔊 Audio Manager State:")
+            logToFile(this, "🔊   - Mode: ${audioManager.mode}")
+            logToFile(this, "🔊   - Ringer mode: ${audioManager.ringerMode}")
+            logToFile(this, "🔊   - Is music active: ${audioManager.isMusicActive}")
+            logToFile(this, "🔊   - Is wired headset on: ${audioManager.isWiredHeadsetOn}")
+            logToFile(this, "🔊   - Is bluetooth A2DP on: ${audioManager.isBluetoothA2dpOn}")
+
+            // Check and set reasonable volume level
             val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
+            logToFile(this, "🔊 Music volume: $currentVolume/$maxVolume")
+
             if (currentVolume < 3 && maxVolume > 3) {
                 val newVolume = maxVolume / 3
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, AudioManager.FLAG_SHOW_UI)
                 logToFile(this, "🔊 Boosted podcast volume from $currentVolume to $newVolume")
             }
 
-            logToFile(this, "🎵 Audio routing configured for podcast playback")
+            // Force audio to route through speakers/headphones (not earpiece)
+            try {
+                // This forces audio routing away from earpiece
+                audioManager.setMode(AudioManager.MODE_NORMAL)
+                audioManager.isSpeakerphoneOn = false
+
+                logToFile(this, "🎵 Forced normal audio routing")
+            } catch (e: Exception) {
+                logToFile(this, "⚠️ Could not set audio mode: ${e.message}")
+            }
+
+            // Additional debug for audio focus
+            debugAudioFocusState()
+
+            logToFile(this, "🎵 Audio routing configuration completed")
 
         } catch (e: Exception) {
             logToFile(this, "❌ Error configuring audio routing: ${e.message}")
         }
     }
 
+    private fun debugAudioFocusState() {
+        try {
+            // Check if we have audio focus
+            val hasAudioFocus = audioManager.isMusicActive
+            logToFile(this, "🎵 Has audio focus (music active): $hasAudioFocus")
+
+            // Check player audio session
+            val player = currentPlayer ?: muxPlayer ?: fallbackExoPlayer
+            player?.let {
+                val audioSessionId = it.audioSessionId
+                logToFile(this, "🎵 Player audio session ID: $audioSessionId")
+
+                // Check if player volume is set correctly
+                logToFile(this, "🎵 Player volume: ${it.volume}")
+
+                // Force player volume to maximum
+                if (it.volume < 1.0f) {
+                    // Note: Some players ignore this, but worth trying
+                    logToFile(this, "🔊 Player volume was ${it.volume}, attempting to set to 1.0")
+                }
+            }
+
+        } catch (e: Exception) {
+            logToFile(this, "❌ Error debugging audio focus: ${e.message}")
+        }
+    }
+
     private fun togglePlayPause() {
-        muxPlayer?.let { player ->
+        val player = currentPlayer ?: muxPlayer ?: fallbackExoPlayer
+        player?.let {
             if (isPlaying) {
-                player.pause()
+                it.pause()
                 logToFile(this, "⏸️ Podcast paused")
             } else {
-                player.play()
+                it.play()
                 logToFile(this, "▶️ Podcast resumed")
             }
         }
     }
 
     private fun skipBackward() {
-        muxPlayer?.let { player ->
-            val newPosition = maxOf(0, player.currentPosition - 15000) // 15 seconds back
-            player.seekTo(newPosition)
+        val player = currentPlayer ?: muxPlayer ?: fallbackExoPlayer
+        player?.let {
+            val newPosition = maxOf(0, it.currentPosition - 15000) // 15 seconds back
+            it.seekTo(newPosition)
             logToFile(this, "⏪ Skipped backward 15 seconds")
         }
     }
 
     private fun skipForward() {
-        muxPlayer?.let { player ->
-            val newPosition = minOf(player.duration, player.currentPosition + 15000) // 15 seconds forward
-            player.seekTo(newPosition)
+        val player = currentPlayer ?: muxPlayer ?: fallbackExoPlayer
+        player?.let {
+            val newPosition = minOf(it.duration, it.currentPosition + 15000) // 15 seconds forward
+            it.seekTo(newPosition)
             logToFile(this, "⏩ Skipped forward 15 seconds")
         }
     }
@@ -427,10 +579,11 @@ class PodcastPlayerActivity : AppCompatActivity() {
     }
 
     private fun updateProgress() {
-        muxPlayer?.let { player ->
-            if (!isUserSeeking && player.duration > 0) {
-                currentTimeSeconds = player.currentPosition / 1000
-                totalDurationSeconds = player.duration / 1000
+        val player = currentPlayer ?: muxPlayer ?: fallbackExoPlayer
+        player?.let {
+            if (!isUserSeeking && it.duration > 0) {
+                currentTimeSeconds = it.currentPosition / 1000
+                totalDurationSeconds = it.duration / 1000
 
                 // Update UI
                 currentTimeText.text = formatTime(currentTimeSeconds.toInt())
@@ -485,8 +638,11 @@ class PodcastPlayerActivity : AppCompatActivity() {
         // Release audio focus
         audioManager.abandonAudioFocus(null)
 
-        // Release player
+        // Release all players
         muxPlayer?.release()
         muxPlayer = null
+        fallbackExoPlayer?.release()
+        fallbackExoPlayer = null
+        currentPlayer = null
     }
 }

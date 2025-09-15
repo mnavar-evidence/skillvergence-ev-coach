@@ -257,7 +257,7 @@ const sampleCourses = [
   }
 ];
 
-// GET /api/courses - Get all courses
+// GET /api/courses - Get all courses (with mux support)
 router.get('/', async (req, res) => {
   try {
     // Process courses to add YouTube video IDs

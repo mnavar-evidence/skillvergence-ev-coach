@@ -11,10 +11,9 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
+import com.mux.player.MuxPlayer
+import com.mux.player.media.MediaItems
 import com.skillvergence.mindsherpa.R
 import com.skillvergence.mindsherpa.data.model.MuxMigrationData
 import kotlinx.coroutines.launch
@@ -33,7 +32,7 @@ class VideoDetailActivity : AppCompatActivity() {
 
     // UI Components
     private lateinit var playerView: PlayerView
-    private lateinit var exoPlayer: ExoPlayer
+    private lateinit var muxPlayer: MuxPlayer
     private lateinit var videoTitle: TextView
     private lateinit var videoDescription: TextView
     private lateinit var videoDuration: TextView
@@ -161,67 +160,33 @@ class VideoDetailActivity : AppCompatActivity() {
                 // Force audio stream type to MUSIC for proper routing
                 volumeControlStream = AudioManager.STREAM_MUSIC
 
-                // Create ExoPlayer instance with audio attributes
-                exoPlayer = ExoPlayer.Builder(this)
-                    .setAudioAttributes(
-                        androidx.media3.common.AudioAttributes.Builder()
-                            .setUsage(androidx.media3.common.C.USAGE_MEDIA)
-                            .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MOVIE)
-                            .build(),
-                        true // Let ExoPlayer handle audio focus automatically
-                    )
+                // Create Mux Player with proper configuration
+                muxPlayer = MuxPlayer.Builder(context = this)
+                    .enableLogcat(true)
+                    .applyExoConfig {
+                        setHandleAudioBecomingNoisy(true)
+                    }
                     .build()
 
-                // Create Mux HLS URL from playback ID
-                val muxUrl = "https://stream.mux.com/$muxPlaybackId.m3u8"
+                // Create media item with Mux playback ID
+                val mediaItem = MediaItems.builderFromMuxPlaybackId(muxPlaybackId)
+                    .build()
 
-                // Create media item
-                val mediaItem = MediaItem.fromUri(muxUrl)
+                // Configure audio for video playback
+                configureAudioForVideoPlayback()
 
-                // Configure player
-                exoPlayer.apply {
-                    setMediaItem(mediaItem)
-                    prepare()
-                    // Start playback automatically (like iOS) - ExoPlayer will handle audio focus
-                    playWhenReady = true
-
-                    // Set up player listeners
-                    addListener(object : Player.Listener {
-                        override fun onPlaybackStateChanged(playbackState: Int) {
-                            when (playbackState) {
-                                Player.STATE_READY -> {
-                                    logToFile(this@VideoDetailActivity, "🎬 Mux Player ready")
-                                    totalDurationSeconds = (duration) / 1000
-                                    startProgressTracking()
-                                    testAudioStream() // Test audio format
-                                }
-                                Player.STATE_ENDED -> {
-                                    logToFile(this@VideoDetailActivity, "🎬 Video playback ended")
-                                    onVideoCompleted()
-                                }
-                            }
-                        }
-
-                        override fun onIsPlayingChanged(isPlaying: Boolean) {
-                            if (isPlaying) {
-                                startProgressTracking()
-                            } else {
-                                stopProgressTracking()
-                            }
-                        }
-
-                        override fun onAudioSessionIdChanged(audioSessionId: Int) {
-                            logToFile(this@VideoDetailActivity, "🎵 Audio session ID: $audioSessionId")
-                        }
-
-                        override fun onVolumeChanged(volume: Float) {
-                            logToFile(this@VideoDetailActivity, "🔊 Volume changed: $volume")
-                        }
-                    })
-                }
+                // Set media item and prepare
+                muxPlayer.setMediaItem(mediaItem)
+                muxPlayer.prepare()
 
                 // Connect player to view
-                playerView.player = exoPlayer
+                playerView.player = muxPlayer
+
+                // Start playback automatically (like iOS)
+                muxPlayer.playWhenReady = true
+
+                // Set up progress tracking
+                startProgressTracking()
 
                 logToFile(this, "🎬 Mux Player setup completed for ID: $muxPlaybackId")
 
@@ -272,9 +237,9 @@ class VideoDetailActivity : AppCompatActivity() {
     }
 
     private fun updateProgress() {
-        if (::exoPlayer.isInitialized && exoPlayer.duration > 0) {
-            currentTimeSeconds = exoPlayer.currentPosition / 1000
-            totalDurationSeconds = exoPlayer.duration / 1000
+        if (::muxPlayer.isInitialized && muxPlayer.duration > 0) {
+            currentTimeSeconds = muxPlayer.currentPosition / 1000
+            totalDurationSeconds = muxPlayer.duration / 1000
 
             updateProgressUI()
             saveProgress()
@@ -344,26 +309,18 @@ class VideoDetailActivity : AppCompatActivity() {
         val muxUrl = "https://stream.mux.com/$muxPlaybackId.m3u8"
         logToFile(this, "🎵 Testing audio stream: $muxUrl")
 
-        // Check ExoPlayer audio renderer status
-        exoPlayer.audioFormat?.let { format ->
-            logToFile(this, "🎵 Audio format: ${format.sampleMimeType}, channels: ${format.channelCount}")
+        // Mux Player handles audio automatically - no need for manual configuration
+        logToFile(this, "🎵 Mux Player handles audio format and routing automatically")
 
-            // Force volume settings when audio is detected
-            exoPlayer.volume = 1.0f
-            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
-                (audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * 0.8).toInt(), 0)
-            logToFile(this, "🔊 Force set ExoPlayer and system volume")
-        } ?: logToFile(this, "❌ No audio format detected")
-
-        // Check if audio is enabled and volume
-        logToFile(this, "🔊 ExoPlayer volume: ${exoPlayer.volume}")
+        // Check system audio volume
+        logToFile(this, "🔊 Mux Player uses system audio management")
         logToFile(this, "🔊 Audio device volume: ${audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)}/${audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}")
     }
 
     override fun onPause() {
         super.onPause()
-        if (::exoPlayer.isInitialized) {
-            exoPlayer.pause()
+        if (::muxPlayer.isInitialized) {
+            muxPlayer.pause()
         }
         stopProgressTracking()
         saveProgress()
@@ -371,15 +328,15 @@ class VideoDetailActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (::exoPlayer.isInitialized) {
+        if (::muxPlayer.isInitialized) {
             startProgressTracking()
         }
     }
 
     override fun onStop() {
         super.onStop()
-        if (::exoPlayer.isInitialized) {
-            exoPlayer.pause()
+        if (::muxPlayer.isInitialized) {
+            muxPlayer.pause()
         }
     }
 
@@ -388,9 +345,9 @@ class VideoDetailActivity : AppCompatActivity() {
         stopProgressTracking()
         saveProgress()
 
-        // Release player - ExoPlayer will handle audio focus automatically
-        if (::exoPlayer.isInitialized) {
-            exoPlayer.release()
+        // Release player - Mux Player handles cleanup automatically
+        if (::muxPlayer.isInitialized) {
+            muxPlayer.release()
         }
     }
 }

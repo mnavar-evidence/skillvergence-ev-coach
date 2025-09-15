@@ -17,8 +17,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         // Mux Player SDK repository
-        maven("https://oss.sonatype.org/content/repositories/snapshots/")
-        maven("https://maven.mux.com/")
+        maven("https://muxinc.jfrog.io/artifactory/default-maven-release-local")
     }
 }
 

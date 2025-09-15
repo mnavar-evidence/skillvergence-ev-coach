@@ -48,13 +48,12 @@
         android:layout_height="220dp"
         android:background="#000000">
 
-        <!-- ExoPlayer with Mux Analytics -->
+        <!-- Mux Player -->
         <androidx.media3.ui.PlayerView
             android:id="@+id/player_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:use_controller="true"
-            app:controller_layout_id="@layout/custom_player_control_view"
             app:resize_mode="fit" />
 
         <!-- Branding overlay (bottom-right) -->

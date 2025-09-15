@@ -192,36 +192,37 @@
                 <!-- Skip Backward -->
                 <ImageButton
                     android:id="@+id/skip_backward_button"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
                     android:src="@drawable/ic_replay_15_24dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Skip backward 15 seconds"
-                    app:tint="?attr/colorOnSurface"
-                    android:layout_marginEnd="32dp" />
+                    app:tint="?attr/colorPrimary"
+                    android:layout_marginEnd="48dp" />
 
                 <!-- Play/Pause Button -->
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/play_pause_button"
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
                     android:src="@drawable/ic_play_circle_24dp"
                     android:contentDescription="Play/Pause"
                     app:tint="?attr/colorOnPrimary"
                     app:backgroundTint="?attr/colorPrimary"
-                    app:elevation="8dp"
-                    app:fabSize="normal" />
+                    app:elevation="4dp"
+                    app:fabSize="mini"
+                    app:maxImageSize="32dp" />
 
                 <!-- Skip Forward -->
                 <ImageButton
                     android:id="@+id/skip_forward_button"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
                     android:src="@drawable/ic_forward_15_24dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Skip forward 15 seconds"
-                    app:tint="?attr/colorOnSurface"
-                    android:layout_marginStart="32dp" />
+                    app:tint="?attr/colorPrimary"
+                    android:layout_marginStart="48dp" />
 
             </LinearLayout>
 

@@ -20,7 +20,7 @@ object PodcastData {
             sequenceOrder = 1,
             courseId = "1",
             episodeNumber = 1,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/high-voltage-safety-1.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/hv-safety-fundamentals.jpg"
         ),
         Podcast(
             id = "podcast-1-2",
@@ -31,7 +31,7 @@ object PodcastData {
             sequenceOrder = 2,
             courseId = "1",
             episodeNumber = 2,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/high-voltage-safety-2.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-ppe-guide.jpg"
         ),
         Podcast(
             id = "podcast-1-3",
@@ -42,7 +42,7 @@ object PodcastData {
             sequenceOrder = 3,
             courseId = "1",
             episodeNumber = 3,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/high-voltage-safety-3.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-loto-procedures.jpg"
         ),
         Podcast(
             id = "podcast-1-4",
@@ -53,7 +53,7 @@ object PodcastData {
             sequenceOrder = 4,
             courseId = "1",
             episodeNumber = 4,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/high-voltage-safety-4.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-emergency-response.jpg"
         ),
 
         // Course 2: Electrical Fundamentals (4 episodes)
@@ -66,7 +66,7 @@ object PodcastData {
             sequenceOrder = 1,
             courseId = "2",
             episodeNumber = 1,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/electrical-fundamentals-1.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/spark-plugs-episode.jpg"
         ),
         Podcast(
             id = "podcast-2-2",
@@ -77,7 +77,7 @@ object PodcastData {
             sequenceOrder = 2,
             courseId = "2",
             episodeNumber = 2,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/electrical-fundamentals-2.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/dc-vs-ac-power.jpg"
         ),
         Podcast(
             id = "podcast-2-3",
@@ -88,7 +88,7 @@ object PodcastData {
             sequenceOrder = 3,
             courseId = "2",
             episodeNumber = 3,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/electrical-fundamentals-3.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ohms-law-ev.jpg"
         ),
         Podcast(
             id = "podcast-2-4",
@@ -99,7 +99,7 @@ object PodcastData {
             sequenceOrder = 4,
             courseId = "2",
             episodeNumber = 4,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/electrical-fundamentals-4.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-motors-episode.jpg"
         ),
 
         // Course 3: EV System Components (3 episodes)
@@ -112,7 +112,7 @@ object PodcastData {
             sequenceOrder = 1,
             courseId = "3",
             episodeNumber = 1,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-components-1.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-powertrain-architecture.jpg"
         ),
         Podcast(
             id = "podcast-3-2",
@@ -123,7 +123,7 @@ object PodcastData {
             sequenceOrder = 2,
             courseId = "3",
             episodeNumber = 2,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-components-2.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/inverters-power-electronics.jpg"
         ),
         Podcast(
             id = "podcast-3-3",
@@ -134,7 +134,7 @@ object PodcastData {
             sequenceOrder = 3,
             courseId = "3",
             episodeNumber = 3,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-components-3.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/regenerative-braking.jpg"
         ),
 
         // Course 4: EV Charging Systems (4 episodes)
@@ -147,7 +147,7 @@ object PodcastData {
             sequenceOrder = 1,
             courseId = "4",
             episodeNumber = 1,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-charging-1.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-batteries-chemistry.jpg"
         ),
         Podcast(
             id = "podcast-4-2",
@@ -158,7 +158,7 @@ object PodcastData {
             sequenceOrder = 2,
             courseId = "4",
             episodeNumber = 2,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-charging-2.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/charging-standards.jpg"
         ),
         Podcast(
             id = "podcast-4-3",
@@ -169,7 +169,7 @@ object PodcastData {
             sequenceOrder = 3,
             courseId = "4",
             episodeNumber = 3,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-charging-3.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/battery-management-systems.jpg"
         ),
         Podcast(
             id = "podcast-4-4",
@@ -180,7 +180,7 @@ object PodcastData {
             sequenceOrder = 4,
             courseId = "4",
             episodeNumber = 4,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-charging-4.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/thermal-management-charging.jpg"
         ),
 
         // Course 5: Advanced EV Systems (3 episodes)
@@ -193,7 +193,7 @@ object PodcastData {
             sequenceOrder = 1,
             courseId = "5",
             episodeNumber = 1,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/advanced-ev-1.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/vehicle-to-grid.jpg"
         ),
         Podcast(
             id = "podcast-5-2",
@@ -204,7 +204,7 @@ object PodcastData {
             sequenceOrder = 2,
             courseId = "5",
             episodeNumber = 2,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/advanced-ev-2.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/autonomous-driving-ev.jpg"
         ),
         Podcast(
             id = "podcast-5-3",
@@ -215,7 +215,7 @@ object PodcastData {
             sequenceOrder = 3,
             courseId = "5",
             episodeNumber = 3,
-            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/advanced-ev-3.jpg"
+            thumbnailUrl = "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/future-electric-transportation.jpg"
         )
     )
 

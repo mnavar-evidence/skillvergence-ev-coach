@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
+    android:layout_margin="12dp"
     app:cardCornerRadius="16dp"
     app:cardElevation="2dp"
-    android:background="@android:color/white">
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
         <!-- Course Header with Icon and Duration -->
         <LinearLayout
@@ -23,16 +24,24 @@
             android:gravity="center_vertical">
 
             <!-- Course Icon -->
-            <TextView
-                android:id="@+id/course_icon"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="⚡"
-                android:textSize="20sp"
-                android:gravity="center"
-                android:background="@android:color/holo_blue_light"
-                android:textColor="@android:color/white"
-                android:layout_marginEnd="12dp" />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="?attr/colorPrimaryContainer">
+
+                <ImageView
+                    android:id="@+id/course_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_high_voltage_safety_24dp"
+                    android:contentDescription="Course icon"
+                    tools:src="@drawable/ic_high_voltage_safety_24dp" />
+
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Course Title and Category -->
             <LinearLayout
@@ -46,9 +55,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="High Voltage Safety Foundation"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@android:color/black"
+                    android:textAppearance="?attr/textAppearanceHeadline2"
+                    android:textColor="?attr/colorOnSurface"
                     android:maxLines="2"
                     android:ellipsize="end"
                     tools:text="High Voltage Safety Foundation" />
@@ -58,9 +66,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Electrical Safety"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/darker_gray"
-                    android:layout_marginTop="2dp"
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_marginTop="4dp"
                     tools:text="Electrical Safety" />
 
             </LinearLayout>
@@ -190,4 +198,4 @@
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

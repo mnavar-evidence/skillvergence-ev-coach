@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material Design 3 Theme for API 27+ -->
+    <style name="Theme.MindSherpa" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Navigation Bar for API 27+ -->
+        <item name="android:navigationBarColor">@color/md_theme_light_surface</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>

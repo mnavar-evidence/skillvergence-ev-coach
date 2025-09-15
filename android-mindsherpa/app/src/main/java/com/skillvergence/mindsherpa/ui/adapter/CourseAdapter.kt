@@ -3,6 +3,7 @@ package com.skillvergence.mindsherpa.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.skillvergence.mindsherpa.R
@@ -37,7 +38,7 @@ class CourseAdapter(
     override fun getItemCount() = courses.size
 
     inner class CourseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val courseIcon: TextView = itemView.findViewById(R.id.course_icon)
+        private val courseIcon: ImageView = itemView.findViewById(R.id.course_icon)
         private val titleText: TextView = itemView.findViewById(R.id.course_title)
         private val categoryText: TextView = itemView.findViewById(R.id.course_category)
         private val durationText: TextView = itemView.findViewById(R.id.course_duration)
@@ -58,14 +59,14 @@ class CourseAdapter(
             durationText.text = "${totalMinutes} min"
 
             // Course icon based on content type
-            courseIcon.text = getCourseIcon(course.title)
+            setCourseIcon(course.title)
 
             // Category (simplified from title)
             categoryText.text = getCourseCategory(course.title)
 
             // Video count
             val videoCount = course.videos?.size ?: 0
-            videoCountText.text = "▶ $videoCount videos"
+            videoCountText.text = "$videoCount videos"
 
             // Progress (mock data for now - in real app this would come from user progress)
             val mockProgress = getMockProgress(course.id, videoCount)
@@ -73,8 +74,8 @@ class CourseAdapter(
             progressBar.progress = mockProgress.percentage
             progressPercentage.text = "${mockProgress.percentage}% watched"
 
-            // Skill level with icon
-            skillLevelText.text = "📊 ${course.skillLevel.displayName}"
+            // Skill level
+            skillLevelText.text = course.skillLevel.displayName
 
             // Debug logging
             println("📱 Course: ${course.title}, Videos: $videoCount, Duration: ${totalMinutes}min")
@@ -84,15 +85,16 @@ class CourseAdapter(
             }
         }
 
-        private fun getCourseIcon(title: String): String {
-            return when {
-                title.contains("Safety", ignoreCase = true) -> "⚠️"
-                title.contains("Electrical", ignoreCase = true) -> "⚡"
-                title.contains("System", ignoreCase = true) -> "🔧"
-                title.contains("Charging", ignoreCase = true) -> "🔌"
-                title.contains("Advanced", ignoreCase = true) -> "🎯"
-                else -> "📚"
+        private fun setCourseIcon(title: String) {
+            val iconRes = when {
+                title.contains("High Voltage Safety", ignoreCase = true) -> R.drawable.ic_high_voltage_safety_24dp
+                title.contains("Electrical Fundamentals", ignoreCase = true) -> R.drawable.ic_electrical_fundamentals_24dp
+                title.contains("EV System Components", ignoreCase = true) -> R.drawable.ic_ev_system_components_24dp
+                title.contains("EV Charging", ignoreCase = true) -> R.drawable.ic_ev_charging_systems_24dp
+                title.contains("Advanced EV", ignoreCase = true) -> R.drawable.ic_advanced_ev_systems_24dp
+                else -> R.drawable.ic_high_voltage_safety_24dp // Default fallback
             }
+            courseIcon.setImageResource(iconRes)
         }
 
         private fun getCourseCategory(title: String): String {

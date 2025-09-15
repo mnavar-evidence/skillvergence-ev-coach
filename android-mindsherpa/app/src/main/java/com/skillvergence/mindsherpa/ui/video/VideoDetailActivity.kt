@@ -246,6 +246,9 @@ class VideoDetailActivity : AppCompatActivity() {
     private fun setupVideoPlayer() {
         if (muxPlaybackId.isNotEmpty()) {
             try {
+                // Configure AudioManager for video playback (equivalent to iOS AVAudioSession)
+                configureAudioForVideoPlayback()
+
                 // Request audio focus before setting up player
                 if (!requestAudioFocus()) {
                     logToFile(this, "⚠️ Could not obtain audio focus, continuing anyway")
@@ -258,7 +261,7 @@ class VideoDetailActivity : AppCompatActivity() {
                             .setUsage(androidx.media3.common.C.USAGE_MEDIA)
                             .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MOVIE)
                             .build(),
-                        true // Handle audio focus automatically
+                        false // Don't handle audio focus automatically, we do it manually
                     )
                     .build()
 
@@ -413,6 +416,34 @@ class VideoDetailActivity : AppCompatActivity() {
         return formatTime(seconds.toInt())
     }
 
+    private fun configureAudioForVideoPlayback() {
+        // Android equivalent of iOS AVAudioSession.setCategory(.playback, mode: .moviePlayback)
+        try {
+            // Set audio mode for video/movie playback
+            audioManager.mode = AudioManager.MODE_NORMAL
+
+            // Set ringer mode to normal (not silent/vibrate)
+            audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
+
+            // Enable speaker phone for video playback
+            audioManager.isSpeakerphoneOn = true
+
+            // Set music stream volume to max if it's muted
+            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+
+            if (currentVolume == 0) {
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume / 2, 0)
+                logToFile(this, "🔊 Set music volume from 0 to ${maxVolume / 2}")
+            }
+
+            logToFile(this, "🎵 Audio configured for video playback - Mode: ${audioManager.mode}, Volume: $currentVolume/$maxVolume")
+
+        } catch (e: Exception) {
+            logToFile(this, "❌ Failed to configure audio for video playback: ${e.message}")
+        }
+    }
+
     private fun testAudioStream() {
         // Test if the Mux HLS stream actually contains audio
         val muxUrl = "https://stream.mux.com/$muxPlaybackId.m3u8"
@@ -427,6 +458,8 @@ class VideoDetailActivity : AppCompatActivity() {
         logToFile(this, "🔊 ExoPlayer volume: ${exoPlayer.volume}")
         logToFile(this, "🔊 Audio device volume: ${audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)}/${audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}")
         logToFile(this, "🔊 Audio mode: ${audioManager.mode}")
+        logToFile(this, "🔊 Speakerphone on: ${audioManager.isSpeakerphoneOn}")
+        logToFile(this, "🔊 Ringer mode: ${audioManager.ringerMode}")
     }
 
     override fun onPause() {

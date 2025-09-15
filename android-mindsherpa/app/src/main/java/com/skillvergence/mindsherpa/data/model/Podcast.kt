@@ -83,9 +83,6 @@ data class Podcast(
         }
     }
 
-    val formattedDuration: String
-        get() = getFormattedDuration()
-
     val episodeTitle: String
         get() = episodeNumber?.let { "Episode $it: $title" } ?: title
 }

@@ -101,8 +101,9 @@ class VideoDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_detail)
 
-        // Initialize views
+        // Initialize views and audio manager
         initializeViews()
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         // Get video data from intent
         extractIntentData()
@@ -325,8 +326,6 @@ class VideoDetailActivity : AppCompatActivity() {
         // Simplified audio configuration - let the system handle routing
         // (like iOS AVAudioSession.setCategory(.playback) without forcing speakerphone)
         try {
-            audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
             // Check if music volume is muted and log info
             val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)

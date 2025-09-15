@@ -16,6 +16,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Mux Player SDK repository
+        maven("https://oss.sonatype.org/content/repositories/snapshots/")
+        maven("https://maven.mux.com/")
     }
 }
 

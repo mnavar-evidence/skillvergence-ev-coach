@@ -48,9 +48,9 @@
         android:layout_height="220dp"
         android:background="#000000">
 
-        <!-- Mux Player View -->
-        <com.mux.player.MuxPlayerView
-            android:id="@+id/mux_player_view"
+        <!-- ExoPlayer with Mux Analytics -->
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/player_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:use_controller="true"

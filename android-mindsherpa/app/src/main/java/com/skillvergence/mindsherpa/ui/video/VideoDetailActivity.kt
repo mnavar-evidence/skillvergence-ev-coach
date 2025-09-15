@@ -10,8 +10,12 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.mux.player.MuxPlayerView
-import com.mux.player.media.MediaItem
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.ui.PlayerView
+import com.mux.stats.sdk.core.model.CustomerPlayerData
+import com.mux.stats.sdk.core.model.CustomerVideoData
+import com.mux.stats.sdk.muxstats.MuxStatsExoPlayer
 import com.skillvergence.mindsherpa.R
 import com.skillvergence.mindsherpa.data.model.MuxMigrationData
 import kotlinx.coroutines.launch
@@ -29,7 +33,9 @@ import java.util.Locale
 class VideoDetailActivity : AppCompatActivity() {
 
     // UI Components
-    private lateinit var muxPlayerView: MuxPlayerView
+    private lateinit var playerView: PlayerView
+    private lateinit var exoPlayer: ExoPlayer
+    private var muxStats: MuxStatsExoPlayer? = null
     private lateinit var videoTitle: TextView
     private lateinit var videoDescription: TextView
     private lateinit var videoDuration: TextView
@@ -111,7 +117,7 @@ class VideoDetailActivity : AppCompatActivity() {
     }
 
     private fun initializeViews() {
-        muxPlayerView = findViewById(R.id.mux_player_view)
+        playerView = findViewById(R.id.player_view)
         videoTitle = findViewById(R.id.video_title)
         videoDescription = findViewById(R.id.video_description)
         videoDuration = findViewById(R.id.video_duration)
@@ -149,27 +155,28 @@ class VideoDetailActivity : AppCompatActivity() {
     private fun setupVideoPlayer() {
         if (muxPlaybackId.isNotEmpty()) {
             try {
-                // Create Mux media item
-                val mediaItem = MediaItem.Builder()
-                    .setPlaybackId(muxPlaybackId)
-                    .build()
+                // Create ExoPlayer instance
+                exoPlayer = ExoPlayer.Builder(this).build()
+
+                // Create Mux HLS URL from playback ID
+                val muxUrl = "https://stream.mux.com/$muxPlaybackId.m3u8"
+
+                // Create media item
+                val mediaItem = MediaItem.fromUri(muxUrl)
 
                 // Configure player
-                muxPlayerView.apply {
-                    // Set media item
-                    player?.setMediaItem(mediaItem)
-
-                    // Configure player settings
-                    player?.prepare()
-                    useController = true
+                exoPlayer.apply {
+                    setMediaItem(mediaItem)
+                    prepare()
+                    playWhenReady = false
 
                     // Set up player listeners
-                    player?.addListener(object : com.google.android.exoplayer2.Player.Listener {
+                    addListener(object : com.google.android.exoplayer2.Player.Listener {
                         override fun onPlaybackStateChanged(playbackState: Int) {
                             when (playbackState) {
                                 com.google.android.exoplayer2.Player.STATE_READY -> {
                                     logToFile(this@VideoDetailActivity, "🎬 Mux Player ready")
-                                    totalDurationSeconds = (player?.duration ?: 0) / 1000
+                                    totalDurationSeconds = (duration) / 1000
                                     startProgressTracking()
                                 }
                                 com.google.android.exoplayer2.Player.STATE_ENDED -> {
@@ -189,6 +196,12 @@ class VideoDetailActivity : AppCompatActivity() {
                     })
                 }
 
+                // Connect player to view
+                playerView.player = exoPlayer
+
+                // Set up Mux analytics
+                setupMuxAnalytics()
+
                 logToFile(this, "🎬 Mux Player setup completed for ID: $muxPlaybackId")
 
             } catch (e: Exception) {
@@ -197,6 +210,37 @@ class VideoDetailActivity : AppCompatActivity() {
             }
         } else {
             logToFile(this, "❌ No Mux playback ID available for video: $videoId")
+        }
+    }
+
+    private fun setupMuxAnalytics() {
+        try {
+            // Customer player data
+            val customerPlayerData = CustomerPlayerData().apply {
+                environmentKey = "your_mux_environment_key" // TODO: Replace with actual key
+            }
+
+            // Customer video data
+            val customerVideoData = CustomerVideoData().apply {
+                videoId = this@VideoDetailActivity.videoId
+                videoTitle = intent.getStringExtra(EXTRA_VIDEO_TITLE)
+                videoSeries = courseId
+            }
+
+            // Initialize Mux Stats
+            muxStats = MuxStatsExoPlayer(
+                this,
+                exoPlayer,
+                "mindsherpa-android",
+                customerPlayerData,
+                customerVideoData
+            )
+
+            logToFile(this, "🎬 Mux analytics initialized for video: $videoId")
+
+        } catch (e: Exception) {
+            logToFile(this, "⚠️ Failed to setup Mux analytics: ${e.message}")
+            // Continue without analytics if it fails
         }
     }
 
@@ -237,18 +281,16 @@ class VideoDetailActivity : AppCompatActivity() {
     }
 
     private fun updateProgress() {
-        muxPlayerView.player?.let { player ->
-            if (player.duration > 0) {
-                currentTimeSeconds = player.currentPosition / 1000
-                totalDurationSeconds = player.duration / 1000
+        if (::exoPlayer.isInitialized && exoPlayer.duration > 0) {
+            currentTimeSeconds = exoPlayer.currentPosition / 1000
+            totalDurationSeconds = exoPlayer.duration / 1000
 
-                updateProgressUI()
-                saveProgress()
+            updateProgressUI()
+            saveProgress()
 
-                // Check for completion (90% watched)
-                if (totalDurationSeconds > 0 && currentTimeSeconds.toDouble() / totalDurationSeconds >= 0.9) {
-                    onVideoCompleted()
-                }
+            // Check for completion (90% watched)
+            if (totalDurationSeconds > 0 && currentTimeSeconds.toDouble() / totalDurationSeconds >= 0.9) {
+                onVideoCompleted()
             }
         }
     }
@@ -293,14 +335,16 @@ class VideoDetailActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        muxPlayerView.player?.pause()
+        if (::exoPlayer.isInitialized) {
+            exoPlayer.pause()
+        }
         stopProgressTracking()
         saveProgress()
     }
 
     override fun onResume() {
         super.onResume()
-        if (muxPlayerView.player?.playWhenReady == true) {
+        if (::exoPlayer.isInitialized && exoPlayer.playWhenReady) {
             startProgressTracking()
         }
     }
@@ -309,6 +353,13 @@ class VideoDetailActivity : AppCompatActivity() {
         super.onDestroy()
         stopProgressTracking()
         saveProgress()
-        muxPlayerView.player?.release()
+
+        // Cleanup Mux analytics
+        muxStats?.release()
+
+        // Release player
+        if (::exoPlayer.isInitialized) {
+            exoPlayer.release()
+        }
     }
 }

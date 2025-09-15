@@ -62,8 +62,8 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-hls:1.2.0")
 
     // Mux Player SDK for Android
-    implementation("com.mux:player:1.15.0")
-    implementation("com.mux:stats:4.5.0")
+    implementation("com.mux.player:MuxExoPlayer:0.17.0")
+    implementation("com.mux.stats.sdk.muxstats:MuxCore:4.5.0")
 
     // Image Loading
     implementation("com.github.bumptech.glide:glide:4.16.0")

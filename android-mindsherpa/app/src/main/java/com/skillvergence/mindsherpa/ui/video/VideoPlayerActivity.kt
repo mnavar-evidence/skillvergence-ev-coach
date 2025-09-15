@@ -80,6 +80,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 putExtra("COURSE_VIDEO_COUNT", course.videos?.size ?: 0)
 
                 // Pass the actual videos data from Railway API
+                val videoIds = course.videos?.map { it.id }?.toTypedArray()
                 val videoTitles = course.videos?.map { it.title }?.toTypedArray()
                 val videoDurations = course.videos?.map { it.duration }?.toIntArray()
                 val videoUrls = course.videos?.map { it.videoUrl }?.toTypedArray()
@@ -87,9 +88,10 @@ class VideoPlayerActivity : AppCompatActivity() {
                 logToFile(context, "🎬 Passing video data for ${course.title}:")
                 logToFile(context, "🎬 Video count: ${course.videos?.size ?: 0}")
                 course.videos?.forEachIndexed { index, video ->
-                    logToFile(context, "🎬 Video $index: ${video.title} (${video.duration}s)")
+                    logToFile(context, "🎬 Video $index: ${video.id} - ${video.title} (${video.duration}s)")
                 }
 
+                putExtra("VIDEO_IDS", videoIds)
                 putExtra("VIDEO_TITLES", videoTitles)
                 putExtra("VIDEO_DURATIONS", videoDurations)
                 putExtra("VIDEO_URLS", videoUrls)
@@ -127,25 +129,27 @@ class VideoPlayerActivity : AppCompatActivity() {
         val videoCount = intent.getIntExtra("COURSE_VIDEO_COUNT", 0)
 
         // Get video data from intent
+        val videoIds = intent.getStringArrayExtra("VIDEO_IDS") ?: emptyArray()
         val videoTitles = intent.getStringArrayExtra("VIDEO_TITLES") ?: emptyArray()
         val videoDurations = intent.getIntArrayExtra("VIDEO_DURATIONS") ?: intArrayOf()
         val videoUrls = intent.getStringArrayExtra("VIDEO_URLS") ?: emptyArray()
 
         logToFile("📱 Course Detail - Course: $courseTitle")
         logToFile("📱 Course Detail - Duration: ${courseDurationSeconds}s, Videos: $videoCount")
-        logToFile("📱 Video Data - Got ${videoTitles.size} video titles")
+        logToFile("📱 Video Data - Got ${videoTitles.size} video titles, ${videoIds.size} video IDs")
 
-        // Debug: Print all video titles received
+        // Debug: Print all video data received
         videoTitles.forEachIndexed { index, title ->
+            val id = if (index < videoIds.size) videoIds[index] else "missing"
             val duration = if (index < videoDurations.size) videoDurations[index] else 0
-            logToFile("📱 Video $index: $title (${duration}s)")
+            logToFile("📱 Video $index: $id - $title (${duration}s)")
         }
 
         // Set up basic course info from intent data
         setupCourseDataFromIntent(courseTitle, courseDescription, skillLevelName, courseDurationSeconds, videoCount)
 
         // Set up video list with real API data
-        setupVideoListFromIntent(courseId, videoTitles, videoDurations, videoUrls)
+        setupVideoListFromIntent(courseId, videoIds, videoTitles, videoDurations, videoUrls)
 
         // Set up click listeners
         setupClickListeners()
@@ -210,6 +214,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun setupVideoListFromIntent(
         courseId: String,
+        videoIds: Array<String>,
         videoTitles: Array<String>,
         videoDurations: IntArray,
         videoUrls: Array<String>
@@ -219,9 +224,12 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         for (i in videoTitles.indices) {
             if (i < videoDurations.size && i < videoUrls.size) {
+                // Use original API ID if available, otherwise fallback to synthetic ID
+                val id = if (i < videoIds.size) videoIds[i] else "${courseId}-${i + 1}"
+
                 videos.add(
                     Video(
-                        id = "${courseId}-${i + 1}",
+                        id = id,
                         title = videoTitles[i],
                         description = "Video from Railway API",
                         duration = videoDurations[i],
@@ -235,7 +243,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         println("📱 Created ${videos.size} video objects from API data")
         videos.forEach { video ->
-            println("📱 Video: ${video.title} (${video.duration}s)")
+            println("📱 Video: ${video.id} - ${video.title} (${video.duration}s)")
+            println("📱 Thumbnail URL: ${video.thumbnailUrl}")
         }
 
         // Setup video list with real data

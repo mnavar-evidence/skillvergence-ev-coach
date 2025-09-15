@@ -21,11 +21,30 @@ class CourseRepository {
         limit: Int? = null,
         skillLevel: String? = null
     ): ApiResult<List<Course>> {
+        println("🔧 [CourseRepository] getCourses called with page=$page, limit=$limit, skillLevel=$skillLevel")
+
         return when (val result = safeApiCall {
             apiService.getCourses(page, limit, skillLevel)
         }) {
-            is ApiResult.Success -> ApiResult.Success(result.data.courses)
-            is ApiResult.Error -> result
+            is ApiResult.Success -> {
+                val courses = result.data.courses
+                println("🔧 [CourseRepository] API Success - Received ${courses.size} courses")
+                courses.forEach { course ->
+                    println("🔧 [CourseRepository] Course: ${course.id} - ${course.title} - Videos: ${course.videos?.size ?: 0}")
+                    if (course.id == "course-1") {
+                        println("🔧 [CourseRepository] *** HIGH VOLTAGE SAFETY FOUNDATION VIDEO IDs ***")
+                        course.videos?.forEach { video ->
+                            println("🔧 [CourseRepository]   Video ID: '${video.id}' - ${video.title}")
+                            println("🔧 [CourseRepository]   Expected thumbnail: https://skillvergence.mindsherpa.ai/assets/videos/thumbnails/${video.id}.jpg")
+                        }
+                    }
+                }
+                ApiResult.Success(courses)
+            }
+            is ApiResult.Error -> {
+                println("❌ [CourseRepository] API Error: ${result.exception}")
+                result
+            }
         }
     }
 

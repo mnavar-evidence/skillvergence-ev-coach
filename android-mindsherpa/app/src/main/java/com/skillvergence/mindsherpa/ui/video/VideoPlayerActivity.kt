@@ -3,6 +3,7 @@ package com.skillvergence.mindsherpa.ui.video
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -33,7 +34,7 @@ import java.util.Locale
 class VideoPlayerActivity : AppCompatActivity() {
 
     private lateinit var toolbar: MaterialToolbar
-    private lateinit var courseIcon: TextView
+    private lateinit var courseIcon: ImageView
     private lateinit var courseTitle: TextView
     private lateinit var courseCategory: TextView
     private lateinit var completionPercentage: TextView
@@ -190,7 +191,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         courseDescription.text = description
 
         // Course icon based on content
-        courseIcon.text = getCourseIcon(title)
+        setCourseIcon(title)
 
         // Course category
         courseCategory.text = getCourseCategory(title)
@@ -331,24 +332,26 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     // Helper functions for mock data and UI
-    private fun getCourseIcon(title: String): String {
-        return when {
-            title.contains("Safety", ignoreCase = true) -> "⚠️"
-            title.contains("Electrical", ignoreCase = true) -> "⚡"
-            title.contains("System", ignoreCase = true) -> "🔧"
-            title.contains("Charging", ignoreCase = true) -> "🔌"
-            title.contains("Advanced", ignoreCase = true) -> "🎯"
-            else -> "📚"
+    private fun setCourseIcon(title: String) {
+        val iconRes = when {
+            title.contains("High Voltage Safety", ignoreCase = true) -> R.drawable.ic_high_voltage_safety_24dp
+            title.contains("Electrical Fundamentals", ignoreCase = true) -> R.drawable.ic_electrical_fundamentals_24dp
+            title.contains("EV System Components", ignoreCase = true) -> R.drawable.ic_ev_system_components_24dp
+            title.contains("EV Charging", ignoreCase = true) -> R.drawable.ic_ev_charging_systems_24dp
+            title.contains("Advanced EV", ignoreCase = true) -> R.drawable.ic_advanced_ev_systems_24dp
+            else -> R.drawable.ic_high_voltage_safety_24dp // Default fallback
         }
+        courseIcon.setImageResource(iconRes)
+        logToFile("📱 Course icon set for: $title")
     }
 
     private fun getCourseCategory(title: String): String {
         return when {
-            title.contains("Safety", ignoreCase = true) -> "Electrical Safety"
-            title.contains("Electrical", ignoreCase = true) -> "Electrical Fundamentals"
-            title.contains("System", ignoreCase = true) -> "EV Technician"
-            title.contains("Charging", ignoreCase = true) -> "EV Systems"
-            title.contains("Advanced", ignoreCase = true) -> "Advanced Systems"
+            title.contains("High Voltage Safety", ignoreCase = true) -> "Electrical Safety"
+            title.contains("Electrical Fundamentals", ignoreCase = true) -> "Electrical Fundamentals"
+            title.contains("EV System Components", ignoreCase = true) -> "EV Technician"
+            title.contains("EV Charging", ignoreCase = true) -> "Battery Technology"
+            title.contains("Advanced EV", ignoreCase = true) -> "Advanced EV Systems"
             else -> "General"
         }
     }

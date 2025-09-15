@@ -65,14 +65,14 @@
                         app:cardElevation="0dp"
                         app:cardBackgroundColor="?attr/colorPrimaryContainer">
 
-                        <TextView
+                        <ImageView
                             android:id="@+id/course_icon"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:text="⚠️"
-                            android:textSize="24sp"
-                            android:gravity="center"
-                            tools:text="⚠️" />
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_high_voltage_safety_24dp"
+                            android:contentDescription="Course icon"
+                            tools:src="@drawable/ic_high_voltage_safety_24dp" />
 
                     </com.google.android.material.card.MaterialCardView>
 

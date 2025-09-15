@@ -136,13 +136,18 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         logToFile("📱 Course Detail - Course: $courseTitle")
         logToFile("📱 Course Detail - Duration: ${courseDurationSeconds}s, Videos: $videoCount")
-        logToFile("📱 Video Data - Got ${videoTitles.size} video titles, ${videoIds.size} video IDs")
+        logToFile("📱 Array Sizes - IDs: ${videoIds.size}, Titles: ${videoTitles.size}, Durations: ${videoDurations.size}, URLs: ${videoUrls.size}")
 
         // Debug: Print all video data received
-        videoTitles.forEachIndexed { index, title ->
-            val id = if (index < videoIds.size) videoIds[index] else "missing"
-            val duration = if (index < videoDurations.size) videoDurations[index] else 0
-            logToFile("📱 Video $index: $id - $title (${duration}s)")
+        val maxSize = maxOf(videoTitles.size, videoIds.size, videoDurations.size, videoUrls.size)
+        logToFile("📱 Max array size: $maxSize")
+
+        for (i in 0 until maxSize) {
+            val id = if (i < videoIds.size) videoIds[i] else "missing"
+            val title = if (i < videoTitles.size) videoTitles[i] else "missing"
+            val duration = if (i < videoDurations.size) videoDurations[i] else 0
+            val url = if (i < videoUrls.size) videoUrls[i] else "missing"
+            logToFile("📱 Video $i: $id - $title (${duration}s) - $url")
         }
 
         // Set up basic course info from intent data
@@ -222,22 +227,38 @@ class VideoPlayerActivity : AppCompatActivity() {
         // Create Video objects from the real API data
         val videos = mutableListOf<Video>()
 
-        for (i in videoTitles.indices) {
-            if (i < videoDurations.size && i < videoUrls.size) {
+        // Use the maximum available data, handle mismatched array sizes gracefully
+        val maxVideos = maxOf(videoTitles.size, videoIds.size, videoDurations.size, videoUrls.size)
+        logToFile("📱 Processing $maxVideos videos (max of all arrays)")
+
+        for (i in 0 until maxVideos) {
+            // Only create video if we have at least title and either duration or URL
+            val hasTitle = i < videoTitles.size
+            val hasDuration = i < videoDurations.size
+            val hasUrl = i < videoUrls.size
+
+            if (hasTitle && (hasDuration || hasUrl)) {
                 // Use original API ID if available, otherwise fallback to synthetic ID
                 val id = if (i < videoIds.size) videoIds[i] else "${courseId}-${i + 1}"
+                val title = videoTitles[i]
+                val duration = if (hasDuration) videoDurations[i] else 0
+                val url = if (hasUrl) videoUrls[i] else ""
+
+                logToFile("📱 Creating video $i: $id - $title")
 
                 videos.add(
                     Video(
                         id = id,
-                        title = videoTitles[i],
+                        title = title,
                         description = "Video from Railway API",
-                        duration = videoDurations[i],
-                        videoUrl = videoUrls[i],
+                        duration = duration,
+                        videoUrl = url,
                         sequenceOrder = i + 1,
                         courseId = courseId
                     )
                 )
+            } else {
+                logToFile("📱 Skipping video $i: missing required data (title: $hasTitle, duration: $hasDuration, url: $hasUrl)")
             }
         }
 

@@ -64,9 +64,9 @@ Look for these log messages in `mindsherpa_debug.log` or Android Studio logcat:
 
 If you see `🔇 Audio focus denied`, that indicates a system-level audio issue.
 
-### Step 3: Test Audio Stream Directly
+### Step 3: Test Audio Stream Directly ✅ IMPLEMENTED
+The `testAudioStream()` method has been added to `VideoDetailActivity.kt`:
 ```kotlin
-// Add this temporary debug method to VideoDetailActivity:
 private fun testAudioStream() {
     // Test if the Mux HLS stream actually contains audio
     val muxUrl = "https://stream.mux.com/$muxPlaybackId.m3u8"
@@ -76,21 +76,25 @@ private fun testAudioStream() {
     exoPlayer.audioFormat?.let { format ->
         logToFile(this, "🎵 Audio format: ${format.sampleMimeType}, channels: ${format.channelCount}")
     } ?: logToFile(this, "❌ No audio format detected")
+
+    // Check if audio is enabled and volume
+    logToFile(this, "🔊 ExoPlayer volume: ${exoPlayer.volume}")
+    logToFile(this, "🔊 Audio device volume: ${audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)}/${audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}")
+    logToFile(this, "🔊 Audio mode: ${audioManager.mode}")
 }
 ```
+This method is automatically called when the player reaches `STATE_READY`.
 
-### Step 4: Check Audio Renderer
+### Step 4: Check Audio Renderer ✅ IMPLEMENTED
+The following debug listeners have been added to `VideoDetailActivity.kt`:
 ```kotlin
-// Add to setupVideoPlayer() after player creation:
-exoPlayer.addListener(object : Player.Listener {
-    override fun onAudioSessionIdChanged(audioSessionId: Int) {
-        logToFile(this@VideoDetailActivity, "🎵 Audio session ID: $audioSessionId")
-    }
+override fun onAudioSessionIdChanged(audioSessionId: Int) {
+    logToFile(this@VideoDetailActivity, "🎵 Audio session ID: $audioSessionId")
+}
 
-    override fun onVolumeChanged(volume: Float) {
-        logToFile(this@VideoDetailActivity, "🔊 Volume changed: $volume")
-    }
-})
+override fun onVolumeChanged(volume: Float) {
+    logToFile(this@VideoDetailActivity, "🔊 Volume changed: $volume")
+}
 ```
 
 ### Step 5: Alternative Simple Test
@@ -137,8 +141,8 @@ https://stream.mux.com/IrMUCbYqtfxeCMbDChNlqZlwxn9Q02d8nYio6a002MBFI.m3u8
 
 ## Quick Fixes to Try
 
-### Fix 1: Add Audio Permission
-Add to `AndroidManifest.xml`:
+### Fix 1: Add Audio Permission ✅ IMPLEMENTED
+Added to `AndroidManifest.xml`:
 ```xml
 <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 ```
@@ -167,8 +171,28 @@ If working correctly, you should see:
 🔊 Audio focus granted
 🎬 Mux Player setup completed for ID: MPYRvK9KnXqBafit01UdxV023S011gYphUUavHkJKu96Z8
 🎬 Mux Player ready
+🎵 Testing audio stream: https://stream.mux.com/MPYRvK9KnXqBafit01UdxV023S011gYphUUavHkJKu96Z8.m3u8
+🎵 Audio format: audio/mp4a-latm, channels: 2
+🔊 ExoPlayer volume: 1.0
+🔊 Audio device volume: 15/15
+🔊 Audio mode: 0
 🎵 Audio session ID: [number]
 🔊 Volume changed: 1.0
 ```
+
+## IMPLEMENTATION STATUS ✅
+All debugging features have been implemented in the codebase:
+- ✅ Audio focus management with detailed logging
+- ✅ Audio stream testing with format detection
+- ✅ Device volume and audio mode checking
+- ✅ ExoPlayer audio session monitoring
+- ✅ MODIFY_AUDIO_SETTINGS permission added
+
+**Next Steps:**
+1. Build and install the app with the latest debugging code
+2. Play a video and check the log output in `mindsherpa_debug.log`
+3. Compare actual log output with expected output above
+4. If "❌ No audio format detected" appears, the Mux streams may not contain audio
+5. If audio format is detected but no sound, check device hardware/routing
 
 Let me know what you find in the logs and which of these tests reveal the issue!

@@ -96,12 +96,31 @@ sealed class ApiResult<out T> {
  */
 suspend fun <T> safeApiCall(apiCall: suspend () -> retrofit2.Response<T>): ApiResult<T> {
     return try {
+        println("🔧 [API] Making API call...")
         val response = apiCall()
+        println("🔧 [API] Response received - Code: ${response.code()}, Success: ${response.isSuccessful}")
+
         if (response.isSuccessful) {
             response.body()?.let { body ->
+                println("🔧 [API] Response body received successfully")
+                // Log specific details for courses response
+                if (body is com.skillvergence.mindsherpa.data.model.CoursesResponse) {
+                    println("🔧 [API] CoursesResponse - Total courses: ${body.courses.size}")
+                    body.courses.forEach { course ->
+                        println("🔧 [API] Course: ${course.id} - ${course.title} - Videos: ${course.videos?.size ?: 0}")
+                        course.videos?.forEach { video ->
+                            println("🔧 [API]   Video: ${video.id} - ${video.title}")
+                        }
+                    }
+                }
                 ApiResult.Success(body)
-            } ?: ApiResult.Error(ApiException.ServerError)
+            } ?: run {
+                println("❌ [API] Response body is null!")
+                ApiResult.Error(ApiException.ServerError)
+            }
         } else {
+            println("❌ [API] HTTP Error: ${response.code()} - ${response.message()}")
+            println("❌ [API] Error body: ${response.errorBody()?.string()}")
             ApiResult.Error(
                 ApiException.HttpError(
                     response.code(),
@@ -110,10 +129,14 @@ suspend fun <T> safeApiCall(apiCall: suspend () -> retrofit2.Response<T>): ApiRe
             )
         }
     } catch (e: java.net.UnknownHostException) {
+        println("❌ [API] Network Error - UnknownHost: ${e.message}")
         ApiResult.Error(ApiException.NetworkError)
     } catch (e: java.net.SocketTimeoutException) {
+        println("❌ [API] Timeout Error: ${e.message}")
         ApiResult.Error(ApiException.TimeoutError)
     } catch (e: Exception) {
+        println("❌ [API] Unknown Error: ${e.message}")
+        e.printStackTrace()
         ApiResult.Error(ApiException.UnknownError(e))
     }
 }

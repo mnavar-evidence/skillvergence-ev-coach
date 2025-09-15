@@ -374,8 +374,51 @@ struct MuxVideoPlayer: View {
         // Award XP and certificate
         let xpAwarded = Int(Double(advancedCourse.xpReward) * SubscriptionManager.shared.currentTier.xpMultiplier)
         
-        // TODO: Save completion and award certificate
-        print("Advanced course completed! Awarded \(xpAwarded) XP and \(advancedCourse.certificateType.displayName) certificate")
+        // Save completion in progress store
+        progressStore.updateVideoProgress(
+            videoId: advancedCourse.id,
+            courseId: advancedCourse.prerequisiteCourseId,
+            currentTime: currentTime,
+            duration: duration,
+            isPlaying: false
+        )
+        
+        // Generate certificate for completion
+        Task { @MainActor in
+            // Get user profile (you'll need to implement this based on your auth system)
+            let user = getCurrentUser()
+            
+            // Create progress data
+            let completionProgress = AdvancedCourseProgress(
+                courseId: advancedCourse.id,
+                watchedSeconds: currentTime,
+                totalDuration: duration,
+                completed: true,
+                certificateEarned: true,
+                completedAt: Date(),
+                certificateIssuedAt: nil
+            )
+            
+            // Generate certificate
+            CertificateManager.shared.generateCertificate(
+                for: user,
+                course: advancedCourse,
+                completionData: completionProgress
+            )
+            
+            print("🎓 Advanced course completed! Awarded \(xpAwarded) XP and generated \(advancedCourse.certificateType.displayName) certificate")
+        }
+    }
+    
+    private func getCurrentUser() -> UserProfile {
+        // This should be implemented based on your authentication system
+        // For now, return a placeholder user
+        return UserProfile(
+            id: "current_user",
+            fullName: "Current User",
+            email: "user@example.com",
+            profileImage: nil
+        )
     }
     
     private func monitorPlaybackState() {

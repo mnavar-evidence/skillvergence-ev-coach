@@ -88,6 +88,14 @@ object AppConfig {
             println("   📶 Ensure your device is on the same WiFi network")
         }
     }
+
+    // Initialize configuration and print debug info
+    fun init() {
+        printConfiguration()
+        println("🔧 Android API Debug:")
+        println("   Full courses URL: $coursesEndpoint")
+        println("   Expected: https://api.mindsherpa.ai/api/courses")
+    }
 }
 
 /**

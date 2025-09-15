@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.skillvergence.mindsherpa.config.AppConfig
 import com.skillvergence.mindsherpa.data.api.ApiResult
 import com.skillvergence.mindsherpa.data.model.Course
 import com.skillvergence.mindsherpa.data.repository.CourseRepository
@@ -27,28 +28,51 @@ class VideoViewModel : ViewModel() {
     val error: LiveData<String?> = _error
 
     init {
+        // Initialize app config and debug
+        AppConfig.init()
         // Load real courses from API
         loadCourses()
     }
 
     fun loadCourses() {
+        println("🔧 [VideoViewModel] loadCourses() called")
         _isLoading.value = true
         _error.value = null
 
         viewModelScope.launch {
             try {
+                println("🔧 [VideoViewModel] Starting coroutine to fetch courses...")
                 when (val result = courseRepository.getCourses()) {
                     is ApiResult.Success -> {
-                        _courses.value = result.data
+                        val courses = result.data
+                        println("🔧 [VideoViewModel] ✅ SUCCESS - Received ${courses.size} courses from repository")
+
+                        courses.forEach { course ->
+                            println("🔧 [VideoViewModel] Course: ${course.id} - ${course.title} - Videos: ${course.videos?.size ?: 0}")
+                            if (course.id == "course-1") {
+                                println("🔧 [VideoViewModel] *** SETTING HIGH VOLTAGE SAFETY FOUNDATION ***")
+                                course.videos?.forEach { video ->
+                                    println("🔧 [VideoViewModel]   Setting video: ${video.id} - ${video.title}")
+                                }
+                            }
+                        }
+
+                        _courses.value = courses
+                        println("🔧 [VideoViewModel] ✅ LiveData updated with ${courses.size} courses")
                         _isLoading.value = false
                     }
                     is ApiResult.Error -> {
-                        _error.value = "Failed to load courses: ${result.exception.message}"
+                        val errorMsg = "Failed to load courses: ${result.exception.message}"
+                        println("❌ [VideoViewModel] API Error: $errorMsg")
+                        _error.value = errorMsg
                         _isLoading.value = false
                     }
                 }
             } catch (e: Exception) {
-                _error.value = "Failed to load courses: ${e.message}"
+                val errorMsg = "Failed to load courses: ${e.message}"
+                println("❌ [VideoViewModel] Exception: $errorMsg")
+                e.printStackTrace()
+                _error.value = errorMsg
                 _isLoading.value = false
             }
         }

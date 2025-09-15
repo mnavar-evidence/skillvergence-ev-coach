@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">MindSherpa</string>
+    <string name="title_video">Video</string>
+    <string name="title_podcast">Podcast</string>
+    <string name="title_premium">Premium</string>
+
+    <!-- Course content -->
+    <string name="course_duration_format">%d:%02d</string>
+    <string name="loading_courses">Loading courses...</string>
+    <string name="error_loading_courses">Failed to load courses</string>
+    <string name="retry">Retry</string>
+
+    <!-- Video player -->
+    <string name="video_loading">Loading video...</string>
+    <string name="video_error">Video playback error</string>
+
+    <!-- Certificates -->
+    <string name="my_certificates">My Certificates</string>
+    <string name="certificate_earned">Certificate Earned</string>
+
+    <!-- Premium features -->
+    <string name="premium_required">Premium Required</string>
+    <string name="unlock_course">Unlock Course</string>
+</resources>

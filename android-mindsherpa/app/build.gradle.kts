@@ -55,12 +55,15 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    // Video Player - ExoPlayer (Mux integration to be added later)
+    // Video Player - ExoPlayer with Mux integration
     implementation("androidx.media3:media3-exoplayer:1.2.0")
     implementation("androidx.media3:media3-ui:1.2.0")
     implementation("androidx.media3:media3-common:1.2.0")
     implementation("androidx.media3:media3-exoplayer-hls:1.2.0")
-    // TODO: Add Mux SDK with proper repository configuration
+
+    // Mux Player SDK for Android
+    implementation("com.mux:player:1.15.0")
+    implementation("com.mux:stats:4.5.0")
 
     // Image Loading
     implementation("com.github.bumptech.glide:glide:4.16.0")

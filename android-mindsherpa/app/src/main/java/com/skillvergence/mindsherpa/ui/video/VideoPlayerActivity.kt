@@ -313,7 +313,19 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun onVideoSelected(video: Video) {
         println("▶️ Selected video: ${video.title}")
-        // TODO: Launch actual video player for selected video
+        logToFile("▶️ Launching video detail for: ${video.id} - ${video.title}")
+
+        // Launch VideoDetailActivity with Mux player
+        val intent = VideoDetailActivity.createIntent(
+            context = this,
+            videoId = video.id,
+            videoTitle = video.title,
+            videoDescription = video.description,
+            videoDuration = video.duration,
+            courseId = video.courseId,
+            muxPlaybackId = video.muxPlaybackId
+        )
+        startActivity(intent)
     }
 
     // Helper functions for mock data and UI

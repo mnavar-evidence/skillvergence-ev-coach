@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginBottom="16dp">
+
+    <!-- Course Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:background="?attr/colorSurfaceVariant">
+
+        <!-- Course Title -->
+        <TextView
+            android:id="@+id/course_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="High Voltage Safety Foundation"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <!-- Episode Count -->
+        <TextView
+            android:id="@+id/episode_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="4 episodes"
+            android:textAppearance="?attr/textAppearanceBody2"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="?attr/colorPrimary"
+            android:textColor="?attr/colorOnPrimary"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp" />
+
+    </LinearLayout>
+
+    <!-- Podcast Episodes RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/podcast_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="false"
+        android:paddingHorizontal="8dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+</LinearLayout>

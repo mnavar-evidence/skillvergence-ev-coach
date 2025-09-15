@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Header Title -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Podcast Library"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Statistics Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Episodes Icon -->
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_headphones_24dp"
+                android:tint="?attr/colorPrimary"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Total Episodes -->
+            <TextView
+                android:id="@+id/total_podcasts"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="19 Episodes"
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:textColor="?attr/colorOnSurface" />
+
+            <!-- Duration Icon -->
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_play_circle_24dp"
+                android:tint="?attr/colorPrimary"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="16dp" />
+
+            <!-- Total Duration -->
+            <TextView
+                android:id="@+id/total_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total: 8:30"
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:textColor="?attr/colorOnSurface" />
+
+        </LinearLayout>
+
+        <!-- Description -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Expert insights, technology deep dives, and industry analysis for electric vehicle professionals"
+            android:textAppearance="?attr/textAppearanceBody2"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:layout_marginTop="12dp"
+            android:alpha="0.8" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

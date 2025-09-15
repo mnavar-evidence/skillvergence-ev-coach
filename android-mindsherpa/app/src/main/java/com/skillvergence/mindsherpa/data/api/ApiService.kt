@@ -22,7 +22,8 @@ interface ApiService {
     @GET("podcasts")
     suspend fun getPodcasts(
         @Query("page") page: Int? = null,
-        @Query("limit") limit: Int? = null
+        @Query("limit") limit: Int? = null,
+        @Query("course_id") courseId: String? = null
     ): Response<PodcastsResponse>
 
     // AI endpoint for coaching questions
@@ -41,6 +42,17 @@ interface ApiService {
     @retrofit2.http.POST("video/progress")
     suspend fun updateVideoProgress(
         @retrofit2.http.Body request: VideoProgressRequest
+    ): Response<Void>
+
+    // Podcast progress endpoints
+    @GET("podcast/progress/{podcastId}")
+    suspend fun getPodcastProgress(
+        @retrofit2.http.Path("podcastId") podcastId: String
+    ): Response<PodcastProgress>
+
+    @retrofit2.http.POST("podcast/progress")
+    suspend fun updatePodcastProgress(
+        @retrofit2.http.Body request: PodcastProgressRequest
     ): Response<Void>
 
     // Analytics endpoint
@@ -75,6 +87,25 @@ data class VideoProgressRequest(
     val watchedSeconds: Int,
     val totalDuration: Int,
     val courseId: String? = null
+)
+
+/**
+ * Podcast Progress models
+ */
+data class PodcastProgress(
+    val podcastId: String,
+    val playbackPosition: Int,
+    val totalDuration: Int,
+    val isCompleted: Boolean,
+    val lastPlayedAt: String? = null
+)
+
+data class PodcastProgressRequest(
+    val podcastId: String,
+    val playbackPosition: Int,
+    val totalDuration: Int,
+    val courseId: String? = null,
+    val isCompleted: Boolean = false
 )
 
 /**

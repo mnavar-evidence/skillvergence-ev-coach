@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
 import com.skillvergence.mindsherpa.R
 import com.skillvergence.mindsherpa.data.model.MuxMigrationData
@@ -167,15 +168,15 @@ class VideoDetailActivity : AppCompatActivity() {
                     playWhenReady = false
 
                     // Set up player listeners
-                    addListener(object : androidx.media3.common.Player.Listener {
+                    addListener(object : Player.Listener {
                         override fun onPlaybackStateChanged(playbackState: Int) {
                             when (playbackState) {
-                                androidx.media3.common.Player.STATE_READY -> {
+                                Player.STATE_READY -> {
                                     logToFile(this@VideoDetailActivity, "🎬 Mux Player ready")
                                     totalDurationSeconds = (duration) / 1000
                                     startProgressTracking()
                                 }
-                                androidx.media3.common.Player.STATE_ENDED -> {
+                                Player.STATE_ENDED -> {
                                     logToFile(this@VideoDetailActivity, "🎬 Video playback ended")
                                     onVideoCompleted()
                                 }

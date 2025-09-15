@@ -87,12 +87,13 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="High Voltage Safety Foundation"
-                            android:textAppearance="?attr/textAppearanceHeadline3"
+                            android:textAppearance="?attr/textAppearanceHeadline4"
                             android:textColor="?attr/colorOnSurfaceVariant"
                             android:textStyle="bold"
-                            android:maxLines="3"
+                            android:textSize="18sp"
+                            android:maxLines="2"
                             android:ellipsize="end"
-                            android:lineSpacingExtra="2dp"
+                            android:lineSpacingExtra="1dp"
                             tools:text="High Voltage Safety Foundation" />
 
                         <TextView

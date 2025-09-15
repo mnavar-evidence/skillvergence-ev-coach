@@ -2,6 +2,10 @@ package com.skillvergence.mindsherpa.ui.video
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -52,6 +56,10 @@ class VideoDetailActivity : AppCompatActivity() {
     private val progressHandler = Handler(Looper.getMainLooper())
     private var progressRunnable: Runnable? = null
 
+    // Audio management
+    private lateinit var audioManager: AudioManager
+    private var audioFocusRequest: AudioFocusRequest? = null
+
     companion object {
         private const val EXTRA_VIDEO_ID = "video_id"
         private const val EXTRA_VIDEO_TITLE = "video_title"
@@ -97,8 +105,9 @@ class VideoDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_detail)
 
-        // Initialize views
+        // Initialize views and audio
         initializeViews()
+        initializeAudio()
 
         // Get video data from intent
         extractIntentData()
@@ -122,6 +131,91 @@ class VideoDetailActivity : AppCompatActivity() {
         progressText = findViewById(R.id.progress_text)
         backButton = findViewById(R.id.back_button)
         fullscreenButton = findViewById(R.id.fullscreen_button)
+    }
+
+    private fun initializeAudio() {
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        setupAudioFocus()
+    }
+
+    private fun setupAudioFocus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
+                .build()
+
+            audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(audioAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener { focusChange ->
+                    handleAudioFocusChange(focusChange)
+                }
+                .build()
+        }
+    }
+
+    private fun handleAudioFocusChange(focusChange: Int) {
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                // Resume playback
+                if (::exoPlayer.isInitialized) {
+                    exoPlayer.volume = 1.0f
+                    if (!exoPlayer.isPlaying) {
+                        exoPlayer.play()
+                    }
+                }
+                logToFile(this, "🔊 Audio focus gained")
+            }
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                // Stop playback
+                if (::exoPlayer.isInitialized) {
+                    exoPlayer.pause()
+                }
+                logToFile(this, "🔇 Audio focus lost")
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                // Pause playback
+                if (::exoPlayer.isInitialized) {
+                    exoPlayer.pause()
+                }
+                logToFile(this, "⏸️ Audio focus lost transient")
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                // Lower volume
+                if (::exoPlayer.isInitialized) {
+                    exoPlayer.volume = 0.3f
+                }
+                logToFile(this, "🔉 Audio focus ducking")
+            }
+        }
+    }
+
+    private fun requestAudioFocus(): Boolean {
+        val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest?.let { audioManager.requestAudioFocus(it) }
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager.requestAudioFocus(
+                { focusChange -> handleAudioFocusChange(focusChange) },
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+        }
+
+        val success = result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        logToFile(this, if (success) "🔊 Audio focus granted" else "🔇 Audio focus denied")
+        return success
+    }
+
+    private fun abandonAudioFocus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest?.let { audioManager.abandonAudioFocusRequest(it) }
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager.abandonAudioFocus { focusChange -> handleAudioFocusChange(focusChange) }
+        }
+        logToFile(this, "🔇 Audio focus abandoned")
     }
 
     private fun extractIntentData() {
@@ -152,8 +246,21 @@ class VideoDetailActivity : AppCompatActivity() {
     private fun setupVideoPlayer() {
         if (muxPlaybackId.isNotEmpty()) {
             try {
-                // Create ExoPlayer instance
-                exoPlayer = ExoPlayer.Builder(this).build()
+                // Request audio focus before setting up player
+                if (!requestAudioFocus()) {
+                    logToFile(this, "⚠️ Could not obtain audio focus, continuing anyway")
+                }
+
+                // Create ExoPlayer instance with audio attributes
+                exoPlayer = ExoPlayer.Builder(this)
+                    .setAudioAttributes(
+                        androidx.media3.common.AudioAttributes.Builder()
+                            .setUsage(androidx.media3.common.C.USAGE_MEDIA)
+                            .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MOVIE)
+                            .build(),
+                        true // Handle audio focus automatically
+                    )
+                    .build()
 
                 // Create Mux HLS URL from playback ID
                 val muxUrl = "https://stream.mux.com/$muxPlaybackId.m3u8"
@@ -309,14 +416,26 @@ class VideoDetailActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (::exoPlayer.isInitialized && exoPlayer.playWhenReady) {
+            requestAudioFocus()
             startProgressTracking()
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (::exoPlayer.isInitialized) {
+            exoPlayer.pause()
+        }
+        abandonAudioFocus()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         stopProgressTracking()
         saveProgress()
+
+        // Abandon audio focus
+        abandonAudioFocus()
 
         // Release player
         if (::exoPlayer.isInitialized) {

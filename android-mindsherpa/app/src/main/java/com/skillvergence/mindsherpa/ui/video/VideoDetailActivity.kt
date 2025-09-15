@@ -10,9 +10,9 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.ui.PlayerView
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.ui.PlayerView
 import com.skillvergence.mindsherpa.R
 import com.skillvergence.mindsherpa.data.model.MuxMigrationData
 import kotlinx.coroutines.launch
@@ -167,15 +167,15 @@ class VideoDetailActivity : AppCompatActivity() {
                     playWhenReady = false
 
                     // Set up player listeners
-                    addListener(object : com.google.android.exoplayer2.Player.Listener {
+                    addListener(object : androidx.media3.common.Player.Listener {
                         override fun onPlaybackStateChanged(playbackState: Int) {
                             when (playbackState) {
-                                com.google.android.exoplayer2.Player.STATE_READY -> {
+                                androidx.media3.common.Player.STATE_READY -> {
                                     logToFile(this@VideoDetailActivity, "🎬 Mux Player ready")
                                     totalDurationSeconds = (duration) / 1000
                                     startProgressTracking()
                                 }
-                                com.google.android.exoplayer2.Player.STATE_ENDED -> {
+                                androidx.media3.common.Player.STATE_ENDED -> {
                                     logToFile(this@VideoDetailActivity, "🎬 Video playback ended")
                                     onVideoCompleted()
                                 }

@@ -44,7 +44,7 @@ class PodcastAdapter(
 
             // Load thumbnail
             Glide.with(itemView.context)
-                .load(podcast.getThumbnailUrl())
+                .load(podcast.resolveThumbnailUrl())
                 .placeholder(R.drawable.ic_headphones_24dp)
                 .error(R.drawable.ic_headphones_24dp)
                 .into(podcastThumbnail)

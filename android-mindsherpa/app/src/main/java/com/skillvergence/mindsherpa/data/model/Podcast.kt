@@ -72,7 +72,7 @@ data class Podcast(
     /**
      * Get course-specific thumbnail URL if not provided
      */
-    fun getThumbnailUrl(): String {
+    fun resolveThumbnailUrl(): String {
         return thumbnailUrl ?: when (courseId) {
             "1", "course-1" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/high-voltage-safety.jpg"
             "2", "course-2" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/electrical-fundamentals.jpg"

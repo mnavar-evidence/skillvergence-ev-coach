@@ -13,9 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.PlayerView
-import com.mux.stats.sdk.core.model.CustomerPlayerData
-import com.mux.stats.sdk.core.model.CustomerVideoData
-import com.mux.stats.sdk.muxstats.MuxStatsExoPlayer
 import com.skillvergence.mindsherpa.R
 import com.skillvergence.mindsherpa.data.model.MuxMigrationData
 import kotlinx.coroutines.launch
@@ -35,7 +32,6 @@ class VideoDetailActivity : AppCompatActivity() {
     // UI Components
     private lateinit var playerView: PlayerView
     private lateinit var exoPlayer: ExoPlayer
-    private var muxStats: MuxStatsExoPlayer? = null
     private lateinit var videoTitle: TextView
     private lateinit var videoDescription: TextView
     private lateinit var videoDuration: TextView
@@ -199,9 +195,6 @@ class VideoDetailActivity : AppCompatActivity() {
                 // Connect player to view
                 playerView.player = exoPlayer
 
-                // Set up Mux analytics
-                setupMuxAnalytics()
-
                 logToFile(this, "🎬 Mux Player setup completed for ID: $muxPlaybackId")
 
             } catch (e: Exception) {
@@ -213,36 +206,6 @@ class VideoDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupMuxAnalytics() {
-        try {
-            // Customer player data
-            val customerPlayerData = CustomerPlayerData().apply {
-                environmentKey = "your_mux_environment_key" // TODO: Replace with actual key
-            }
-
-            // Customer video data
-            val customerVideoData = CustomerVideoData().apply {
-                videoId = this@VideoDetailActivity.videoId
-                videoTitle = intent.getStringExtra(EXTRA_VIDEO_TITLE)
-                videoSeries = courseId
-            }
-
-            // Initialize Mux Stats
-            muxStats = MuxStatsExoPlayer(
-                this,
-                exoPlayer,
-                "mindsherpa-android",
-                customerPlayerData,
-                customerVideoData
-            )
-
-            logToFile(this, "🎬 Mux analytics initialized for video: $videoId")
-
-        } catch (e: Exception) {
-            logToFile(this, "⚠️ Failed to setup Mux analytics: ${e.message}")
-            // Continue without analytics if it fails
-        }
-    }
 
     private fun setupUI() {
         // Set initial progress
@@ -353,9 +316,6 @@ class VideoDetailActivity : AppCompatActivity() {
         super.onDestroy()
         stopProgressTracking()
         saveProgress()
-
-        // Cleanup Mux analytics
-        muxStats?.release()
 
         // Release player
         if (::exoPlayer.isInitialized) {

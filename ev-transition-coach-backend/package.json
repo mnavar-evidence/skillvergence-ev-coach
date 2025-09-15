@@ -1,6 +1,6 @@
 {
   "name": "ev-transition-coach-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Backend API for EV Transition Coach learning platform",
   "main": "server.js",
   "scripts": {

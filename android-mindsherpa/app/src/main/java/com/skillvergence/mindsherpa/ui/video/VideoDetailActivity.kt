@@ -198,6 +198,9 @@ class VideoDetailActivity : AppCompatActivity() {
                                 logToFile(this@VideoDetailActivity, "🎬 Duration: ${muxPlayer.duration}ms")
                                 totalDurationSeconds = muxPlayer.duration / 1000
 
+                                // Ensure audio routing is correct when video is ready
+                                ensureAudioRouting()
+
                                 // Debug audio information when ready
                                 debugAudioInfo()
 
@@ -415,17 +418,32 @@ class VideoDetailActivity : AppCompatActivity() {
     }
 
     private fun configureAudioForVideoPlayback() {
-        // Simplified audio configuration - let the system handle routing
-        // (like iOS AVAudioSession.setCategory(.playback) without forcing speakerphone)
+        // Configure audio routing similar to iOS AVAudioSession.setCategory(.playback)
         try {
-            // Check if music volume is muted and log info
+            // Force audio to route to the main speaker/headphones (not earpiece)
+            audioManager.mode = AudioManager.MODE_NORMAL
+            audioManager.isSpeakerphoneOn = false // Let system decide routing
+
+            // Ensure we're not in silent/vibrate mode for media
+            if (audioManager.ringerMode == AudioManager.RINGER_MODE_SILENT) {
+                logToFile(this, "⚠️ Device is in silent mode - this may affect audio")
+            }
+
+            // Check and boost music volume if too low
             val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
-            logToFile(this, "🎵 Audio ready for video playback - Volume: $currentVolume/$maxVolume")
+            if (currentVolume < 2 && maxVolume > 2) {
+                // Boost volume to at least 25% if very low
+                val newVolume = maxVolume / 4
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, AudioManager.FLAG_SHOW_UI)
+                logToFile(this, "🔊 Boosted music volume from $currentVolume to $newVolume")
+            }
+
+            logToFile(this, "🎵 Audio configured - Mode: ${audioManager.mode}, Volume: $currentVolume/$maxVolume")
 
         } catch (e: Exception) {
-            logToFile(this, "❌ Failed to check audio configuration: ${e.message}")
+            logToFile(this, "❌ Failed to configure audio: ${e.message}")
         }
     }
 
@@ -440,6 +458,49 @@ class VideoDetailActivity : AppCompatActivity() {
         // Check system audio volume
         logToFile(this, "🔊 Mux Player uses system audio management")
         logToFile(this, "🔊 Audio device volume: ${audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)}/${audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}")
+    }
+
+    private fun ensureAudioRouting() {
+        try {
+            logToFile(this, "🎵 Ensuring proper audio routing...")
+
+            // Force audio manager to route audio correctly for media playback
+            audioManager.mode = AudioManager.MODE_NORMAL
+            audioManager.isSpeakerphoneOn = false
+
+            // Request audio focus for media playback (important for proper routing)
+            val result = audioManager.requestAudioFocus(
+                null,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                logToFile(this, "🎵 Audio focus granted - routing should be correct")
+            } else {
+                logToFile(this, "⚠️ Audio focus not granted - result: $result")
+            }
+
+            // Verify the player's audio session is active
+            val currentPlayer = if (::muxPlayer.isInitialized) muxPlayer else fallbackExoPlayer
+            currentPlayer?.let { player ->
+                if (player.audioSessionId != 0) {
+                    logToFile(this, "🎵 Audio session active: ${player.audioSessionId}")
+                } else {
+                    logToFile(this, "⚠️ No audio session ID - this may indicate audio routing issues")
+                }
+            }
+
+            // Check if any audio is currently being routed (system level)
+            val isMusicActive = audioManager.isMusicActive
+            logToFile(this, "🎵 System music active: $isMusicActive")
+
+            // Force the volume control to affect media stream
+            volumeControlStream = AudioManager.STREAM_MUSIC
+
+        } catch (e: Exception) {
+            logToFile(this, "❌ Error ensuring audio routing: ${e.message}")
+        }
     }
 
     private fun debugAudioInfo() {
@@ -513,6 +574,9 @@ class VideoDetailActivity : AppCompatActivity() {
         super.onDestroy()
         stopProgressTracking()
         saveProgress()
+
+        // Abandon audio focus when leaving
+        audioManager.abandonAudioFocus(null)
 
         // Release player - Mux Player handles cleanup automatically
         if (::muxPlayer.isInitialized) {

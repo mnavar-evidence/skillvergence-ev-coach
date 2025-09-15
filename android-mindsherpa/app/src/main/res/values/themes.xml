@@ -74,22 +74,20 @@
 
     <!-- Typography Styles -->
     <style name="TextAppearance.MindSherpa.Headline1" parent="TextAppearance.Material3.HeadlineLarge">
-        <item name="fontFamily">@font/roboto_bold</item>
         <item name="android:textSize">32sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="TextAppearance.MindSherpa.Headline2" parent="TextAppearance.Material3.HeadlineMedium">
-        <item name="fontFamily">@font/roboto_medium</item>
         <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="TextAppearance.MindSherpa.Body1" parent="TextAppearance.Material3.BodyLarge">
-        <item name="fontFamily">@font/roboto_regular</item>
         <item name="android:textSize">16sp</item>
     </style>
 
     <style name="TextAppearance.MindSherpa.Body2" parent="TextAppearance.Material3.BodyMedium">
-        <item name="fontFamily">@font/roboto_regular</item>
         <item name="android:textSize">14sp</item>
     </style>
 </resources>

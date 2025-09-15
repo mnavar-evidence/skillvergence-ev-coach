@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.appbar.MaterialToolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.skillvergence.mindsherpa.R
@@ -31,7 +32,7 @@ import java.util.Locale
  */
 class VideoPlayerActivity : AppCompatActivity() {
 
-    private lateinit var backButton: TextView
+    private lateinit var toolbar: MaterialToolbar
     private lateinit var courseIcon: TextView
     private lateinit var courseTitle: TextView
     private lateinit var courseCategory: TextView
@@ -161,7 +162,8 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun initializeViews() {
-        backButton = findViewById(R.id.back_button)
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
         courseIcon = findViewById(R.id.course_icon)
         courseTitle = findViewById(R.id.course_title)
         courseCategory = findViewById(R.id.course_category)
@@ -300,7 +302,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        backButton.setOnClickListener {
+        toolbar.setNavigationOnClickListener {
             finish()
         }
 

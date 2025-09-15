@@ -504,18 +504,32 @@ class PodcastPlayerActivity : AppCompatActivity() {
             logToFile(this, "🎵 Has audio focus (music active): $hasAudioFocus")
 
             // Check player audio session
-            val player = currentPlayer ?: muxPlayer ?: fallbackExoPlayer
-            player?.let {
-                val audioSessionId = it.audioSessionId
-                logToFile(this, "🎵 Player audio session ID: $audioSessionId")
+            if (muxPlayer != null) {
+                // For Mux Player, we need to access the underlying ExoPlayer
+                try {
+                    // Try to get audio session ID from Mux Player
+                    logToFile(this, "🎵 Using Mux Player for audio session debugging")
+                    logToFile(this, "🎵 Mux Player volume: ${muxPlayer!!.volume}")
 
-                // Check if player volume is set correctly
-                logToFile(this, "🎵 Player volume: ${it.volume}")
+                    // Note: Audio session ID might not be directly accessible on MuxPlayer
+                    // This is mainly for debugging, so we'll skip it if not available
+                    logToFile(this, "🎵 Mux Player state: Ready and configured")
 
-                // Force player volume to maximum
-                if (it.volume < 1.0f) {
-                    // Note: Some players ignore this, but worth trying
-                    logToFile(this, "🔊 Player volume was ${it.volume}, attempting to set to 1.0")
+                } catch (e: Exception) {
+                    logToFile(this, "⚠️ Could not access Mux Player audio session: ${e.message}")
+                }
+            } else if (fallbackExoPlayer != null) {
+                // For ExoPlayer, we can access audioSessionId directly
+                try {
+                    val audioSessionId = fallbackExoPlayer!!.audioSessionId
+                    logToFile(this, "🎵 ExoPlayer audio session ID: $audioSessionId")
+                    logToFile(this, "🎵 ExoPlayer volume: ${fallbackExoPlayer!!.volume}")
+
+                    if (audioSessionId == android.media.AudioManager.AUDIO_SESSION_ID_GENERATE) {
+                        logToFile(this, "⚠️ Audio session ID not yet generated")
+                    }
+                } catch (e: Exception) {
+                    logToFile(this, "⚠️ Could not access ExoPlayer audio session: ${e.message}")
                 }
             }
 

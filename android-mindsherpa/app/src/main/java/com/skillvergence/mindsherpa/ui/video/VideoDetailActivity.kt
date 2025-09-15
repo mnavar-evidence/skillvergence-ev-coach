@@ -198,12 +198,6 @@ class VideoDetailActivity : AppCompatActivity() {
                                 logToFile(this@VideoDetailActivity, "🎬 Duration: ${muxPlayer.duration}ms")
                                 totalDurationSeconds = muxPlayer.duration / 1000
 
-                                // Ensure audio routing is correct when video is ready
-                                ensureAudioRouting()
-
-                                // Debug audio information when ready
-                                debugAudioInfo()
-
                                 startProgressTracking()
                             }
                             Player.STATE_ENDED -> logToFile(this@VideoDetailActivity, "🎬 Player state: ENDED")
@@ -220,7 +214,6 @@ class VideoDetailActivity : AppCompatActivity() {
                         logToFile(this@VideoDetailActivity, "🎬 Is playing: $isPlaying")
                         if (isPlaying) {
                             startProgressTracking()
-                            debugAudioInfo()
                         } else {
                             stopProgressTracking()
                         }
@@ -241,8 +234,8 @@ class VideoDetailActivity : AppCompatActivity() {
                     .build()
                 logToFile(this, "🎬 Media item created successfully")
 
-                // Configure audio for video playback
-                configureAudioForVideoPlayback()
+                // Set player volume to ensure audibility
+                muxPlayer.volume = 1.0f
 
                 // Set media item and prepare
                 logToFile(this, "🎬 Setting media item and preparing...")
@@ -255,9 +248,8 @@ class VideoDetailActivity : AppCompatActivity() {
                 playerView.player = muxPlayer
                 logToFile(this, "🎬 Player connected to view")
 
-                // Start playback automatically (like iOS)
-                logToFile(this, "🎬 Starting playback...")
-                muxPlayer.playWhenReady = true
+                // Don't start playback automatically - let user press play
+                logToFile(this, "🎬 Player ready - waiting for user to press play")
 
                 logToFile(this, "🎬 Mux Player setup completed for ID: $muxPlaybackId")
 
@@ -288,16 +280,21 @@ class VideoDetailActivity : AppCompatActivity() {
         }
 
         try {
-            // Create basic ExoPlayer
-            val fallbackPlayer = ExoPlayer.Builder(this)
-                .setAudioAttributes(
-                    androidx.media3.common.AudioAttributes.Builder()
-                        .setUsage(androidx.media3.common.C.USAGE_MEDIA)
-                        .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MOVIE)
-                        .build(),
-                    true // Handle audio focus automatically
-                )
+            // Configure audio attributes and let ExoPlayer handle focus
+            val audioAttrs = androidx.media3.common.AudioAttributes.Builder()
+                .setUsage(androidx.media3.common.C.USAGE_MEDIA)
+                .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MOVIE)
                 .build()
+
+            // Create ExoPlayer with automatic audio focus handling
+            val fallbackPlayer = ExoPlayer.Builder(this)
+                .setAudioAttributes(audioAttrs, /* handleAudioFocus= */ true)
+                .setHandleAudioBecomingNoisy(true)
+                .setWakeMode(androidx.media3.common.C.WAKE_MODE_NETWORK)
+                .build()
+
+            // Set player volume to ensure audibility
+            fallbackPlayer.volume = 1.0f
 
             // Create media item from HLS URL
             val mediaItem = MediaItem.fromUri(muxHlsUrl)
@@ -305,7 +302,9 @@ class VideoDetailActivity : AppCompatActivity() {
             // Configure player
             fallbackPlayer.setMediaItem(mediaItem)
             fallbackPlayer.prepare()
-            fallbackPlayer.playWhenReady = true
+
+            // Don't start playback automatically - let user press play
+            logToFile(this, "🎬 Fallback player ready - waiting for user to press play")
 
             // Connect to view
             playerView.player = fallbackPlayer
@@ -417,133 +416,6 @@ class VideoDetailActivity : AppCompatActivity() {
         return formatTime(seconds.toInt())
     }
 
-    private fun configureAudioForVideoPlayback() {
-        // Configure audio routing similar to iOS AVAudioSession.setCategory(.playback)
-        try {
-            // Force audio to route to the main speaker/headphones (not earpiece)
-            audioManager.mode = AudioManager.MODE_NORMAL
-            audioManager.isSpeakerphoneOn = false // Let system decide routing
-
-            // Ensure we're not in silent/vibrate mode for media
-            if (audioManager.ringerMode == AudioManager.RINGER_MODE_SILENT) {
-                logToFile(this, "⚠️ Device is in silent mode - this may affect audio")
-            }
-
-            // Check and boost music volume if too low
-            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-
-            if (currentVolume < 2 && maxVolume > 2) {
-                // Boost volume to at least 25% if very low
-                val newVolume = maxVolume / 4
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, AudioManager.FLAG_SHOW_UI)
-                logToFile(this, "🔊 Boosted music volume from $currentVolume to $newVolume")
-            }
-
-            logToFile(this, "🎵 Audio configured - Mode: ${audioManager.mode}, Volume: $currentVolume/$maxVolume")
-
-        } catch (e: Exception) {
-            logToFile(this, "❌ Failed to configure audio: ${e.message}")
-        }
-    }
-
-    private fun testAudioStream() {
-        // Test if the Mux HLS stream actually contains audio
-        val muxUrl = "https://stream.mux.com/$muxPlaybackId.m3u8"
-        logToFile(this, "🎵 Testing audio stream: $muxUrl")
-
-        // Mux Player handles audio automatically - no need for manual configuration
-        logToFile(this, "🎵 Mux Player handles audio format and routing automatically")
-
-        // Check system audio volume
-        logToFile(this, "🔊 Mux Player uses system audio management")
-        logToFile(this, "🔊 Audio device volume: ${audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)}/${audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}")
-    }
-
-    private fun ensureAudioRouting() {
-        try {
-            logToFile(this, "🎵 Ensuring proper audio routing...")
-
-            // Force audio manager to route audio correctly for media playback
-            audioManager.mode = AudioManager.MODE_NORMAL
-            audioManager.isSpeakerphoneOn = false
-
-            // Request audio focus for media playback (important for proper routing)
-            val result = audioManager.requestAudioFocus(
-                null,
-                AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN
-            )
-
-            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                logToFile(this, "🎵 Audio focus granted - routing should be correct")
-            } else {
-                logToFile(this, "⚠️ Audio focus not granted - result: $result")
-            }
-
-            // Verify the player's audio session is active
-            val currentPlayer = if (::muxPlayer.isInitialized) muxPlayer else fallbackExoPlayer
-            currentPlayer?.let { player ->
-                if (player.audioSessionId != 0) {
-                    logToFile(this, "🎵 Audio session active: ${player.audioSessionId}")
-                } else {
-                    logToFile(this, "⚠️ No audio session ID - this may indicate audio routing issues")
-                }
-            }
-
-            // Check if any audio is currently being routed (system level)
-            val isMusicActive = audioManager.isMusicActive
-            logToFile(this, "🎵 System music active: $isMusicActive")
-
-            // Force the volume control to affect media stream
-            volumeControlStream = AudioManager.STREAM_MUSIC
-
-        } catch (e: Exception) {
-            logToFile(this, "❌ Error ensuring audio routing: ${e.message}")
-        }
-    }
-
-    private fun debugAudioInfo() {
-        try {
-            // Get the current player (Mux or fallback)
-            val currentPlayer = if (::muxPlayer.isInitialized) muxPlayer else fallbackExoPlayer
-
-            currentPlayer?.let { player ->
-                // Check audio format
-                val audioFormat = player.audioFormat
-                if (audioFormat != null) {
-                    logToFile(this, "🎵 Audio format detected:")
-                    logToFile(this, "🎵   - Sample MIME type: ${audioFormat.sampleMimeType}")
-                    logToFile(this, "🎵   - Channel count: ${audioFormat.channelCount}")
-                    logToFile(this, "🎵   - Sample rate: ${audioFormat.sampleRate}")
-                    logToFile(this, "🎵   - Bitrate: ${audioFormat.bitrate}")
-                } else {
-                    logToFile(this, "❌ No audio format detected in player")
-                }
-
-                // Check player volume
-                logToFile(this, "🔊 Player volume: ${player.volume}")
-
-                // Check if player is actually playing
-                logToFile(this, "🎬 Player is playing: ${player.isPlaying}")
-                logToFile(this, "🎬 Playback state: ${player.playbackState}")
-            }
-
-            // Check system audio state
-            logToFile(this, "🔊 System audio info:")
-            logToFile(this, "🔊   - Music volume: ${audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)}/${audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}")
-            logToFile(this, "🔊   - Ringer mode: ${audioManager.ringerMode}")
-            logToFile(this, "🔊   - Is music active: ${audioManager.isMusicActive}")
-            logToFile(this, "🔊   - Is speakerphone on: ${audioManager.isSpeakerphoneOn}")
-
-            // Check audio focus
-            @Suppress("DEPRECATION")
-            logToFile(this, "🔊   - Audio mode: ${audioManager.mode}")
-
-        } catch (e: Exception) {
-            logToFile(this, "❌ Error debugging audio info: ${e.message}")
-        }
-    }
 
     override fun onPause() {
         super.onPause()
@@ -575,15 +447,10 @@ class VideoDetailActivity : AppCompatActivity() {
         stopProgressTracking()
         saveProgress()
 
-        // Abandon audio focus when leaving
-        audioManager.abandonAudioFocus(null)
-
-        // Release player - Mux Player handles cleanup automatically
+        // Release players (they handle audio focus automatically)
         if (::muxPlayer.isInitialized) {
             muxPlayer.release()
         }
-
-        // Release fallback player if used
         fallbackExoPlayer?.release()
     }
 }

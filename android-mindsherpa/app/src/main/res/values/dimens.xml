@@ -2,4 +2,11 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <!-- Transport Controls -->
+    <dimen name="transport_button_size_large">72dp</dimen>
+    <dimen name="transport_button_size_main">64dp</dimen>
+    <dimen name="transport_button_spacing">24dp</dimen>
+    <dimen name="transport_icon_size_large">36dp</dimen>
+    <dimen name="transport_icon_size_main">32dp</dimen>
 </resources>

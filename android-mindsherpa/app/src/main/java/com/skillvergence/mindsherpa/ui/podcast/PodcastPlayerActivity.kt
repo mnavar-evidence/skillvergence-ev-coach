@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.widget.ImageButton
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.SeekBar
@@ -44,9 +45,9 @@ class PodcastPlayerActivity : AppCompatActivity() {
     private lateinit var currentTimeText: TextView
     private lateinit var totalTimeText: TextView
     private lateinit var seekBar: SeekBar
-    private lateinit var playPauseButton: ImageButton
-    private lateinit var skipBackwardButton: ImageButton
-    private lateinit var skipForwardButton: ImageButton
+    private lateinit var playPauseButton: FloatingActionButton
+    private lateinit var skipBackwardButton: FloatingActionButton
+    private lateinit var skipForwardButton: FloatingActionButton
     private lateinit var backButton: ImageButton
     private lateinit var loadingIndicator: ProgressBar
 
@@ -263,34 +264,26 @@ class PodcastPlayerActivity : AppCompatActivity() {
             // Configure for audio-only playback
             volumeControlStream = AudioManager.STREAM_MUSIC
 
-            // Request audio focus for media playback
-            val audioFocusResult = audioManager.requestAudioFocus(
-                null,
-                AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN
-            )
+            // Configure audio attributes and let the player handle focus
+            val audioAttrs = androidx.media3.common.AudioAttributes.Builder()
+                .setUsage(androidx.media3.common.C.USAGE_MEDIA)
+                .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
+                .build()
 
-            if (audioFocusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                logToFile(this, "⚠️ Audio focus not granted")
-            }
-
-            // Create Mux Player optimized for audio
+            // Create Mux Player with automatic audio focus handling
             muxPlayer = MuxPlayer.Builder(context = this)
                 .enableLogcat(true)
                 .applyExoConfig {
                     setHandleAudioBecomingNoisy(true)
-                    setAudioAttributes(
-                        androidx.media3.common.AudioAttributes.Builder()
-                            .setUsage(androidx.media3.common.C.USAGE_MEDIA)
-                            .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
-                            .build(),
-                        true
-                    )
+                    setAudioAttributes(audioAttrs, /* handleAudioFocus= */ true)
                     setWakeMode(androidx.media3.common.C.WAKE_MODE_NETWORK)
                 }
                 .build()
 
             currentPlayer = muxPlayer
+
+            // Set player volume to ensure audibility
+            muxPlayer?.volume = 1.0f
 
             // Add player listener
             muxPlayer?.addListener(object : Player.Listener {
@@ -309,10 +302,6 @@ class PodcastPlayerActivity : AppCompatActivity() {
                             showLoading(false)
                             totalDurationSeconds = (muxPlayer?.duration ?: 0) / 1000
                             totalTimeText.text = formatTime(totalDurationSeconds.toInt())
-
-                            // Ensure proper audio routing for podcast playback
-                            ensureAudioRoutingForPodcast()
-
                             startProgressTracking()
                         }
                         Player.STATE_ENDED -> {
@@ -338,13 +327,11 @@ class PodcastPlayerActivity : AppCompatActivity() {
                 override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                     logToFile(this@PodcastPlayerActivity, "❌ Mux Player error: ${error.message}")
                     logToFile(this@PodcastPlayerActivity, "🔄 Attempting fallback to ExoPlayer...")
-
-                    // Try fallback to basic ExoPlayer
                     tryFallbackExoPlayer()
                 }
             })
 
-            // Create media item
+            // Create media item and prepare
             val mediaItem = MediaItems.builderFromMuxPlaybackId(muxPlaybackId).build()
             muxPlayer?.setMediaItem(mediaItem)
             muxPlayer?.prepare()
@@ -370,20 +357,23 @@ class PodcastPlayerActivity : AppCompatActivity() {
             val hlsUrl = "https://stream.mux.com/$muxPlaybackId.m3u8"
             logToFile(this, "🔄 Using HLS URL: $hlsUrl")
 
-            // Create ExoPlayer with audio-focused configuration
+            // Configure audio attributes and let ExoPlayer handle focus
+            val audioAttrs = androidx.media3.common.AudioAttributes.Builder()
+                .setUsage(androidx.media3.common.C.USAGE_MEDIA)
+                .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
+                .build()
+
+            // Create ExoPlayer with automatic audio focus handling
             fallbackExoPlayer = ExoPlayer.Builder(this)
-                .setAudioAttributes(
-                    androidx.media3.common.AudioAttributes.Builder()
-                        .setUsage(androidx.media3.common.C.USAGE_MEDIA)
-                        .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
-                        .build(),
-                    true
-                )
+                .setAudioAttributes(audioAttrs, /* handleAudioFocus= */ true)
                 .setHandleAudioBecomingNoisy(true)
                 .setWakeMode(androidx.media3.common.C.WAKE_MODE_NETWORK)
                 .build()
 
             currentPlayer = fallbackExoPlayer
+
+            // Set player volume to ensure audibility
+            fallbackExoPlayer?.volume = 1.0f
 
             // Add listener for ExoPlayer
             fallbackExoPlayer?.addListener(object : Player.Listener {
@@ -402,9 +392,6 @@ class PodcastPlayerActivity : AppCompatActivity() {
                             showLoading(false)
                             totalDurationSeconds = (fallbackExoPlayer?.duration ?: 0) / 1000
                             totalTimeText.text = formatTime(totalDurationSeconds.toInt())
-
-                            // Enhanced audio routing for ExoPlayer
-                            ensureAudioRoutingForPodcast()
                             startProgressTracking()
                         }
                         Player.STATE_ENDED -> {
@@ -445,96 +432,6 @@ class PodcastPlayerActivity : AppCompatActivity() {
             logToFile(this, "❌ Fallback ExoPlayer setup failed: ${e.message}")
             showError("Failed to initialize audio player")
             showLoading(false)
-        }
-    }
-
-    private fun ensureAudioRoutingForPodcast() {
-        try {
-            logToFile(this, "🎵 Ensuring audio routing for podcast playback...")
-
-            // Force normal audio mode (not speakerphone, not earpiece)
-            audioManager.mode = AudioManager.MODE_NORMAL
-            audioManager.isSpeakerphoneOn = false
-
-            // Debug current audio state
-            logToFile(this, "🔊 Audio Manager State:")
-            logToFile(this, "🔊   - Mode: ${audioManager.mode}")
-            logToFile(this, "🔊   - Ringer mode: ${audioManager.ringerMode}")
-            logToFile(this, "🔊   - Is music active: ${audioManager.isMusicActive}")
-            logToFile(this, "🔊   - Is wired headset on: ${audioManager.isWiredHeadsetOn}")
-            logToFile(this, "🔊   - Is bluetooth A2DP on: ${audioManager.isBluetoothA2dpOn}")
-
-            // Check and set reasonable volume level
-            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-
-            logToFile(this, "🔊 Music volume: $currentVolume/$maxVolume")
-
-            if (currentVolume < 3 && maxVolume > 3) {
-                val newVolume = maxVolume / 3
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, AudioManager.FLAG_SHOW_UI)
-                logToFile(this, "🔊 Boosted podcast volume from $currentVolume to $newVolume")
-            }
-
-            // Force audio to route through speakers/headphones (not earpiece)
-            try {
-                // This forces audio routing away from earpiece
-                audioManager.setMode(AudioManager.MODE_NORMAL)
-                audioManager.isSpeakerphoneOn = false
-
-                logToFile(this, "🎵 Forced normal audio routing")
-            } catch (e: Exception) {
-                logToFile(this, "⚠️ Could not set audio mode: ${e.message}")
-            }
-
-            // Additional debug for audio focus
-            debugAudioFocusState()
-
-            logToFile(this, "🎵 Audio routing configuration completed")
-
-        } catch (e: Exception) {
-            logToFile(this, "❌ Error configuring audio routing: ${e.message}")
-        }
-    }
-
-    private fun debugAudioFocusState() {
-        try {
-            // Check if we have audio focus
-            val hasAudioFocus = audioManager.isMusicActive
-            logToFile(this, "🎵 Has audio focus (music active): $hasAudioFocus")
-
-            // Check player audio session
-            if (muxPlayer != null) {
-                // For Mux Player, we need to access the underlying ExoPlayer
-                try {
-                    // Try to get audio session ID from Mux Player
-                    logToFile(this, "🎵 Using Mux Player for audio session debugging")
-                    logToFile(this, "🎵 Mux Player volume: ${muxPlayer!!.volume}")
-
-                    // Note: Audio session ID might not be directly accessible on MuxPlayer
-                    // This is mainly for debugging, so we'll skip it if not available
-                    logToFile(this, "🎵 Mux Player state: Ready and configured")
-
-                } catch (e: Exception) {
-                    logToFile(this, "⚠️ Could not access Mux Player audio session: ${e.message}")
-                }
-            } else if (fallbackExoPlayer != null) {
-                // For ExoPlayer, we can access audioSessionId directly
-                try {
-                    val audioSessionId = fallbackExoPlayer!!.audioSessionId
-                    logToFile(this, "🎵 ExoPlayer audio session ID: $audioSessionId")
-                    logToFile(this, "🎵 ExoPlayer volume: ${fallbackExoPlayer!!.volume}")
-
-                    if (audioSessionId == android.media.AudioManager.AUDIO_SESSION_ID_GENERATE) {
-                        logToFile(this, "⚠️ Audio session ID not yet generated")
-                    }
-                } catch (e: Exception) {
-                    logToFile(this, "⚠️ Could not access ExoPlayer audio session: ${e.message}")
-                }
-            }
-
-        } catch (e: Exception) {
-            logToFile(this, "❌ Error debugging audio focus: ${e.message}")
         }
     }
 
@@ -649,10 +546,7 @@ class PodcastPlayerActivity : AppCompatActivity() {
         super.onDestroy()
         stopProgressTracking()
 
-        // Release audio focus
-        audioManager.abandonAudioFocus(null)
-
-        // Release all players
+        // Release all players (they will handle audio focus automatically)
         muxPlayer?.release()
         muxPlayer = null
         fallbackExoPlayer?.release()

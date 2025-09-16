@@ -45,6 +45,7 @@ class VideoAdapter(
         private val titleText: TextView = itemView.findViewById(R.id.video_title)
         private val durationText: TextView = itemView.findViewById(R.id.video_duration)
         private val completionStatus: TextView = itemView.findViewById(R.id.completion_status)
+        private val playButton: ImageView = itemView.findViewById(R.id.play_button)
 
         fun bind(video: Video, position: Int) {
             // Video title
@@ -65,10 +66,18 @@ class VideoAdapter(
                 .into(thumbnailImage)
 
             // TODO: Real completion status would come from user progress API
-            // For now, show all videos as available to watch
-            completionStatus.text = "▶️"
+            // For now, hide completion status and show all as available
+            completionStatus.visibility = View.GONE
 
+            // Set play button icon
+            playButton.setImageResource(R.drawable.ic_play_circle_24dp)
+
+            // Click listeners
             itemView.setOnClickListener {
+                onVideoClick(video)
+            }
+
+            playButton.setOnClickListener {
                 onVideoClick(video)
             }
         }

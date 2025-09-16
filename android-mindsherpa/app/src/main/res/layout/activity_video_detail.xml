@@ -8,6 +8,7 @@
 
     <!-- Header with back button -->
     <LinearLayout
+        android:id="@+id/header_layout"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:orientation="horizontal"
@@ -15,15 +16,14 @@
         android:paddingHorizontal="16dp"
         android:background="@color/surface_color">
 
-        <TextView
+        <ImageButton
             android:id="@+id/back_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="← Back"
-            android:textSize="16sp"
-            android:textColor="@color/primary_color"
-            android:padding="8dp"
-            android:background="?android:attr/selectableItemBackground" />
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_arrow_back_24dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            app:tint="@color/primary_color" />
 
         <View
             android:layout_width="0dp"
@@ -72,6 +72,7 @@
 
     <!-- Video Info Section -->
     <ScrollView
+        android:id="@+id/info_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"

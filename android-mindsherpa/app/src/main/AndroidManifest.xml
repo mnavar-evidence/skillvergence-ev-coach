@@ -39,8 +39,8 @@
             android:name=".ui.video.VideoDetailActivity"
             android:exported="false"
             android:label="Video Detail"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="portrait" />
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode"
+            android:screenOrientation="sensor" />
 
         <activity
             android:name=".ui.podcast.PodcastPlayerActivity"

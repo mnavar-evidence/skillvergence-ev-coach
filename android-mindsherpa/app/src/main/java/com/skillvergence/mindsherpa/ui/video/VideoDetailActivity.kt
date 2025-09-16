@@ -2,14 +2,27 @@ package com.skillvergence.mindsherpa.ui.video
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import android.view.WindowManager
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.ui.PlayerView
 import androidx.media3.common.Player
@@ -42,8 +55,18 @@ open class VideoDetailActivity : AppCompatActivity() {
     private lateinit var videoDuration: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView
-    private lateinit var backButton: TextView
+    private lateinit var backButton: ImageButton
     private lateinit var fullscreenButton: View
+
+    // Landscape/Fullscreen UI Components
+    private var overlayControls: LinearLayout? = null
+    private var bottomOverlay: LinearLayout? = null
+
+    // Fullscreen state
+    private var isPortraitFullscreen = false
+    private var isLandscape = false
+    private val overlayHandler = Handler(Looper.getMainLooper())
+    private var overlayRunnable: Runnable? = null
 
     // Video data
     private var videoId: String = ""
@@ -130,6 +153,18 @@ open class VideoDetailActivity : AppCompatActivity() {
         progressText = findViewById(R.id.progress_text)
         backButton = findViewById(R.id.back_button)
         fullscreenButton = findViewById(R.id.fullscreen_button)
+
+        // Landscape/Fullscreen specific views (may be null in portrait)
+        overlayControls = findViewById(R.id.overlay_controls)
+        bottomOverlay = findViewById(R.id.bottom_overlay)
+
+        // Check if we're in landscape mode
+        isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        if (isLandscape) {
+            enableLandscapeFullscreen()
+            setupOverlayHiding()
+        }
     }
 
 
@@ -334,8 +369,14 @@ open class VideoDetailActivity : AppCompatActivity() {
         }
 
         fullscreenButton.setOnClickListener {
-            // TODO: Implement fullscreen mode
-            logToFile(this, "🎬 Fullscreen requested")
+            togglePortraitFullscreen()
+        }
+
+        // Set up overlay hiding for landscape mode
+        if (isLandscape) {
+            playerView.setOnClickListener {
+                toggleOverlayVisibility()
+            }
         }
     }
 
@@ -416,6 +457,184 @@ open class VideoDetailActivity : AppCompatActivity() {
         return formatTime(seconds.toInt())
     }
 
+    // MARK: - Fullscreen and Orientation Handling
+
+    private fun togglePortraitFullscreen() {
+        if (isLandscape) {
+            // In landscape, ignore portrait fullscreen toggle
+            return
+        }
+
+        isPortraitFullscreen = !isPortraitFullscreen
+        logToFile(this, "🎬 Portrait fullscreen: $isPortraitFullscreen")
+
+        if (isPortraitFullscreen) {
+            enablePortraitFullscreen()
+        } else {
+            disablePortraitFullscreen()
+        }
+    }
+
+    private fun enablePortraitFullscreen() {
+        logToFile(this, "🎬 Enabling portrait fullscreen - centering video")
+
+        // Hide the header LinearLayout using the correct ID
+        val headerLayout = findViewById<LinearLayout>(R.id.header_layout)
+        headerLayout?.visibility = View.GONE
+
+        // Hide the info ScrollView using the correct ID
+        val infoScrollView = findViewById<ScrollView>(R.id.info_scroll_view)
+        infoScrollView?.visibility = View.GONE
+
+        // Make video container fill available space
+        val videoContainer = playerView.parent as? FrameLayout
+        videoContainer?.layoutParams?.height = ViewGroup.LayoutParams.MATCH_PARENT
+        videoContainer?.requestLayout()
+
+        // Keep screen on during video playback
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+
+    private fun disablePortraitFullscreen() {
+        logToFile(this, "🎬 Disabling portrait fullscreen - restoring normal view")
+
+        // Show the header LinearLayout using the correct ID
+        val headerLayout = findViewById<LinearLayout>(R.id.header_layout)
+        headerLayout?.visibility = View.VISIBLE
+
+        // Show the info ScrollView using the correct ID
+        val infoScrollView = findViewById<ScrollView>(R.id.info_scroll_view)
+        infoScrollView?.visibility = View.VISIBLE
+
+        // Restore original video container height (220dp)
+        val videoContainer = playerView.parent as? FrameLayout
+        val heightInDp = 220
+        val heightInPx = (heightInDp * resources.displayMetrics.density).toInt()
+        videoContainer?.layoutParams?.height = heightInPx
+        videoContainer?.requestLayout()
+
+        // Allow screen to turn off normally
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    private fun enableLandscapeFullscreen() {
+        logToFile(this, "🎬 Enabling landscape fullscreen mode")
+
+        // Hide system UI for immersive experience
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.let { controller ->
+                controller.hide(WindowInsets.Type.systemBars())
+                controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            )
+        }
+
+        // Keep screen on during video playback
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    private fun disableLandscapeFullscreen() {
+        logToFile(this, "🎬 Disabling landscape fullscreen mode")
+
+        // Show system UI
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.show(WindowInsets.Type.systemBars())
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+        }
+
+        // Allow screen to turn off normally
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    private fun setupOverlayHiding() {
+        if (!isLandscape) return
+
+        // Start timer to hide overlays after 3 seconds
+        scheduleOverlayHiding()
+    }
+
+    private fun toggleOverlayVisibility() {
+        if (!isLandscape) return
+
+        val isVisible = overlayControls?.visibility == View.VISIBLE
+        val targetVisibility = if (isVisible) View.GONE else View.VISIBLE
+
+        overlayControls?.visibility = targetVisibility
+        bottomOverlay?.visibility = targetVisibility
+
+        if (targetVisibility == View.VISIBLE) {
+            scheduleOverlayHiding()
+        } else {
+            cancelOverlayHiding()
+        }
+    }
+
+    private fun scheduleOverlayHiding() {
+        cancelOverlayHiding()
+        overlayRunnable = Runnable {
+            overlayControls?.visibility = View.GONE
+            bottomOverlay?.visibility = View.GONE
+        }
+        overlayHandler.postDelayed(overlayRunnable!!, 3000) // Hide after 3 seconds
+    }
+
+    private fun cancelOverlayHiding() {
+        overlayRunnable?.let { overlayHandler.removeCallbacks(it) }
+        overlayRunnable = null
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        val newIsLandscape = newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE
+        logToFile(this, "🎬 Orientation changed: ${if (newIsLandscape) "LANDSCAPE" else "PORTRAIT"}")
+
+        if (newIsLandscape != isLandscape) {
+            isLandscape = newIsLandscape
+
+            if (isLandscape) {
+                // Apply fullscreen mode immediately
+                enableLandscapeFullscreen()
+
+                // Re-initialize landscape-specific views after layout change
+                overlayHandler.post {
+                    overlayControls = findViewById(R.id.overlay_controls)
+                    bottomOverlay = findViewById(R.id.bottom_overlay)
+                    setupOverlayHiding()
+
+                    // Set up click listener for landscape player view
+                    playerView.setOnClickListener {
+                        toggleOverlayVisibility()
+                    }
+
+                    // Ensure fullscreen mode is still applied after layout finishes
+                    enableLandscapeFullscreen()
+                }
+            } else {
+                disableLandscapeFullscreen()
+                cancelOverlayHiding()
+
+                // Reset portrait fullscreen state when returning to portrait
+                if (isPortraitFullscreen) {
+                    disablePortraitFullscreen()
+                    isPortraitFullscreen = false
+                }
+            }
+        }
+    }
+
 
     override fun onPause() {
         super.onPause()
@@ -432,6 +651,19 @@ open class VideoDetailActivity : AppCompatActivity() {
         if (::muxPlayer.isInitialized || fallbackExoPlayer != null) {
             startProgressTracking()
         }
+
+        // Reapply fullscreen mode if in landscape
+        if (isLandscape) {
+            enableLandscapeFullscreen()
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && isLandscape) {
+            // Ensure fullscreen mode is maintained when window regains focus
+            enableLandscapeFullscreen()
+        }
     }
 
     override fun onStop() {
@@ -446,6 +678,7 @@ open class VideoDetailActivity : AppCompatActivity() {
         super.onDestroy()
         stopProgressTracking()
         saveProgress()
+        cancelOverlayHiding()
 
         // Release players (they handle audio focus automatically)
         if (::muxPlayer.isInitialized) {

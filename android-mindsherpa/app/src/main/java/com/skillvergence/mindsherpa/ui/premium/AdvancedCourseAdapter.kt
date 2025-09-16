@@ -46,7 +46,7 @@ class AdvancedCourseAdapter(
         holder.courseTitle.text = course.title
         holder.prerequisiteText.text = "Prerequisite: Complete ${getPrerequisiteCourseName(course.prerequisiteCourseId)}"
         holder.courseDescription.text = course.description
-        holder.courseDuration.text = "${course.estimatedHours.format(1)} hours"
+        holder.courseDuration.text = course.formattedDuration
         holder.skillLevel.text = course.skillLevel.displayName
         holder.xpReward.text = "${course.xpReward} XP"
 

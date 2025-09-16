@@ -13,7 +13,7 @@ import com.skillvergence.mindsherpa.R
  * Works with all course types (1.0, 2.0, 3.0, 4.0, 5.0)
  */
 class CourseModuleAdapter(
-    private val modules: List<CourseModule>,
+    private val modules: MutableList<CourseModule>,
     private val onModuleClick: (CourseModule) -> Unit
 ) : RecyclerView.Adapter<CourseModuleAdapter.ViewHolder>() {
 
@@ -58,5 +58,18 @@ class CourseModuleAdapter(
         }
     }
 
-    override fun getItemCount() = modules.size
+    override fun getItemCount(): Int {
+        println("🔍 CourseModuleAdapter - getItemCount(): ${modules.size}")
+        return modules.size
+    }
+
+    /**
+     * Update a specific module's duration and refresh that item
+     */
+    fun updateModuleDuration(position: Int, updatedModule: CourseModule) {
+        if (position < modules.size) {
+            modules[position] = updatedModule
+            notifyItemChanged(position)
+        }
+    }
 }

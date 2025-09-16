@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
+    android:layout_marginBottom="12dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
-    android:background="@android:color/white">
+    app:strokeWidth="0dp"
+    app:cardBackgroundColor="?attr/colorSurface"
+    android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -49,7 +51,7 @@
                 android:text="1.1 EV Safety Pyramid - Who's Allowed to Touch"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:maxLines="2"
                 android:ellipsize="end"
                 tools:text="1.1 EV Safety Pyramid - Who's Allowed to Touch" />
@@ -60,18 +62,18 @@
                 android:layout_height="wrap_content"
                 android:text="6:10"
                 android:textSize="12sp"
-                android:textColor="@android:color/darker_gray"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:layout_marginTop="4dp"
                 tools:text="6:10" />
 
         </LinearLayout>
 
-        <!-- Completion Status -->
+        <!-- Status and Play Button -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:gravity="center"
             android:layout_marginStart="12dp">
 
             <TextView
@@ -80,20 +82,24 @@
                 android:layout_height="wrap_content"
                 android:text="✅ 100%"
                 android:textSize="12sp"
-                android:textColor="@android:color/holo_green_dark"
+                android:textColor="?attr/colorPrimary"
                 android:textStyle="bold"
+                android:layout_marginBottom="4dp"
+                android:visibility="gone"
                 tools:text="✅ 100%" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=">"
-                android:textSize="16sp"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginStart="8dp" />
+            <ImageView
+                android:id="@+id/play_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_play_circle_24dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:scaleType="centerInside"
+                android:contentDescription="Play video"
+                app:tint="?attr/colorPrimary" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

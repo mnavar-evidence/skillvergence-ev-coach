@@ -75,7 +75,7 @@
                     android:text="12 min"
                     android:textAppearance="?attr/textAppearanceCaption"
                     android:textColor="?attr/colorOnSurfaceVariant"
-                    android:drawableStart="@drawable/ic_headphones_24dp"
+                    android:drawableStart="@drawable/ic_play_circle_24dp"
                     android:drawablePadding="4dp"
                     android:gravity="center_vertical"
                     android:layout_marginEnd="16dp"

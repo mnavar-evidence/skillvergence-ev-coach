@@ -173,7 +173,9 @@ struct MuxVideoPlayer: View {
     
     private func setupPlayer() {
         // Create Mux Player with playback ID
+        #if DEBUG
         print("🎬 Setting up Mux Player with ID: \(playbackId)")
+        #endif
         
         Task {
             do {
@@ -182,7 +184,9 @@ struct MuxVideoPlayer: View {
                     try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay, .allowBluetoothA2DP])
                     try AVAudioSession.sharedInstance().setActive(true)
                 } catch {
+                    #if DEBUG
                     print("Failed to set up audio session for video: \(error)")
+                    #endif
                 }
                 
                 // Create shared AVPlayer using Mux
@@ -239,7 +243,9 @@ struct MuxVideoPlayer: View {
                 loadSavedProgress()
                 
             } catch {
+                #if DEBUG
                 print("❌ Failed to setup Mux Player: \(error)")
+                #endif
                 await MainActor.run {
                     self.isLoading = false
                 }
@@ -279,7 +285,9 @@ struct MuxVideoPlayer: View {
                 let seekTime = CMTime(seconds: savedTime, preferredTimescale: 1)
                 player.seek(to: seekTime)
                 
+                #if DEBUG
                 print("⏯️ Resumed advanced course at \(Int(savedTime)) seconds")
+                #endif
             }
         }
     }
@@ -329,7 +337,9 @@ struct MuxVideoPlayer: View {
     }
     
     private func cleanupPlayer() {
+        #if DEBUG
         print("🧹 Cleaning up Mux Player")
+        #endif
         
         // Stop progress timer
         stopProgressTimer()
@@ -356,7 +366,9 @@ struct MuxVideoPlayer: View {
     private func saveProgress() {
         // Progress is automatically saved via updateProgress() method
         // This method is called when the view disappears
+        #if DEBUG
         print("💾 Saving advanced course progress: \(currentTime)s of \(duration)s")
+        #endif
         
         // Ensure final progress update
         if currentTime > 0 && duration > 0 {

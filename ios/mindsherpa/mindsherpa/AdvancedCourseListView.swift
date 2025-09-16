@@ -249,7 +249,6 @@ struct Course1ModuleListView: View {
 
     private func fetchRealDurations() {
         modulesWithRealDurations = course1Modules
-        print("🎬 Fetching real video durations from Mux for Course 1...")
 
         for (index, module) in course1Modules.enumerated() {
             Task {
@@ -257,7 +256,6 @@ struct Course1ModuleListView: View {
                     let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
                     let durationMinutes = max(1, Int(duration / 60))
 
-                    print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
 
                     await MainActor.run {
                         var updatedModule = module
@@ -265,7 +263,6 @@ struct Course1ModuleListView: View {
                         modulesWithRealDurations[index] = updatedModule
                     }
                 } catch {
-                    print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
                 }
             }
         }
@@ -384,7 +381,6 @@ struct Course2ModuleListView: View {
 
     private func fetchRealDurations() {
         modulesWithRealDurations = course2Modules
-        print("🎬 Fetching real video durations from Mux for Course 2...")
 
         for (index, module) in course2Modules.enumerated() {
             Task {
@@ -392,7 +388,6 @@ struct Course2ModuleListView: View {
                     let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
                     let durationMinutes = max(1, Int(duration / 60))
 
-                    print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
 
                     await MainActor.run {
                         var updatedModule = module
@@ -400,7 +395,6 @@ struct Course2ModuleListView: View {
                         modulesWithRealDurations[index] = updatedModule
                     }
                 } catch {
-                    print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
                 }
             }
         }
@@ -503,7 +497,6 @@ struct Course3ModuleListView: View {
 
     private func fetchRealDurations() {
         modulesWithRealDurations = course3Modules
-        print("🎬 Fetching real video durations from Mux for Course 3...")
 
         for (index, module) in course3Modules.enumerated() {
             Task {
@@ -511,7 +504,6 @@ struct Course3ModuleListView: View {
                     let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
                     let durationMinutes = max(1, Int(duration / 60))
 
-                    print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
 
                     await MainActor.run {
                         var updatedModule = module
@@ -519,7 +511,6 @@ struct Course3ModuleListView: View {
                         modulesWithRealDurations[index] = updatedModule
                     }
                 } catch {
-                    print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
                 }
             }
         }
@@ -622,7 +613,6 @@ struct Course4ModuleListView: View {
 
     private func fetchRealDurations() {
         modulesWithRealDurations = course4Modules
-        print("🎬 Fetching real video durations from Mux for Course 4...")
 
         for (index, module) in course4Modules.enumerated() {
             Task {
@@ -630,7 +620,6 @@ struct Course4ModuleListView: View {
                     let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
                     let durationMinutes = max(1, Int(duration / 60))
 
-                    print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
 
                     await MainActor.run {
                         var updatedModule = module
@@ -638,7 +627,6 @@ struct Course4ModuleListView: View {
                         modulesWithRealDurations[index] = updatedModule
                     }
                 } catch {
-                    print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
                 }
             }
         }
@@ -753,7 +741,6 @@ struct Course5ModuleListView: View {
         // Initialize with modules that have nil durations (show ... until real duration is fetched)
         modulesWithRealDurations = course5Modules
 
-        print("🎬 Fetching real video durations from Mux for Course 5...")
 
         // Fetch real durations for each module asynchronously
         for (index, module) in course5Modules.enumerated() {
@@ -762,7 +749,6 @@ struct Course5ModuleListView: View {
                     let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
                     let durationMinutes = max(1, Int(duration / 60)) // Convert seconds to minutes, minimum 1 minute
 
-                    print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
 
                     // Update the module with real duration on main thread
                     await MainActor.run {
@@ -771,7 +757,6 @@ struct Course5ModuleListView: View {
                         modulesWithRealDurations[index] = updatedModule
                     }
                 } catch {
-                    print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
                     // Keep nil duration on error to show ... instead of wrong placeholder
                 }
             }

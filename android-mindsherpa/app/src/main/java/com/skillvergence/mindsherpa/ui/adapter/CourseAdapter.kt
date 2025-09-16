@@ -5,37 +5,82 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ScrollView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.chip.Chip
+import com.google.android.material.textfield.TextInputLayout
+import com.google.android.flexbox.FlexboxLayout
 import com.skillvergence.mindsherpa.R
 import com.skillvergence.mindsherpa.data.model.Course
 
 /**
  * Course Adapter for RecyclerView
- * Displays course list similar to iOS course cards
+ * Displays course list with AI footer
  */
 class CourseAdapter(
-    private val onCourseClick: (Course) -> Unit
-) : RecyclerView.Adapter<CourseAdapter.CourseViewHolder>() {
+    private val onCourseClick: (Course) -> Unit,
+    private val onAIQuestionSubmit: (String) -> Unit = {},
+    private val onQuickQuestionClick: (String) -> Unit = {}
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    companion object {
+        private const val VIEW_TYPE_COURSE = 0
+        private const val VIEW_TYPE_AI_FOOTER = 1
+    }
 
     private var courses = listOf<Course>()
+    private var aiFooterViewHolder: AIFooterViewHolder? = null
+    private val quickQuestions = listOf(
+        "Compare alternator vs DC-DC",
+        "How to test charging systems",
+        "Safety when working with EVs",
+        "Explain regenerative braking",
+        "What is thermal runaway?"
+    )
 
     fun updateCourses(newCourses: List<Course>) {
         courses = newCourses
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CourseViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_course, parent, false)
-        return CourseViewHolder(view)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return when (viewType) {
+            VIEW_TYPE_COURSE -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_course, parent, false)
+                CourseViewHolder(view)
+            }
+            VIEW_TYPE_AI_FOOTER -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_ai_footer, parent, false)
+                val holder = AIFooterViewHolder(view)
+                aiFooterViewHolder = holder
+                holder
+            }
+            else -> throw IllegalArgumentException("Unknown view type: $viewType")
+        }
     }
 
-    override fun onBindViewHolder(holder: CourseViewHolder, position: Int) {
-        val course = courses[position]
-        holder.bind(course)
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (holder) {
+            is CourseViewHolder -> {
+                val course = courses[position]
+                holder.bind(course)
+            }
+            is AIFooterViewHolder -> {
+                holder.bind()
+            }
+        }
     }
 
-    override fun getItemCount() = courses.size
+    override fun getItemCount() = courses.size + 1 // +1 for AI footer
+
+    override fun getItemViewType(position: Int): Int {
+        return if (position < courses.size) VIEW_TYPE_COURSE else VIEW_TYPE_AI_FOOTER
+    }
 
     inner class CourseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val courseIcon: ImageView = itemView.findViewById(R.id.course_icon)
@@ -120,4 +165,75 @@ class CourseAdapter(
         val totalVideos: Int,
         val percentage: Int
     )
+
+    inner class AIFooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val questionInput: EditText = itemView.findViewById(R.id.question_input)
+        private val questionInputLayout: TextInputLayout = itemView.findViewById(R.id.question_input_layout)
+        private val quickQuestionsLayout: FlexboxLayout = itemView.findViewById(R.id.quick_questions_layout)
+        private val aiResponseScroll: ScrollView = itemView.findViewById(R.id.ai_response_scroll)
+        private val aiResponseText: TextView = itemView.findViewById(R.id.ai_response_text)
+        private val aiLoadingLayout: LinearLayout = itemView.findViewById(R.id.ai_loading_layout)
+
+        fun bind() {
+            println("🤖 [AIFooterViewHolder] Binding AI footer")
+            // Setup send button click
+            questionInputLayout.setEndIconOnClickListener {
+                val question = questionInput.text.toString()
+                println("🤖 [AIFooterViewHolder] Send button clicked with question: '$question'")
+                if (question.isNotBlank()) {
+                    onAIQuestionSubmit(question)
+                    questionInput.text?.clear()
+                } else {
+                    println("🤖 [AIFooterViewHolder] Question is blank, not submitting")
+                }
+            }
+
+            // Setup quick questions
+            setupQuickQuestions()
+        }
+
+        private fun setupQuickQuestions() {
+            println("🤖 [AIFooterViewHolder] Setting up ${quickQuestions.size} quick questions")
+            quickQuestionsLayout.removeAllViews()
+
+            quickQuestions.forEach { question ->
+                val chip = Chip(itemView.context)
+                chip.text = question
+                chip.isClickable = true
+                chip.setOnClickListener {
+                    println("🤖 [AIFooterViewHolder] Quick question clicked: '$question'")
+                    onQuickQuestionClick(question)
+                }
+                quickQuestionsLayout.addView(chip)
+                println("🤖 [AIFooterViewHolder] Added chip: '$question'")
+            }
+        }
+
+        fun updateAIResponse(response: String) {
+            aiResponseText.text = response
+            aiResponseScroll.visibility = View.VISIBLE
+        }
+
+        fun showLoading(isLoading: Boolean) {
+            aiLoadingLayout.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+
+        fun showError(error: String) {
+            aiResponseText.text = "Error: $error"
+            aiResponseScroll.visibility = View.VISIBLE
+        }
+    }
+
+    // Methods to update AI footer from fragment
+    fun updateAIResponse(response: String) {
+        aiFooterViewHolder?.updateAIResponse(response)
+    }
+
+    fun showAILoading(isLoading: Boolean) {
+        aiFooterViewHolder?.showLoading(isLoading)
+    }
+
+    fun showAIError(error: String) {
+        aiFooterViewHolder?.showError(error)
+    }
 }

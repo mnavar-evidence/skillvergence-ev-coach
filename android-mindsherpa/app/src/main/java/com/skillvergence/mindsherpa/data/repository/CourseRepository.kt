@@ -7,6 +7,8 @@ import com.skillvergence.mindsherpa.data.model.Course
 import com.skillvergence.mindsherpa.data.model.CoursesResponse
 import com.skillvergence.mindsherpa.data.model.Podcast
 import com.skillvergence.mindsherpa.data.model.PodcastsResponse
+import com.skillvergence.mindsherpa.data.model.AIRequest
+import com.skillvergence.mindsherpa.data.model.AIResponse
 
 /**
  * Course Repository
@@ -60,12 +62,19 @@ class CourseRepository {
         }
     }
 
-    suspend fun askAI(question: String, context: String? = null): ApiResult<String> {
+    suspend fun askAI(request: AIRequest): ApiResult<AIResponse> {
+        println("🤖 [CourseRepository] Asking AI: ${request.question}")
         return when (val result = safeApiCall {
-            apiService.askAI(question, context)
+            apiService.askAI(request)
         }) {
-            is ApiResult.Success -> ApiResult.Success(result.data.answer)
-            is ApiResult.Error -> result
+            is ApiResult.Success -> {
+                println("🤖 [CourseRepository] AI Response received: ${result.data.answer}")
+                ApiResult.Success(result.data)
+            }
+            is ApiResult.Error -> {
+                println("❌ [CourseRepository] AI Error: ${result.exception}")
+                result
+            }
         }
     }
 

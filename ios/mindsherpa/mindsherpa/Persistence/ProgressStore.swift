@@ -261,11 +261,6 @@ public class ProgressStore: ObservableObject {
     // MARK: - Course Completion Methods
     
     public func isCourseCompleted(courseId: String) -> Bool {
-        // DEBUG: Show all stored video IDs to understand what's actually saved
-        let allVideoIds = Array(snapshot.videos.keys).sorted()
-        print("🔍 DEBUG: All stored video IDs: \(allVideoIds)")
-        let allStoredCourseIds = Array(Set(snapshot.videos.values.map { $0.courseId })).sorted()
-        print("🔍 DEBUG: All stored course IDs: \(allStoredCourseIds)")
 
         // Handle courseId format mismatches comprehensively
         var possibleCourseIds = [courseId]
@@ -389,15 +384,6 @@ public class ProgressStore: ObservableObject {
         let completedVideos = allCourseVideos.filter { $0.completed }
         let isCompleted = completedVideos.count == allCourseVideos.count
 
-        // Debug logging to help track down prerequisite issues
-        print("🔍 DEBUG: Course completion check for '\(courseId)':")
-        print("🔍 DEBUG: - Searched courseIds: \(possibleCourseIds)")
-        print("🔍 DEBUG: - Found \(allCourseVideos.count) videos, \(completedVideos.count) completed")
-        if !allCourseVideos.isEmpty {
-            let videoIds = allCourseVideos.map { $0.videoId }
-            print("🔍 DEBUG: - Video IDs: \(videoIds)")
-        }
-        print("🔍 DEBUG: - Result: \(isCompleted)")
 
         return isCompleted
     }
@@ -420,7 +406,7 @@ public class ProgressStore: ObservableObject {
             try data.write(to: storageURL)
         } catch {
             // Log error but don't crash app
-            print("Failed to save progress: \(error)")
+            // Error logging removed for production
         }
     }
 }

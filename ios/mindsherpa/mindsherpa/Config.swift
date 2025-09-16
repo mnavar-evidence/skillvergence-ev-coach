@@ -77,10 +77,14 @@ struct AppConfig {
             
             if let config = try? JSONDecoder().decode(DynamicConfig.self, from: data) {
                 _dynamicBaseURL = config.apiBaseURL
+                #if DEBUG
                 print("✅ Loaded dynamic config: \(config.apiBaseURL)")
+                #endif
             }
         } catch {
+            #if DEBUG
             print("⚠️ Could not load dynamic config, using default: \(error)")
+            #endif
         }
     }
     
@@ -91,10 +95,14 @@ struct AppConfig {
         }
         
         // Test fallback URL
+        #if DEBUG
         print("⚠️ Primary URL failed, trying fallback...")
+        #endif
         if await testURL(fallbackBaseURL) {
             _dynamicBaseURL = fallbackBaseURL
+            #if DEBUG
             print("✅ Using fallback URL: \(fallbackBaseURL)")
+            #endif
             return true
         }
         
@@ -110,7 +118,9 @@ struct AppConfig {
                 return httpResponse.statusCode == 200
             }
         } catch {
+            #if DEBUG
             print("❌ Connection test failed for \(baseURL): \(error)")
+            #endif
         }
         
         return false
@@ -119,6 +129,7 @@ struct AppConfig {
     // MARK: - Helper Methods
     
     static func printConfiguration() {
+        #if DEBUG
         print("📱 EV Coach App Configuration")
         print("   Environment: \(isProduction ? "Production" : "Development")")
         print("   Current Base URL: \(currentBaseURL)")
@@ -126,13 +137,8 @@ struct AppConfig {
         print("   Courses URL: \(coursesEndpoint)")
         print("   Network Logging: \(enableNetworkLogging)")
         print("   Device ID: \(DeviceManager.shared.deviceId)")
-        
-        #if DEBUG
         print("   ⚠️  HTTP connections enabled for local development")
         print("   📶 Ensure your device is on the same WiFi network")
-        #else
-        print("   🌐 Using Railway production backend")
-        print("   📡 Testing network connectivity...")
         #endif
     }
 }
@@ -154,7 +160,9 @@ class NetworkHelper {
     
     func createURLRequest(for endpoint: String, method: String = "GET") -> URLRequest? {
         guard let url = URL(string: endpoint) else {
+            #if DEBUG
             print("❌ Invalid URL: \(endpoint)")
+            #endif
             return nil
         }
         
@@ -164,7 +172,9 @@ class NetworkHelper {
         request.setValue("EV-Coach-iOS/1.0", forHTTPHeaderField: "User-Agent")
         
         if AppConfig.enableNetworkLogging {
+            #if DEBUG
             print("🌐 \(method) \(endpoint)")
+            #endif
         }
         
         return request
@@ -177,7 +187,9 @@ class NetworkHelper {
             DispatchQueue.main.async {
                 if let error = error {
                     if AppConfig.enableNetworkLogging {
+                        #if DEBUG
                         print("❌ Network Error: \(error.localizedDescription)")
+                        #endif
                     }
                     completion(.failure(error))
                     return
@@ -189,7 +201,9 @@ class NetworkHelper {
                 }
                 
                 if AppConfig.enableNetworkLogging {
+                    #if DEBUG
                     print("✅ Response: \(data.count) bytes")
+                    #endif
                 }
                 
                 do {

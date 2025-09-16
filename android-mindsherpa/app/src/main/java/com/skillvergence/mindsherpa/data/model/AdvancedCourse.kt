@@ -138,7 +138,7 @@ object AdvancedCourseData {
             muxPlaybackId = "UPHJQd9u5KDcadeIUwbeRk2q700ZVxJlhJ4UpA1e37aU",
             estimatedHours = 3.89, // 4 modules, 3:53:40 (233 mins 40 seconds total)
             certificateType = AdvancedCertificateType.BATTERY_SYSTEMS_EXPERT,
-            xpReward = 400, // 4 modules × 100 XP each
+            xpReward = 480, // 4 modules × 120 XP each
             skillLevel = AdvancedSkillLevel.EXPERT
         ),
         AdvancedCourse(
@@ -149,7 +149,7 @@ object AdvancedCourseData {
             muxPlaybackId = "noM3WWJr6Q43t6eGJ6JJ5VUzNnSv2IW3UcNs2601b02is",
             estimatedHours = 2.51, // 2 modules, 2:30:32 (150 mins 32 seconds total)
             certificateType = AdvancedCertificateType.CHARGING_INFRASTRUCTURE_SPECIALIST,
-            xpReward = 200, // 2 modules × 100 XP each
+            xpReward = 280, // 2 modules × 140 XP each
             skillLevel = AdvancedSkillLevel.EXPERT
         ),
         AdvancedCourse(
@@ -160,7 +160,7 @@ object AdvancedCourseData {
             muxPlaybackId = "cZ5rxX2013jHbgsxIBDKEHtdJyB4aTYNkLG5hB4GWmm4",
             estimatedHours = 1.21, // 2 modules, 1:12:19 (72 mins 19 seconds total)
             certificateType = AdvancedCertificateType.EV_MAINTENANCE_PROFESSIONAL,
-            xpReward = 200, // 2 modules × 100 XP each
+            xpReward = 320, // 2 modules × 160 XP each
             skillLevel = AdvancedSkillLevel.MASTER
         ),
         AdvancedCourse(
@@ -171,7 +171,7 @@ object AdvancedCourseData {
             muxPlaybackId = "lJjDsHFQ1J5c9tcfy3Bh6OP00SbOQcWMEJ243Lk102Yyk",
             estimatedHours = 2.54, // 3 modules, 2:32:42 (152 mins 42 seconds total)
             certificateType = AdvancedCertificateType.EV_FUNDAMENTALS_ADVANCED,
-            xpReward = 300, // 3 modules × 100 XP each
+            xpReward = 450, // 3 modules × 150 XP each
             skillLevel = AdvancedSkillLevel.MASTER
         )
     )

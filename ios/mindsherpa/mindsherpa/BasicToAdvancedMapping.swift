@@ -53,20 +53,22 @@ struct BasicToAdvancedMapping {
     
     // Debug helper to test the mapping
     static func testMapping() {
+        #if DEBUG
         print("🧪 Testing Basic → Advanced Mapping:")
         print("  Total mappings: \(videoToAdvancedMapping.count)")
-        
+
         // Test by course
         let courseGroups = Dictionary(grouping: videoToAdvancedMapping.keys) { String($0.prefix(1)) }
         for courseNum in courseGroups.keys.sorted() {
             let moduleCount = courseGroups[courseNum]?.count ?? 0
             print("  Course \(courseNum): \(moduleCount) modules")
         }
-        
+
         // Test lookups
         print("🔍 Testing lookups:")
         print("  1-1 has advanced: \(hasAdvancedContent(for: "1-1"))")
         print("  5-3 has advanced: \(hasAdvancedContent(for: "5-3"))")
         print("  6-1 has advanced: \(hasAdvancedContent(for: "6-1"))")
+        #endif
     }
 }

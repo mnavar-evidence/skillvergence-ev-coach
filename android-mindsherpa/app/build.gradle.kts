@@ -83,6 +83,9 @@ dependencies {
     // Fragment
     implementation("androidx.fragment:fragment-ktx:1.6.2")
 
+    // FlexboxLayout for AI quick questions
+    implementation("com.google.android.flexbox:flexbox:3.0.0")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

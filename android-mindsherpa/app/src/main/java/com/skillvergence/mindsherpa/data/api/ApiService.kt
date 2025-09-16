@@ -2,8 +2,12 @@ package com.skillvergence.mindsherpa.data.api
 
 import com.skillvergence.mindsherpa.data.model.CoursesResponse
 import com.skillvergence.mindsherpa.data.model.PodcastsResponse
+import com.skillvergence.mindsherpa.data.model.AIRequest
+import com.skillvergence.mindsherpa.data.model.AIResponse
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Body
 import retrofit2.http.Query
 
 /**
@@ -26,11 +30,10 @@ interface ApiService {
         @Query("course_id") courseId: String? = null
     ): Response<PodcastsResponse>
 
-    // AI endpoint for coaching questions
-    @GET("ai/ask")
+    // AI endpoint for coaching questions - matches iOS POST implementation
+    @POST("ai/ask")
     suspend fun askAI(
-        @Query("question") question: String,
-        @Query("context") context: String? = null
+        @Body request: AIRequest
     ): Response<AIResponse>
 
     // Progress tracking endpoints
@@ -62,14 +65,6 @@ interface ApiService {
     ): Response<Void>
 }
 
-/**
- * AI Response model
- */
-data class AIResponse(
-    val answer: String,
-    val confidence: Double? = null,
-    val sources: List<String>? = null
-)
 
 /**
  * Video Progress models

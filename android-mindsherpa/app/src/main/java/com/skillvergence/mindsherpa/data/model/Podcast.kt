@@ -70,10 +70,47 @@ data class Podcast(
     }
 
     /**
-     * Get course-specific thumbnail URL if not provided
+     * Get episode-specific thumbnail URL if not provided
+     * Matches iOS implementation with individual episode thumbnails
+     * Prioritizes known working URLs over potentially broken hardcoded ones
      */
     fun resolveThumbnailUrl(): String {
-        return thumbnailUrl ?: when (courseId) {
+        // First check our known working mappings (prioritized over hardcoded URLs)
+        val workingUrl = when (id) {
+            // Course 1: High Voltage Safety Foundation
+            "podcast-1-1" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/hv-safety-fundamentals.jpg"
+            "podcast-1-2" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-ppe-guide.jpg"
+            "podcast-1-3" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-loto-procedures.jpg"
+            "podcast-1-4" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-emergency-response.jpg"
+
+            // Course 2: Electrical Fundamentals
+            "podcast-2-1" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/spark-plugs-episode.jpg"
+            "podcast-2-2" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/dc-vs-ac-power.jpg"
+            "podcast-2-3" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ohms-law-ev.jpg"
+            "podcast-2-4" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-motors-episode.jpg"
+
+            // Course 3: EV System Components
+            "podcast-3-1" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-powertrain-arch.jpg"
+            "podcast-3-2" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/inverters-power-electronics.jpg"
+            "podcast-3-3" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/regenerative-braking.jpg"
+
+            // Course 4: EV Charging Systems
+            "podcast-4-1" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-batteries-episode.jpg"
+            "podcast-4-2" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/charging-standards.jpg"
+            "podcast-4-3" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/battery-management-systems.jpg"
+            "podcast-4-4" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/thermal-management.jpg"
+
+            // Course 5: Advanced EV Systems
+            "podcast-5-1" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/vehicle-to-grid.jpg"
+            "podcast-5-2" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/autonomous-ev-integration.jpg"
+            "podcast-5-3" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/future-ev-transport.jpg"
+
+            // Unknown episodes - return null to check hardcoded URLs
+            else -> null
+        }
+
+        // Return working URL if we have one, otherwise fall back to hardcoded URL or course-level
+        return workingUrl ?: thumbnailUrl ?: when (courseId) {
             "1", "course-1" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/high-voltage-safety.jpg"
             "2", "course-2" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/electrical-fundamentals.jpg"
             "3", "course-3" -> "https://skillvergence.mindsherpa.ai/assets/podcasts/thumbnails/ev-components.jpg"

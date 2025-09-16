@@ -24,6 +24,7 @@ class VideoFragment : Fragment() {
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var courseAdapter: CourseAdapter
 
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -51,10 +52,20 @@ class VideoFragment : Fragment() {
         recyclerView = rootView.findViewById(R.id.courses_recycler_view)
         swipeRefresh = rootView.findViewById(R.id.swipe_refresh)
 
-        courseAdapter = CourseAdapter { course ->
-            // Handle course selection - will implement video player
-            onCourseSelected(course)
-        }
+        courseAdapter = CourseAdapter(
+            onCourseClick = { course ->
+                // Handle course selection - will implement video player
+                onCourseSelected(course)
+            },
+            onAIQuestionSubmit = { question ->
+                println("🎬 [VideoFragment] AI question submitted: '$question'")
+                videoViewModel.askAI(question)
+            },
+            onQuickQuestionClick = { question ->
+                println("🎬 [VideoFragment] Quick question clicked: '$question'")
+                videoViewModel.askAI(question)
+            }
+        )
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = courseAdapter
@@ -79,6 +90,26 @@ class VideoFragment : Fragment() {
                 // Show error message
                 swipeRefresh.isRefreshing = false
                 // TODO: Show proper error UI
+            }
+        }
+
+        // AI observers
+        videoViewModel.aiResponse.observe(viewLifecycleOwner) { response ->
+            println("🎬 [VideoFragment] AI response received: '$response'")
+            if (response.isNotEmpty()) {
+                courseAdapter.updateAIResponse(response)
+            }
+        }
+
+        videoViewModel.isAILoading.observe(viewLifecycleOwner) { isLoading ->
+            println("🎬 [VideoFragment] AI loading state: $isLoading")
+            courseAdapter.showAILoading(isLoading)
+        }
+
+        videoViewModel.aiError.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                println("🎬 [VideoFragment] AI error: '$it'")
+                courseAdapter.showAIError(it)
             }
         }
     }

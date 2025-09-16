@@ -310,7 +310,9 @@ struct AVPlayerControllerView: UIViewControllerRepresentable {
                 try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay, .allowBluetoothA2DP])
                 try AVAudioSession.sharedInstance().setActive(true)
             } catch {
+                #if DEBUG
                 print("Failed to set up audio session for video: \(error)")
+                #endif
             }
             
             let player = AVPlayer(url: url)

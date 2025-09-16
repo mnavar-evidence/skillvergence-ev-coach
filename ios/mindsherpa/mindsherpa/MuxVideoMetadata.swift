@@ -20,7 +20,6 @@ struct MuxVideoMetadata {
     @MainActor
     static func getVideoDuration(muxPlaybackId: String) async throws -> Double {
         return try await withCheckedThrowingContinuation { continuation in
-            print("🎬 Fetching duration for Mux ID: \(muxPlaybackId)")
 
             // Create AVPlayerViewController with Mux playback ID (same approach as existing code)
             let muxPlayerViewController = AVPlayerViewController(playbackID: muxPlaybackId)
@@ -49,7 +48,6 @@ struct MuxVideoMetadata {
                     let seconds = CMTimeGetSeconds(durationValue)
 
                     if seconds.isFinite && seconds > 0 && !hasResumed {
-                        print("✅ Duration found: \(seconds) seconds for \(muxPlaybackId)")
 
                         // Clean up
                         hasResumed = true
@@ -67,7 +65,6 @@ struct MuxVideoMetadata {
                 if let duration = player.currentItem?.duration, !hasResumed {
                     let seconds = CMTimeGetSeconds(duration)
                     if seconds.isFinite && seconds > 0 {
-                        print("✅ Duration immediately available: \(seconds) seconds for \(muxPlaybackId)")
 
                         hasResumed = true
                         durationObserver?.invalidate()

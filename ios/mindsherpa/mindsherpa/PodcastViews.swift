@@ -54,7 +54,7 @@ struct PodcastView: View {
             .padding()
         }
         .sheet(item: $viewModel.currentPodcast) { podcast in
-            PodcastPlayerView(podcast: podcast, viewModel: viewModel)
+            PodcastPlayerView(podcast: podcast, viewModel: viewModel, shouldAutoPlay: viewModel.shouldAutoPlayPodcast)
         }
     }
     
@@ -162,80 +162,86 @@ struct PodcastCardView: View {
     }
     
     var body: some View {
-        Button {
-            viewModel.currentPodcast = podcast
-        } label: {
-            HStack(spacing: 16) {
-                // Podcast artwork
-                VStack {
-                    if let thumbnailUrl = podcast.thumbnailUrl, let url = URL(string: thumbnailUrl) {
-                        AsyncImage(url: url) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            PodcastArtworkPlaceholder(courseId: podcast.courseId)
-                        }
-                        .frame(width: 60, height: 60)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    } else {
+        HStack(spacing: 16) {
+            // Podcast artwork
+            VStack {
+                if let thumbnailUrl = podcast.thumbnailUrl, let url = URL(string: thumbnailUrl) {
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
                         PodcastArtworkPlaceholder(courseId: podcast.courseId)
-                            .frame(width: 60, height: 60)
+                    }
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                } else {
+                    PodcastArtworkPlaceholder(courseId: podcast.courseId)
+                        .frame(width: 60, height: 60)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(podcast.title)
+                    .font(.headline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.leading)
+
+                if !podcast.description.isEmpty {
+                    Text(podcast.description)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                HStack {
+                    Image(systemName: "clock")
+                        .font(.caption)
+                    Text(formatDuration(podcast.duration))
+                        .font(.caption)
+
+                    if podcast.isMuxPodcast {
+                        Image(systemName: "waveform")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+
+                    if let progress = progress, progress.playbackPosition > 0 {
+                        Spacer()
+                        Text("Played \(formatDuration(progress.playbackPosition))")
+                            .font(.caption)
+                            .foregroundStyle(.purple)
                     }
                 }
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(podcast.title)
-                        .font(.headline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.leading)
-                    
-                    if !podcast.description.isEmpty {
-                        Text(podcast.description)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                    }
-                    
-                    HStack {
-                        Image(systemName: "clock")
-                            .font(.caption)
-                        Text(formatDuration(podcast.duration))
-                            .font(.caption)
-                        
-                        if podcast.isMuxPodcast {
-                            Image(systemName: "waveform")
-                                .font(.caption)
-                                .foregroundStyle(.orange)
-                        }
-                        
-                        if let progress = progress, progress.playbackPosition > 0 {
-                            Spacer()
-                            Text("Played \(formatDuration(progress.playbackPosition))")
-                                .font(.caption)
-                                .foregroundStyle(.purple)
-                        }
-                    }
-                    .foregroundStyle(.secondary)
-                    
-                    if progressPercentage > 0 {
-                        ProgressView(value: progressPercentage)
-                            .tint(.purple)
-                    }
+                .foregroundStyle(.secondary)
+
+                if progressPercentage > 0 {
+                    ProgressView(value: progressPercentage)
+                        .tint(.purple)
                 }
-                
-                Spacer()
-                
+            }
+
+            Spacer()
+
+            // Play button - separate from card tap
+            Button {
+                // Play button - navigate with autoplay
+                viewModel.playPodcast(podcast, autoPlay: true)
+            } label: {
                 Image(systemName: "play.circle.fill")
                     .font(.title)
                     .foregroundStyle(.purple)
             }
-            .padding(16)
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+        .padding(16)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .onTapGesture {
+            // Card tap - navigate without autoplay
+            viewModel.playPodcast(podcast, autoPlay: false)
+        }
     }
     
     private func formatDuration(_ seconds: Int) -> String {
@@ -254,6 +260,7 @@ struct PodcastCardView: View {
 struct PodcastPlayerView: View {
     let podcast: Podcast
     @ObservedObject var viewModel: EVCoachViewModel
+    let shouldAutoPlay: Bool
     @Environment(\.dismiss) private var dismiss
     @State private var player: AVPlayer?
     @State private var isPlaying = false
@@ -462,7 +469,13 @@ struct PodcastPlayerView: View {
                     currentTime = Double(progress.playbackPosition)
                     await player?.seek(to: CMTime(seconds: currentTime, preferredTimescale: 600))
                 }
-                
+
+                // Auto-play if requested
+                if shouldAutoPlay {
+                    player?.play()
+                    isPlaying = true
+                }
+
                 isLoadingAudio = false
             } catch {
                 audioError = "Failed to load audio: \(error.localizedDescription)"

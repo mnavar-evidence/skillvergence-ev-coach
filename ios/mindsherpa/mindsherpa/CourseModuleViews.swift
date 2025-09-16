@@ -73,7 +73,6 @@ struct GenericModuleListView<T: CourseModule>: View {
 // MARK: - Helper Function for Duration Fetching
 @MainActor
 func fetchRealDurationsForModules<T: CourseModule>(_ modules: [T], completion: @escaping ([T]) -> Void) {
-    print("🎬 Fetching real video durations from Mux for \(modules.count) modules...")
 
     for (index, module) in modules.enumerated() {
         Task {
@@ -81,7 +80,6 @@ func fetchRealDurationsForModules<T: CourseModule>(_ modules: [T], completion: @
                 let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
                 let durationMinutes = max(1, Int(duration / 60))
 
-                print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
 
                 // Create updated modules array on main actor
                 await MainActor.run {
@@ -90,7 +88,6 @@ func fetchRealDurationsForModules<T: CourseModule>(_ modules: [T], completion: @
                     completion(updatedModules)
                 }
             } catch {
-                print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
             }
         }
     }

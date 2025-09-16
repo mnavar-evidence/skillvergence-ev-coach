@@ -578,6 +578,7 @@ class EVCoachViewModel: ObservableObject {
     @Published var podcasts: [Podcast] = []
     @Published var currentVideo: Video?
     @Published var currentPodcast: Podcast?
+    @Published var shouldAutoPlayPodcast: Bool = false
     @Published var currentCourse: Course?
     @Published var isLoading = false
     @Published var aiResponse: String = ""
@@ -1100,6 +1101,18 @@ class EVCoachViewModel: ObservableObject {
     
     var coursesGroupedByCategory: [CourseCategory: [Course]] {
         Dictionary(grouping: courses, by: { $0.category })
+    }
+
+    // MARK: - Podcast Player Methods
+
+    func playPodcast(_ podcast: Podcast, autoPlay: Bool = false) {
+        shouldAutoPlayPodcast = autoPlay
+        currentPodcast = podcast
+
+        // Reset autoplay flag after a short delay to avoid it persisting for future opens
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.shouldAutoPlayPodcast = false
+        }
     }
 }
 

@@ -596,7 +596,7 @@ struct MediaTabsView: View {
     
     var body: some View {
         HStack(spacing: 0) {
-            TabButton(title: "Video", isSelected: selectedTab == 0) {
+            TabButton(title: "AI / Video", isSelected: selectedTab == 0) {
                 selectedTab = 0
             }
             TabButton(title: "Podcast", isSelected: selectedTab == 1) {

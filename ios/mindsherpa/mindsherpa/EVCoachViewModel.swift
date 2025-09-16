@@ -859,15 +859,20 @@ class EVCoachViewModel: ObservableObject {
         ]
     }
     
+    private var lastAIQuestion: String = ""
+
     func askAI(question: String) {
         guard !question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             aiError = "Please enter a question"
             return
         }
-        
+
+        // Store the question for XP recording
+        lastAIQuestion = question.trimmingCharacters(in: .whitespacesAndNewlines)
+
         isAILoading = true
         aiError = nil
-        
+
         // Create context from current course content
         let context = createContext()
         
@@ -887,6 +892,9 @@ class EVCoachViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self?.aiResponse = response.answer
                     self?.aiError = nil
+
+                    // Award 10 XP for each AI interaction with Coach Nova
+                    self?.awardAIInteractionXP()
                 }
             })
             .store(in: &cancellables)
@@ -910,7 +918,13 @@ class EVCoachViewModel: ObservableObject {
         aiResponse = ""
         aiError = nil
     }
-    
+
+    private func awardAIInteractionXP() {
+        // Award 10 XP for each AI interaction with Coach Nova
+        let question = lastAIQuestion.isEmpty ? "Coach Nova interaction" : lastAIQuestion
+        ProgressStore.shared.recordAIInteraction(question: question)
+    }
+
     // MARK: - Video Management
     
     func selectCourse(_ course: Course) {

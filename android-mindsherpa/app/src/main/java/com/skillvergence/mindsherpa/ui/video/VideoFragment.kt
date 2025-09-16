@@ -146,6 +146,9 @@ class VideoFragment : Fragment() {
             println("🎬 [VideoFragment] AI response received: '$response'")
             if (response.isNotEmpty()) {
                 courseAdapter.updateAIResponse(response)
+
+                // Award 10 XP for each AI interaction with Coach Nova
+                progressStore.recordAIInteraction("Coach Nova interaction")
             }
         }
 

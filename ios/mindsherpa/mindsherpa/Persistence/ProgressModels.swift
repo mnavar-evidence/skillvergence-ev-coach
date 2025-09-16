@@ -33,22 +33,39 @@ public struct DailyActivityRecord: Codable, Hashable {
     public let watchedSecDay: Double
 }
 
+public struct AIInteractionRecord: Codable, Hashable {
+    public let interactionId: String
+    public let timestamp: Date
+    public let question: String
+    public let xpAwarded: Int
+
+    public init(interactionId: String, timestamp: Date, question: String, xpAwarded: Int = 10) {
+        self.interactionId = interactionId
+        self.timestamp = timestamp
+        self.question = question
+        self.xpAwarded = xpAwarded
+    }
+}
+
 // MARK: - Snapshot Container
 
 public struct ProgressSnapshot: Codable {
     public let videos: [String: VideoProgressRecord]       // key: videoId
-    public let courses: [String: CourseProgressRecord]     // key: courseId  
+    public let courses: [String: CourseProgressRecord]     // key: courseId
     public let activity: [String: DailyActivityRecord]     // key: yyyy-MM-dd
-    
+    public let aiInteractions: [String: AIInteractionRecord] // key: interactionId
+
     public init() {
         self.videos = [:]
         self.courses = [:]
         self.activity = [:]
+        self.aiInteractions = [:]
     }
-    
-    public init(videos: [String: VideoProgressRecord], courses: [String: CourseProgressRecord], activity: [String: DailyActivityRecord]) {
+
+    public init(videos: [String: VideoProgressRecord], courses: [String: CourseProgressRecord], activity: [String: DailyActivityRecord], aiInteractions: [String: AIInteractionRecord] = [:]) {
         self.videos = videos
         self.courses = courses
         self.activity = activity
+        self.aiInteractions = aiInteractions
     }
 }

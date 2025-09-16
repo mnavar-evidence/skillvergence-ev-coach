@@ -36,6 +36,7 @@ class ProgressStore private constructor(private val context: Context) {
     private val videoProgressMap = mutableMapOf<String, VideoProgressRecord>()
     private val courseProgressMap = mutableMapOf<String, CourseProgressRecord>()
     private val dailyActivityMap = mutableMapOf<String, DailyActivityRecord>()
+    private val aiInteractionMap = mutableMapOf<String, AIInteractionRecord>()
 
     // LiveData for observers
     private val _totalXP = MutableLiveData<Int>()
@@ -65,6 +66,32 @@ class ProgressStore private constructor(private val context: Context) {
 
     fun hasUserName(): Boolean {
         return getUserName().isNotEmpty()
+    }
+
+    // MARK: - AI Interaction Methods
+
+    fun recordAIInteraction(question: String) {
+        val now = Date()
+        val interactionId = "ai_${now.time}"
+
+        val interaction = AIInteractionRecord(
+            interactionId = interactionId,
+            timestamp = now,
+            question = question,
+            xpAwarded = 10
+        )
+
+        aiInteractionMap[interactionId] = interaction
+
+        // Save to disk
+        saveToDisk()
+        updateLiveData()
+
+        println("🤖 AI Interaction recorded: +10 XP for Coach Nova query")
+    }
+
+    fun getAIInteractionXP(): Int {
+        return aiInteractionMap.values.sumOf { it.xpAwarded }
     }
 
     // MARK: - Video Progress Methods
@@ -188,6 +215,9 @@ class ProgressStore private constructor(private val context: Context) {
 
         // Bonus XP for streaks (10 XP per streak day)
         totalXP += getCurrentStreak() * 10
+
+        // XP from AI interactions (10 XP each)
+        totalXP += getAIInteractionXP()
 
         return totalXP
     }
@@ -481,6 +511,12 @@ class ProgressStore private constructor(private val context: Context) {
         val activityType = object : TypeToken<Map<String, DailyActivityRecord>>() {}.type
         val loadedActivity: Map<String, DailyActivityRecord> = gson.fromJson(activityJson, activityType) ?: emptyMap()
         dailyActivityMap.putAll(loadedActivity)
+
+        // Load AI interactions
+        val aiInteractionsJson = sharedPrefs.getString("ai_interactions", "{}")
+        val aiInteractionsType = object : TypeToken<Map<String, AIInteractionRecord>>() {}.type
+        val loadedAIInteractions: Map<String, AIInteractionRecord> = gson.fromJson(aiInteractionsJson, aiInteractionsType) ?: emptyMap()
+        aiInteractionMap.putAll(loadedAIInteractions)
     }
 
     private fun saveToDisk() {
@@ -493,6 +529,10 @@ class ProgressStore private constructor(private val context: Context) {
         // Save daily activity
         val activityJson = gson.toJson(dailyActivityMap)
         editor.putString("daily_activity", activityJson)
+
+        // Save AI interactions
+        val aiInteractionsJson = gson.toJson(aiInteractionMap)
+        editor.putString("ai_interactions", aiInteractionsJson)
 
         editor.apply()
     }
@@ -561,4 +601,11 @@ data class CourseProgressRecord(
 data class DailyActivityRecord(
     val day: Date,
     val watchedSecDay: Double
+)
+
+data class AIInteractionRecord(
+    val interactionId: String,
+    val timestamp: Date,
+    val question: String,
+    val xpAwarded: Int = 10
 )

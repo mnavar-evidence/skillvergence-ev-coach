@@ -111,12 +111,45 @@ public class ProgressStore: ObservableObject {
             updatedActivity[todayKey] = dailyRecord
         }
         
-        snapshot = ProgressSnapshot(videos: updatedVideos, courses: snapshot.courses, activity: updatedActivity)
+        snapshot = ProgressSnapshot(videos: updatedVideos, courses: snapshot.courses, activity: updatedActivity, aiInteractions: snapshot.aiInteractions)
         
         // Save to disk
         saveToDisk()
     }
-    
+
+    // MARK: - AI Interaction Methods
+
+    public func recordAIInteraction(question: String) {
+        let now = Date()
+        let interactionId = "ai_\(now.timeIntervalSince1970)"
+
+        let interaction = AIInteractionRecord(
+            interactionId: interactionId,
+            timestamp: now,
+            question: question,
+            xpAwarded: 10
+        )
+
+        var updatedAIInteractions = snapshot.aiInteractions
+        updatedAIInteractions[interactionId] = interaction
+
+        snapshot = ProgressSnapshot(
+            videos: snapshot.videos,
+            courses: snapshot.courses,
+            activity: snapshot.activity,
+            aiInteractions: updatedAIInteractions
+        )
+
+        // Save to disk
+        saveToDisk()
+
+        print("🤖 AI Interaction recorded: +10 XP for Coach Nova query")
+    }
+
+    public func getAIInteractionXP() -> Int {
+        return snapshot.aiInteractions.values.reduce(0) { $0 + $1.xpAwarded }
+    }
+
     // MARK: - Daily Activity Methods
     
     public func getTodayActivity() -> Double {
@@ -181,7 +214,10 @@ public class ProgressStore: ObservableObject {
         
         // Bonus XP for streaks (10 XP per streak day)
         totalXP += getCurrentStreak() * 10
-        
+
+        // XP from AI interactions (10 XP each)
+        totalXP += getAIInteractionXP()
+
         return totalXP
     }
     

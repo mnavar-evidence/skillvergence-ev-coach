@@ -10,6 +10,7 @@ import com.skillvergence.mindsherpa.data.model.Course
 import com.skillvergence.mindsherpa.data.model.AIRequest
 import com.skillvergence.mindsherpa.data.model.AIResponse
 import com.skillvergence.mindsherpa.data.api.ApiException
+import com.skillvergence.mindsherpa.data.persistence.ProgressStore
 import com.skillvergence.mindsherpa.data.repository.CourseRepository
 import kotlinx.coroutines.launch
 

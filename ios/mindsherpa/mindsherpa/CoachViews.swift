@@ -150,6 +150,7 @@ struct LevelDetailsView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             XPSourceRow(icon: "play.circle.fill", title: "Complete a video", xp: "+50 XP", color: .blue)
                             XPSourceRow(icon: "eye.fill", title: "Watch part of a video", xp: "+10-40 XP", color: .purple)
+                            XPSourceRow(icon: "brain.head.profile", title: "Ask Coach Nova (AI)", xp: "+10 XP", color: .green)
                             XPSourceRow(icon: "flame.fill", title: "Daily learning streak", xp: "+10 XP/day", color: .red)
                         }
                     }

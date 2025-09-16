@@ -83,34 +83,12 @@ class StudentCertificateManager: ObservableObject {
 
     // MARK: - Certificate Status Updates (from backend)
 
-    func updateCertificateStatus(_ certificateId: String, newStatus: CertificateStatus) {
-        guard let index = myCertificates.firstIndex(where: { $0.id == certificateId }) else { return }
-
-        var updatedCertificate = myCertificates[index]
-        updatedCertificate = SkillvergenceCertificate(
-            id: updatedCertificate.id,
-            userId: updatedCertificate.userId,
-            userFullName: updatedCertificate.userFullName,
-            userEmail: updatedCertificate.userEmail,
-            courseId: updatedCertificate.courseId,
-            courseTitle: updatedCertificate.courseTitle,
-            certificateType: updatedCertificate.certificateType,
-            skillLevel: updatedCertificate.skillLevel,
-            completionDate: updatedCertificate.completionDate,
-            issuedDate: newStatus == .issued ? Date() : updatedCertificate.issuedDate,
-            certificateNumber: updatedCertificate.certificateNumber,
-            status: newStatus,
-            adminNotes: updatedCertificate.adminNotes,
-            totalWatchedHours: updatedCertificate.totalWatchedHours,
-            finalScore: updatedCertificate.finalScore,
-            instructorName: updatedCertificate.instructorName,
-            credentialVerificationCode: updatedCertificate.credentialVerificationCode
-        )
-
-        myCertificates[index] = updatedCertificate
-        saveCertificates()
-
-        print("📋 Certificate status updated: \(certificateId) -> \(newStatus)")
+    // Note: Certificate status updates would typically come from the backend API
+    // For now, this is a placeholder for when the backend notifies of status changes
+    func refreshCertificateStatus() {
+        // In a real app, this would fetch updated certificate statuses from the backend
+        // and update the local certificates accordingly
+        print("📋 Refreshing certificate statuses from backend...")
     }
 
     // MARK: - Data Persistence

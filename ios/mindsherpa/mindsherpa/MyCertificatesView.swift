@@ -247,7 +247,7 @@ struct MyCertificatesView: View {
         hours: Double,
         score: Double
     ) -> SkillvergenceCertificate {
-        var certificate = SkillvergenceCertificate(
+        let certificate = SkillvergenceCertificate(
             userId: currentUserId,
             userFullName: "John Smith",
             userEmail: "john.smith@example.com",
@@ -259,30 +259,7 @@ struct MyCertificatesView: View {
             totalWatchedHours: hours,
             finalScore: score
         )
-        
-        // Update status and issued date if needed
-        if status == .issued {
-            certificate = SkillvergenceCertificate(
-                id: certificate.id,
-                userId: certificate.userId,
-                userFullName: certificate.userFullName,
-                userEmail: certificate.userEmail,
-                courseId: certificate.courseId,
-                courseTitle: certificate.courseTitle,
-                certificateType: certificate.certificateType,
-                skillLevel: certificate.skillLevel,
-                completionDate: certificate.completionDate,
-                issuedDate: completionDate.addingTimeInterval(86400 * 3), // 3 days later
-                certificateNumber: certificate.certificateNumber,
-                status: status,
-                adminNotes: nil,
-                totalWatchedHours: certificate.totalWatchedHours,
-                finalScore: certificate.finalScore,
-                instructorName: certificate.instructorName,
-                credentialVerificationCode: certificate.credentialVerificationCode
-            )
-        }
-        
+
         return certificate
     }
 }
@@ -625,6 +602,28 @@ struct ShareSheet: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+// MARK: - Detail Row
+
+struct DetailRow: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(label + ":")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .frame(width: 120, alignment: .leading)
+
+            Text(value)
+                .font(.subheadline)
+                .multilineTextAlignment(.leading)
+
+            Spacer()
+        }
+    }
 }
 
 // MARK: - Preview

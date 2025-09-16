@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - My Certificates View (User-Facing)
 
 struct MyCertificatesView: View {
-    @StateObject private var certificateManager = CertificateManager.shared
+    @StateObject private var certificateManager = StudentCertificateManager.shared
     @State private var selectedCertificate: SkillvergenceCertificate?
     @State private var showingCertificateDetail = false
     @State private var selectedFilter: CertificateFilter = .all
@@ -180,7 +180,7 @@ struct MyCertificatesView: View {
     // MARK: - Computed Properties
     
     private var userCertificates: [SkillvergenceCertificate] {
-        certificateManager.certificatesForUser(currentUserId)
+        certificateManager.getMyCertificates()
     }
     
     private var issuedCertificates: [SkillvergenceCertificate] {
@@ -234,18 +234,7 @@ struct MyCertificatesView: View {
             
             // Add sample certificates to manager
             for certificate in sampleCertificates {
-                certificateManager.allCertificates.append(certificate)
-                
-                switch certificate.status {
-                case .pendingApproval:
-                    certificateManager.pendingCertificates.append(certificate)
-                case .approved:
-                    certificateManager.approvedCertificates.append(certificate)
-                case .issued:
-                    certificateManager.issuedCertificates.append(certificate)
-                default:
-                    break
-                }
+                certificateManager.myCertificates.append(certificate)
             }
         }
     }

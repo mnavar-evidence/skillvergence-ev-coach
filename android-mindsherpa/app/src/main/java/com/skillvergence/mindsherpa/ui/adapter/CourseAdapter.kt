@@ -93,6 +93,7 @@ class CourseAdapter(
         private val progressPercentage: TextView = itemView.findViewById(R.id.progress_percentage)
         private val skillLevelText: TextView = itemView.findViewById(R.id.course_skill_level)
         private val videoCountText: TextView = itemView.findViewById(R.id.video_count)
+        private val xpRewardText: TextView = itemView.findViewById(R.id.course_xp_reward)
 
         fun bind(course: Course) {
             // Course title and basic info
@@ -122,8 +123,12 @@ class CourseAdapter(
             // Skill level
             skillLevelText.text = course.skillLevel.displayName
 
+            // XP Reward calculation (50 XP per video)
+            val totalXP = videoCount * 50
+            xpRewardText.text = "${totalXP} XP"
+
             // Debug logging
-            println("📱 Course: ${course.title}, Videos: $videoCount, Duration: ${totalMinutes}min")
+            println("📱 Course: ${course.title}, Videos: $videoCount, Duration: ${totalMinutes}min, XP: ${totalXP}")
 
             itemView.setOnClickListener {
                 onCourseClick(course)

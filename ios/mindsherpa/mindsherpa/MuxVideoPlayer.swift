@@ -412,7 +412,7 @@ struct MuxVideoPlayer: View {
             )
             
             // Generate certificate
-            CertificateManager.shared.generateCertificate(
+            StudentCertificateManager.shared.generateCertificate(
                 for: user,
                 course: advancedCourse,
                 completionData: completionProgress

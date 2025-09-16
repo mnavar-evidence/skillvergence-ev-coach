@@ -182,11 +182,30 @@ struct PodcastCardView: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(podcast.title)
-                    .font(.headline)
-                    .fontWeight(.medium)
+                HStack {
+                    Text(podcast.title)
+                        .font(.headline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.leading)
+
+                    Spacer()
+
+                    // XP Badge
+                    HStack(spacing: 3) {
+                        Image(systemName: "star.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.yellow)
+                        Text("50 XP")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                    }
                     .foregroundStyle(.primary)
-                    .multilineTextAlignment(.leading)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(.thinMaterial)
+                    .clipShape(Capsule())
+                }
 
                 if !podcast.description.isEmpty {
                     Text(podcast.description)

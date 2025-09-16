@@ -922,7 +922,9 @@ class EVCoachViewModel: ObservableObject {
     private func awardAIInteractionXP() {
         // Award 10 XP for each AI interaction with Coach Nova
         let question = lastAIQuestion.isEmpty ? "Coach Nova interaction" : lastAIQuestion
-        ProgressStore.shared.recordAIInteraction(question: question)
+        Task { @MainActor in
+            ProgressStore.shared.recordAIInteraction(question: question)
+        }
     }
 
     // MARK: - Video Management

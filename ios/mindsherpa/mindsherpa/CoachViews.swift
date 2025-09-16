@@ -692,13 +692,13 @@ struct CoachHeaderView: View {
             // Progress Metrics
             HStack(spacing: 12) {
                 MetricView(
-                    title: "Streak", 
-                    value: "\(ProgressStore.shared.getCurrentStreak())d", 
+                    title: "Streak",
+                    value: "\(progressStore.getCurrentStreak())d",
                     icon: "flame.fill"
                 )
                 MetricView(
-                    title: "Today", 
-                    value: String(format: "%.0fm", ProgressStore.shared.getTodayActivity()), 
+                    title: "Today",
+                    value: String(format: "%.0fm", progressStore.getTodayActivity()),
                     icon: "clock.fill"
                 )
                 LevelMetricView()
@@ -909,32 +909,33 @@ struct VideoView: View {
 struct CourseCardView: View {
     let course: Course
     @ObservedObject var viewModel: EVCoachViewModel
-    
+    @ObservedObject private var progressStore = ProgressStore.shared
+
     // Computed properties to avoid crashes from accessing @Published during init
     private var formattedDuration: String {
         Self.formatHours(course.estimatedHours)
     }
-    
+
     private var completionPercentage: Double {
         let totalVideos = course.videos.count
         guard totalVideos > 0 else { return 0 }
-        
+
         let completedCount = course.videos.filter { video in
-            ProgressStore.shared.videoProgress(videoId: video.id)?.completed ?? false
+            progressStore.videoProgress(videoId: video.id)?.completed ?? false
         }.count
-        
+
         return Double(completedCount) / Double(totalVideos) * 100.0
     }
-    
+
     private var completedVideoCount: Int {
         return course.videos.filter { video in
-            ProgressStore.shared.videoProgress(videoId: video.id)?.completed ?? false
+            progressStore.videoProgress(videoId: video.id)?.completed ?? false
         }.count
     }
-    
+
     private var hasAnyProgress: Bool {
         return course.videos.contains { video in
-            if let progress = ProgressStore.shared.videoProgress(videoId: video.id) {
+            if let progress = progressStore.videoProgress(videoId: video.id) {
                 return progress.watchedSec > 30 // Show progress if watched more than 30 seconds
             }
             return false
@@ -974,7 +975,22 @@ struct CourseCardView: View {
                 
                 Spacer()
                 
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: 4) {
+                    // XP Badge
+                    HStack(spacing: 3) {
+                        Image(systemName: "star.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.yellow)
+                        Text("\(course.videos.count * 50) XP")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(.thinMaterial)
+                    .clipShape(Capsule())
+
                     Text(formattedDuration)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -982,7 +998,7 @@ struct CourseCardView: View {
                         .padding(.vertical, 4)
                         .background(.thinMaterial)
                         .clipShape(Capsule())
-                    
+
                     if completionPercentage > 0 {
                         Text("\(Int(completionPercentage))%")
                             .font(.caption2)
@@ -1178,6 +1194,23 @@ struct AIInteractionView: View {
                         Text("Coach Nova")
                             .font(.caption)
                             .fontWeight(.medium)
+
+                        Spacer()
+
+                        // XP Badge for AI interactions
+                        HStack(spacing: 3) {
+                            Image(systemName: "star.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.yellow)
+                            Text("+10 XP")
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(.thinMaterial)
+                        .clipShape(Capsule())
                     }
                     
                     Text(viewModel.aiResponse)

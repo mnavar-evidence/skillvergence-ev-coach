@@ -76,17 +76,56 @@
 
             </LinearLayout>
 
-            <!-- Duration Badge -->
-            <TextView
-                android:id="@+id/course_duration"
+            <!-- XP and Duration Badge -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="46 min"
-                android:textSize="12sp"
-                android:textColor="@android:color/darker_gray"
-                android:textStyle="bold"
-                android:layout_marginStart="8dp"
-                tools:text="46 min" />
+                android:orientation="vertical"
+                android:gravity="end"
+                android:layout_marginStart="8dp">
+
+                <!-- XP Badge -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/ai_response_background"
+                    android:padding="4dp"
+                    android:layout_marginBottom="4dp">
+
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="4dp"
+                        android:src="@drawable/ic_star_24dp"
+                        android:scaleType="centerInside"
+                        android:tint="?attr/colorPrimary" />
+
+                    <TextView
+                        android:id="@+id/course_xp_reward"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="350 XP"
+                        android:textSize="10sp"
+                        android:textColor="?attr/colorPrimary"
+                        android:textStyle="bold"
+                        tools:text="350 XP" />
+
+                </LinearLayout>
+
+                <!-- Duration Badge -->
+                <TextView
+                    android:id="@+id/course_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="46 min"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/darker_gray"
+                    android:textStyle="bold"
+                    tools:text="46 min" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

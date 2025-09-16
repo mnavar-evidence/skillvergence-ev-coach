@@ -81,6 +81,13 @@
             android:exported="false"
             android:label="Course Modules"
             android:screenOrientation="portrait" />
+
+        <!-- Gaming System Activities -->
+        <activity
+            android:name=".ui.progress.LevelDetailsActivity"
+            android:exported="false"
+            android:label="Your Progress"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

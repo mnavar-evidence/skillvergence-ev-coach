@@ -8,7 +8,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.widget.ImageButton
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.SeekBar
@@ -45,9 +44,9 @@ class PodcastPlayerActivity : AppCompatActivity() {
     private lateinit var currentTimeText: TextView
     private lateinit var totalTimeText: TextView
     private lateinit var seekBar: SeekBar
-    private lateinit var playPauseButton: FloatingActionButton
-    private lateinit var skipBackwardButton: FloatingActionButton
-    private lateinit var skipForwardButton: FloatingActionButton
+    private lateinit var playPauseButton: ImageButton
+    private lateinit var skipBackwardButton: ImageButton
+    private lateinit var skipForwardButton: ImageButton
     private lateinit var backButton: ImageButton
     private lateinit var loadingIndicator: ProgressBar
 

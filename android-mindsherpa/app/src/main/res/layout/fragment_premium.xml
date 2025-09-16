@@ -1,31 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:orientation="vertical"
+    android:background="?attr/colorSurface">
 
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:background="?attr/colorSurface"
+        android:elevation="2dp">
 
         <TextView
-            android:id="@+id/premium_title"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Premium Advanced Courses"
-            android:textSize="24sp"
+            android:layout_weight="1"
+            android:text="Advanced Courses"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/course_count_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5 courses"
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textStyle="bold"
-            android:layout_marginBottom="16dp" />
-
-        <TextView
-            android:id="@+id/premium_content"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🎓 Professional Certificate Programs:\n\n⚡ Advanced High Voltage Safety\n🔋 Battery Management Systems Expert\n🔌 DC Fast Charging Infrastructure\n🔧 EV Diagnostics &amp; Repair Professional\n🏗️ Vehicle-to-Grid Integration Systems\n\nUnlock professional certifications and advanced learning content."
-            android:textSize="16sp"
-            android:lineSpacingMultiplier="1.5" />
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:background="@drawable/rounded_transport_button"
+            android:backgroundTint="?attr/colorSurfaceVariant" />
 
     </LinearLayout>
 
-</ScrollView>
+    <!-- Course List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/advanced_courses_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        android:clipToPadding="false"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+</LinearLayout>

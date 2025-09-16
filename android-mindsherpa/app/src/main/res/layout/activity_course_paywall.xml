@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/colorSurface">
+
+    <!-- Header with back button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:background="?attr/colorSurface"
+        android:elevation="2dp">
+
+        <ImageButton
+            android:id="@+id/back_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_arrow_back_24dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            app:tint="?attr/colorOnSurface" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Purchase Course"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:textColor="?attr/colorOnSurface"
+            android:gravity="center" />
+
+        <!-- Placeholder for symmetry -->
+        <View
+            android:layout_width="48dp"
+            android:layout_height="48dp" />
+
+    </LinearLayout>
+
+    <!-- Main Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Header Icon -->
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_star_24dp"
+                app:tint="?attr/colorPrimary"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Course Title -->
+            <TextView
+                android:id="@+id/course_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="1.0 High Voltage Vehicle Safety"
+                android:textAppearance="?attr/textAppearanceHeadline5"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Subtitle -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Enter your purchase code to unlock this course"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:gravity="center"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Course Description -->
+            <TextView
+                android:id="@+id/course_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Master-level 7-module certification covering advanced EV safety protocols, risk assessment, and professional safety management."
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:gravity="center"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Course Details -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="?attr/colorSurfaceVariant">
+
+                <LinearLayout
+                    android:id="@+id/course_details"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Purchase Code Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="32dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Course Purchase Code"
+                    android:textAppearance="?attr/textAppearanceSubtitle2"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- 6-digit code input -->
+                <EditText
+                    android:id="@+id/code_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/rounded_transport_button"
+                    android:backgroundTint="?attr/colorSurfaceVariant"
+                    android:hint="Enter 6-digit code"
+                    android:inputType="number"
+                    android:maxLength="6"
+                    android:textAppearance="?attr/textAppearanceHeadline6"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:letterSpacing="0.2"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Error Message -->
+                <TextView
+                    android:id="@+id/error_message"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Invalid purchase code"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="@color/design_default_color_error"
+                    android:visibility="gone"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Unlock Button -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <ProgressBar
+                        android:id="@+id/progress_bar"
+                        style="?android:attr/progressBarStyleSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:layout_marginEnd="8dp"
+                        app:tint="?attr/colorOnPrimary" />
+
+                    <Button
+                        android:id="@+id/unlock_button"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:text="Unlock Course"
+                        android:textAppearance="?attr/textAppearanceButton"
+                        android:textColor="?attr/colorOnPrimary"
+                        android:background="@drawable/rounded_transport_button"
+                        android:backgroundTint="?attr/colorPrimary"
+                        android:enabled="false" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

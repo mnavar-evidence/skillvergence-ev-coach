@@ -261,14 +261,68 @@ public class ProgressStore: ObservableObject {
     // MARK: - Course Completion Methods
     
     public func isCourseCompleted(courseId: String) -> Bool {
-        // Check for Course 5 completion with multiple possible course ID formats
-        if courseId == "course_5" {
-            // Look for Course 5 videos with various possible courseId formats
-            let possibleCourse5Ids = ["5", "course_5", "course-5", "Course 5", "Advanced EV Systems"]
-            
+        // DEBUG: Show all stored video IDs to understand what's actually saved
+        let allVideoIds = Array(snapshot.videos.keys).sorted()
+        print("🔍 DEBUG: All stored video IDs: \(allVideoIds)")
+        let allStoredCourseIds = Array(Set(snapshot.videos.values.map { $0.courseId })).sorted()
+        print("🔍 DEBUG: All stored course IDs: \(allStoredCourseIds)")
+
+        // Handle courseId format mismatches comprehensively
+        var possibleCourseIds = [courseId]
+
+        // Handle "course_X" format (advanced courses checking for basic prerequisite)
+        if courseId.hasPrefix("course_") {
+            let courseNumber = courseId.replacingOccurrences(of: "course_", with: "")
+            possibleCourseIds.append(courseNumber)
+
+            // CRITICAL: Also check for hyphen format "course-X" (basic videos use this format!)
+            possibleCourseIds.append("course-\(courseNumber)")
+
+            // Also check for course titles and other variations
+            switch courseNumber {
+            case "1":
+                possibleCourseIds.append(contentsOf: [
+                    "High Voltage Safety Foundation",
+                    "EV Safety Pyramid",
+                    "Electrical Safety",
+                    "High Voltage Vehicle Safety"
+                ])
+            case "2":
+                possibleCourseIds.append(contentsOf: [
+                    "Electrical Fundamentals",
+                    "High Voltage Hazards"
+                ])
+            case "3":
+                possibleCourseIds.append(contentsOf: [
+                    "Advanced Electrical Diagnostics",
+                    "Navigating Electrical Shock Protection"
+                ])
+            case "4":
+                possibleCourseIds.append(contentsOf: [
+                    "EV Charging Systems",
+                    "High Voltage PPE"
+                ])
+            case "5":
+                possibleCourseIds.append(contentsOf: [
+                    "Advanced EV Systems",
+                    "Inside an Electric Car"
+                ])
+            default:
+                break
+            }
+        }
+        // Handle numeric courseId (basic courses)
+        else if courseId.count == 1 && courseId.rangeOfCharacter(from: CharacterSet.decimalDigits) != nil {
+            possibleCourseIds.append("course_\(courseId)")
+        }
+
+        // Special handling for Course 5 with multiple possible formats
+        if courseId == "course_5" || courseId == "5" {
+            let course5Ids = ["5", "course_5", "course-5", "Course 5", "Advanced EV Systems"]
+
             var allCourse5Videos: [VideoProgressRecord] = []
-            
-            for possibleId in possibleCourse5Ids {
+
+            for possibleId in course5Ids {
                 let courseVideos = snapshot.videos.filter { videoProgress in
                     return videoProgress.value.courseId == possibleId ||
                            videoProgress.value.courseId.contains("5") ||
@@ -278,31 +332,74 @@ public class ProgressStore: ObservableObject {
                 }
                 allCourse5Videos.append(contentsOf: courseVideos.map { $0.value })
             }
-            
+
             // Remove duplicates
             let uniqueVideos = Array(Set(allCourse5Videos.map { $0.videoId }))
-            
+
             // If we found Course 5 videos, check if any are completed
             if uniqueVideos.count > 0 {
                 let completedCourse5Videos = allCourse5Videos.filter { $0.completed }
                 // If at least 1 Course 5 video is completed, unlock advanced courses
                 return completedCourse5Videos.count > 0
             }
-            
+
             return false
         }
-        
-        // For other courses, use the original logic
-        let courseVideos = snapshot.videos.filter { videoProgress in
-            return videoProgress.value.courseId == courseId
+
+        // Check all possible courseId formats
+        var allCourseVideos: [VideoProgressRecord] = []
+
+        for possibleId in possibleCourseIds {
+            let courseVideos = snapshot.videos.filter { videoProgress in
+                // CRITICAL: When checking for basic course completion, exclude advanced videos
+                let videoId = videoProgress.key
+                let matchesCourseId = videoProgress.value.courseId == possibleId
+                let isNotAdvancedVideo = !videoId.hasPrefix("adv_")
+
+                return matchesCourseId && isNotAdvancedVideo
+            }
+            allCourseVideos.append(contentsOf: courseVideos.map { $0.value })
         }
-        
-        if courseVideos.isEmpty {
+
+        // Fallback: If no videos found and checking course_X format, try video ID pattern matching
+        // BUT exclude advanced course videos (those starting with "adv_")
+        if allCourseVideos.isEmpty && courseId.hasPrefix("course_") {
+            let courseNumber = courseId.replacingOccurrences(of: "course_", with: "")
+
+            // Look for basic videos with pattern like "1-1", "1-2", etc
+            // CRITICAL: Exclude ANY video that starts with "adv_" to prevent advanced videos from being included
+            let basicVideos = snapshot.videos.filter { videoProgress in
+                let videoId = videoProgress.key
+                // Must match pattern "X-Y" where X is the course number
+                let hasCorrectPattern = videoId.hasPrefix("\(courseNumber)-")
+                // Must NOT start with "adv_"
+                let isNotAdvanced = !videoId.hasPrefix("adv_")
+                // Must be a simple format like "1-1", "1-2" (basic videos are typically short)
+                let isBasicFormat = videoId.count <= 5 && videoId.contains("-")
+
+                return hasCorrectPattern && isNotAdvanced && isBasicFormat
+            }
+            allCourseVideos.append(contentsOf: basicVideos.map { $0.value })
+        }
+
+        if allCourseVideos.isEmpty {
             return false
         }
-        
-        let completedVideos = courseVideos.filter { $0.value.completed }
-        return completedVideos.count == courseVideos.count
+
+        let completedVideos = allCourseVideos.filter { $0.completed }
+        let isCompleted = completedVideos.count == allCourseVideos.count
+
+        // Debug logging to help track down prerequisite issues
+        print("🔍 DEBUG: Course completion check for '\(courseId)':")
+        print("🔍 DEBUG: - Searched courseIds: \(possibleCourseIds)")
+        print("🔍 DEBUG: - Found \(allCourseVideos.count) videos, \(completedVideos.count) completed")
+        if !allCourseVideos.isEmpty {
+            let videoIds = allCourseVideos.map { $0.videoId }
+            print("🔍 DEBUG: - Video IDs: \(videoIds)")
+        }
+        print("🔍 DEBUG: - Result: \(isCompleted)")
+
+        return isCompleted
     }
     
     // MARK: - Persistence Methods

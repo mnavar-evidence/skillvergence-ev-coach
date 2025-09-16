@@ -31,7 +31,7 @@ import java.util.Locale
  * Matches iOS UnifiedVideoPlayer functionality
  * Handles both basic and advanced course videos with Mux streaming
  */
-class VideoDetailActivity : AppCompatActivity() {
+open class VideoDetailActivity : AppCompatActivity() {
 
     // UI Components
     private lateinit var playerView: PlayerView

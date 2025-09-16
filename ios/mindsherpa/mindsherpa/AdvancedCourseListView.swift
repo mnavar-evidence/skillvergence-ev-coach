@@ -39,12 +39,13 @@ struct AdvancedCourseListView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 8) {
-                        NavigationLink(destination: CertificateAdminView()) {
-                            Image(systemName: "graduationcap.circle")
-                                .font(.title3)
-                                .foregroundColor(.blue)
-                        }
-                        
+                        // Certificates hidden for TestFlight
+                        // NavigationLink(destination: CertificateAdminView()) {
+                        //     Image(systemName: "graduationcap.circle")
+                        //         .font(.title3)
+                        //         .foregroundColor(.blue)
+                        // }
+
                         Text("5 courses")
                             .font(.caption)
                             .fontWeight(.medium)
@@ -62,10 +63,19 @@ struct AdvancedCourseListView: View {
                 if subscriptionManager.isCourseUnlocked(courseId: course.id) {
                     // Course is purchased - check if prerequisite is completed
                     if course.isUnlocked {
-                        // Both purchased and prerequisite complete - show content
-                        if course.prerequisiteCourseId == "course_5" {
+                        // Both purchased and prerequisite complete - show module list for all courses
+                        switch course.id {
+                        case "adv_1":
+                            Course1ModuleListView(course: course)
+                        case "adv_2":
+                            Course2ModuleListView(course: course)
+                        case "adv_3":
+                            Course3ModuleListView(course: course)
+                        case "adv_4":
+                            Course4ModuleListView(course: course)
+                        case "adv_5":
                             Course5ModuleListView(course: course)
-                        } else {
+                        default:
                             UnifiedVideoPlayer(advancedCourse: course)
                         }
                     } else {
@@ -103,37 +113,586 @@ struct AdvancedCourseListView: View {
     }
 }
 
+// MARK: - Course 1 Module List View
+struct Course1ModuleListView: View {
+    let course: AdvancedCourse
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @State private var selectedModule: Course1Module?
+    @State private var modulesWithRealDurations: [Course1Module] = []
+
+    // Course 1 modules data - 7 modules for High Voltage Vehicle Safety
+    private let course1Modules = [
+        Course1Module(
+            id: "1-1",
+            title: "1.1 High Voltage Workplace Personnel",
+            description: "Overview of high voltage safety in electric vehicles covering different roles and qualifications including electrically aware persons, qualified persons, and authorized persons. Understanding training requirements and authorization for high voltage work.",
+            muxPlaybackId: "6nHzce7SgTCbcBD00UoMqPdZqobvlBMyJUqnhvzsvIns",
+            estimatedMinutes: nil,
+            xpReward: 100
+        ),
+        Course1Module(
+            id: "1-2",
+            title: "1.2 High Voltage Hazards",
+            description: "Comprehensive exploration of dangers associated with high voltage systems including electric shock, arc flash, and arc blast hazards. Understanding factors affecting shock severity, body resistance, and current effects.",
+            muxPlaybackId: "XOvqV82WjeJnJiu4josaw9JL2k4Rq1hdV3SQA4Sg678",
+            estimatedMinutes: nil,
+            xpReward: 100
+        ),
+        Course1Module(
+            id: "1-3",
+            title: "1.3 Shock Protection Boundaries",
+            description: "Critical concept of shock protection boundaries in high voltage environments covering limited approach, restricted approach, and arc flash boundaries. Learning to identify and respect safety zones.",
+            muxPlaybackId: "bI2WjGdUUWzHJ7w00Gv3aRf7OHz1vn46RDGdgp5YvVcU",
+            estimatedMinutes: nil,
+            xpReward: 100
+        ),
+        Course1Module(
+            id: "1-4",
+            title: "1.4 PPE Ratings and Categories",
+            description: "Personal protective equipment for high voltage work covering PPE capabilities, ratings, and categories with emphasis on arc ratings and hazard risk categories. Learning to select appropriate PPE for various tasks.",
+            muxPlaybackId: "8mRfAgwaHusffNx5gObTyztZz9vtOIUY9umBArsTaic",
+            estimatedMinutes: nil,
+            xpReward: 100
+        ),
+        Course1Module(
+            id: "1-5",
+            title: "1.5 High Voltage Components",
+            description: "In-depth look at key components of high voltage systems in electric vehicles including energy storage systems, battery management, traction motors, power distribution, inverters, and converters.",
+            muxPlaybackId: "NCCNveUpYpRKBkTDINDNksgsooofohQr7q9McFS7DpY",
+            estimatedMinutes: nil,
+            xpReward: 100
+        ),
+        Course1Module(
+            id: "1-6",
+            title: "1.6 High-Voltage Safety Procedures",
+            description: "Detailed instruction on safety procedures for working with high voltage systems covering precautionary measures, battery disabling techniques, manual service disconnects, and high voltage interlock loops.",
+            muxPlaybackId: "AxKaucprgU200mmFTGLNIRlpSkaA02FMZwFmmZ1rmaUrE",
+            estimatedMinutes: nil,
+            xpReward: 100
+        ),
+        Course1Module(
+            id: "1-7",
+            title: "1.7 Warning Labels",
+            description: "Visual identification of high voltage components in electric vehicles covering badges, wraps, orange cables, and high voltage warning labels. Learning to recognize and interpret various warning signs and markings.",
+            muxPlaybackId: "fYYHPmsdI1iYZYBZfOhuUkQgD8RDsfm2tHSScOUIYAw",
+            estimatedMinutes: nil,
+            xpReward: 100
+        )
+    ]
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Course header
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text(course.title)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Spacer()
+                        Text("\(course1Modules.count) modules")
+                            .font(.caption)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.orange.opacity(0.15))
+                            .foregroundColor(.orange)
+                            .cornerRadius(12)
+                    }
+
+                    Text(course.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(.gray.opacity(0.05))
+
+                // Module list
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(modulesWithRealDurations.isEmpty ? course1Modules : modulesWithRealDurations) { module in
+                            CourseModuleCard(module: module) {
+                                selectedModule = module
+                            }
+                        }
+                    }
+                    .padding()
+                }
+
+                Spacer()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                fetchRealDurations()
+            }
+        }
+        .sheet(item: $selectedModule) { module in
+            // Convert Course1Module to AdvancedCourse for UnifiedVideoPlayer
+            let advancedCourse = AdvancedCourse(
+                id: "adv_\(module.id)",
+                title: module.title,
+                description: module.description,
+                prerequisiteCourseId: "course_1",
+                muxPlaybackId: module.muxPlaybackId,
+                estimatedHours: Double(module.estimatedMinutes ?? 0) / 60.0,
+                certificateType: .evFundamentalsAdvanced,
+                xpReward: module.xpReward,
+                skillLevel: .expert
+            )
+
+            UnifiedVideoPlayer(advancedCourse: advancedCourse)
+        }
+    }
+
+    private func fetchRealDurations() {
+        modulesWithRealDurations = course1Modules
+        print("🎬 Fetching real video durations from Mux for Course 1...")
+
+        for (index, module) in course1Modules.enumerated() {
+            Task {
+                do {
+                    let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
+                    let durationMinutes = max(1, Int(duration / 60))
+
+                    print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
+
+                    await MainActor.run {
+                        var updatedModule = module
+                        updatedModule.estimatedMinutes = durationMinutes
+                        modulesWithRealDurations[index] = updatedModule
+                    }
+                } catch {
+                    print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Course 2 Module List View
+struct Course2ModuleListView: View {
+    let course: AdvancedCourse
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @State private var selectedModule: Course2Module?
+    @State private var modulesWithRealDurations: [Course2Module] = []
+
+    // Course 2 modules data - Electrical Level 1 (4 modules • 3:53:40)
+    private let course2Modules = [
+        Course2Module(
+            id: "2-1",
+            title: "2.1 Basic Circuit Components & Configuration",
+            description: "Understanding electrical components, series and parallel circuits, and calculating voltage, current, resistance, and power. Practical lab exercises reinforce theoretical knowledge for building and testing circuits.",
+            muxPlaybackId: "KGnXNWj2cE7FE8usEaoA2ROnqGQAMqZq021Xykgski2k",
+            estimatedMinutes: nil,
+            xpReward: 120
+        ),
+        Course2Module(
+            id: "2-2",
+            title: "2.2 Electrical Measurements",
+            description: "Comprehensive training on using digital multimeters for automotive electrical measurements, covering voltage, current, resistance, continuity, capacitance, and frequency measurements with safety procedures.",
+            muxPlaybackId: "UPHJQd9u5KDcadeIUwbeRk2q700ZVxJlhJ4UpA1e37aU",
+            estimatedMinutes: nil,
+            xpReward: 120
+        ),
+        Course2Module(
+            id: "2-3",
+            title: "2.3 Electrical Fault Analysis",
+            description: "Comprehensive training in diagnosing and troubleshooting electrical issues including high resistance faults, open circuits, shorts to ground, and component faults using digital multimeters.",
+            muxPlaybackId: "f7bWarA02aIjBloGalrhHuSXRGGEEtpwvJ3nLnjAtxV4",
+            estimatedMinutes: nil,
+            xpReward: 120
+        ),
+        Course2Module(
+            id: "2-4",
+            title: "2.4 Circuit Diagnosis",
+            description: "Essential skills for troubleshooting electrical systems, reading wiring diagrams, tracing current flow, and systematic diagnostic approaches using digital multimeters and voltage drop tests.",
+            muxPlaybackId: "k7feJpMDdL6CJc1GeCS2MHRR9B1h2Yotr02Kypy2bupg",
+            estimatedMinutes: nil,
+            xpReward: 120
+        )
+    ]
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Course header
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text(course.title)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Spacer()
+                        Text("\(course2Modules.count) modules")
+                            .font(.caption)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.orange.opacity(0.15))
+                            .foregroundColor(.orange)
+                            .cornerRadius(12)
+                    }
+
+                    Text(course.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(.gray.opacity(0.05))
+
+                // Module list
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(modulesWithRealDurations.isEmpty ? course2Modules : modulesWithRealDurations) { module in
+                            CourseModuleCard(module: module) {
+                                selectedModule = module
+                            }
+                        }
+                    }
+                    .padding()
+                }
+
+                Spacer()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                fetchRealDurations()
+            }
+        }
+        .sheet(item: $selectedModule) { module in
+            // Convert Course2Module to AdvancedCourse for UnifiedVideoPlayer
+            let advancedCourse = AdvancedCourse(
+                id: "adv_\(module.id)",
+                title: module.title,
+                description: module.description,
+                prerequisiteCourseId: "course_2",
+                muxPlaybackId: module.muxPlaybackId,
+                estimatedHours: Double(module.estimatedMinutes ?? 0) / 60.0,
+                certificateType: .evFundamentalsAdvanced,
+                xpReward: module.xpReward,
+                skillLevel: .intermediate
+            )
+
+            UnifiedVideoPlayer(advancedCourse: advancedCourse)
+        }
+    }
+
+    private func fetchRealDurations() {
+        modulesWithRealDurations = course2Modules
+        print("🎬 Fetching real video durations from Mux for Course 2...")
+
+        for (index, module) in course2Modules.enumerated() {
+            Task {
+                do {
+                    let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
+                    let durationMinutes = max(1, Int(duration / 60))
+
+                    print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
+
+                    await MainActor.run {
+                        var updatedModule = module
+                        updatedModule.estimatedMinutes = durationMinutes
+                        modulesWithRealDurations[index] = updatedModule
+                    }
+                } catch {
+                    print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Course 3 Module List View
+struct Course3ModuleListView: View {
+    let course: AdvancedCourse
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @State private var selectedModule: Course3Module?
+    @State private var modulesWithRealDurations: [Course3Module] = []
+
+    // Course 3 modules data - Electrical Level 2 (2 modules • 2:30:32)
+    private let course3Modules = [
+        Course3Module(
+            id: "3-1",
+            title: "3.1 Advanced Electrical Systems Diagnosis",
+            description: "Advanced digital multimeter functions and oscilloscope operation for precise voltage, current, and waveform analysis. In-depth study of computer input/output circuits, sensors, and actuators in modern vehicles with hands-on diagnostic techniques.",
+            muxPlaybackId: "noM3WWJr6Q43t6eGJ6JJ5VUzNnSv2IW3UcNs2601b02is",
+            estimatedMinutes: nil,
+            xpReward: 140
+        ),
+        Course3Module(
+            id: "3-2",
+            title: "3.2 Automotive Communication Systems",
+            description: "Comprehensive overview of automotive bus communication systems including K-CAN, PT-CAN, LIN, FlexRay, MOST, and Ethernet. Understanding gateway modules, fiber optics, LVDS, real-time vehicle scanning, and diagnostic strategies for complex network architectures.",
+            muxPlaybackId: "WMQlHCyi1zrF018XtLXycNXHqTMnvVxV70001tMSXOS02J4",
+            estimatedMinutes: nil,
+            xpReward: 140
+        )
+    ]
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Course header
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text(course.title)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Spacer()
+                        Text("\(course3Modules.count) modules")
+                            .font(.caption)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.orange.opacity(0.15))
+                            .foregroundColor(.orange)
+                            .cornerRadius(12)
+                    }
+
+                    Text(course.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(.gray.opacity(0.05))
+
+                // Module list
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(modulesWithRealDurations.isEmpty ? course3Modules : modulesWithRealDurations) { module in
+                            CourseModuleCard(module: module) {
+                                selectedModule = module
+                            }
+                        }
+                    }
+                    .padding()
+                }
+
+                Spacer()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                fetchRealDurations()
+            }
+        }
+        .sheet(item: $selectedModule) { module in
+            // Convert Course3Module to AdvancedCourse for UnifiedVideoPlayer
+            let advancedCourse = AdvancedCourse(
+                id: "adv_\(module.id)",
+                title: module.title,
+                description: module.description,
+                prerequisiteCourseId: "course_3",
+                muxPlaybackId: module.muxPlaybackId,
+                estimatedHours: Double(module.estimatedMinutes ?? 0) / 60.0,
+                certificateType: .evFundamentalsAdvanced,
+                xpReward: module.xpReward,
+                skillLevel: .advanced
+            )
+
+            UnifiedVideoPlayer(advancedCourse: advancedCourse)
+        }
+    }
+
+    private func fetchRealDurations() {
+        modulesWithRealDurations = course3Modules
+        print("🎬 Fetching real video durations from Mux for Course 3...")
+
+        for (index, module) in course3Modules.enumerated() {
+            Task {
+                do {
+                    let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
+                    let durationMinutes = max(1, Int(duration / 60))
+
+                    print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
+
+                    await MainActor.run {
+                        var updatedModule = module
+                        updatedModule.estimatedMinutes = durationMinutes
+                        modulesWithRealDurations[index] = updatedModule
+                    }
+                } catch {
+                    print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Course 4 Module List View
+struct Course4ModuleListView: View {
+    let course: AdvancedCourse
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
+    @State private var selectedModule: Course4Module?
+    @State private var modulesWithRealDurations: [Course4Module] = []
+
+    // Course 4 modules data - EV Supply Equipment (2 modules • 1:12:19)
+    private let course4Modules = [
+        Course4Module(
+            id: "4-1",
+            title: "4.1 Electric Vehicle Supply Equipment & Electric Vehicle Charging Systems",
+            description: "Comprehensive exploration of EV charging infrastructure including EVSE types, charging levels (Level 1, 2, DC Fast), charging standards and connectors (J1772, CCS, CHAdeMO), AC/DC charging principles, safety features, and communication protocols between EVs and charging stations.",
+            muxPlaybackId: "cZ5rxX2013jHbgsxIBDKEHtdJyB4aTYNkLG5hB4GWmm4",
+            estimatedMinutes: nil,
+            xpReward: 160
+        ),
+        Course4Module(
+            id: "4-2",
+            title: "4.2 Battery Management Systems",
+            description: "In-depth study of EV battery systems fundamentals, battery charging/discharging characteristics, Battery Management System (BMS) functions and components, battery health monitoring, thermal management, and safety considerations in battery charging and management with hands-on diagnostic techniques.",
+            muxPlaybackId: "zfSZVFnzqFm02QkqkNw301mhZtC700qvgd5IH6srTBmtJo",
+            estimatedMinutes: nil,
+            xpReward: 160
+        )
+    ]
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Course header
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text(course.title)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Spacer()
+                        Text("\(course4Modules.count) modules")
+                            .font(.caption)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.orange.opacity(0.15))
+                            .foregroundColor(.orange)
+                            .cornerRadius(12)
+                    }
+
+                    Text(course.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(.gray.opacity(0.05))
+
+                // Module list
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(modulesWithRealDurations.isEmpty ? course4Modules : modulesWithRealDurations) { module in
+                            CourseModuleCard(module: module) {
+                                selectedModule = module
+                            }
+                        }
+                    }
+                    .padding()
+                }
+
+                Spacer()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                fetchRealDurations()
+            }
+        }
+        .sheet(item: $selectedModule) { module in
+            // Convert Course4Module to AdvancedCourse for UnifiedVideoPlayer
+            let advancedCourse = AdvancedCourse(
+                id: "adv_\(module.id)",
+                title: module.title,
+                description: module.description,
+                prerequisiteCourseId: "course_4",
+                muxPlaybackId: module.muxPlaybackId,
+                estimatedHours: Double(module.estimatedMinutes ?? 0) / 60.0,
+                certificateType: .evFundamentalsAdvanced,
+                xpReward: module.xpReward,
+                skillLevel: .expert
+            )
+
+            UnifiedVideoPlayer(advancedCourse: advancedCourse)
+        }
+    }
+
+    private func fetchRealDurations() {
+        modulesWithRealDurations = course4Modules
+        print("🎬 Fetching real video durations from Mux for Course 4...")
+
+        for (index, module) in course4Modules.enumerated() {
+            Task {
+                do {
+                    let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
+                    let durationMinutes = max(1, Int(duration / 60))
+
+                    print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
+
+                    await MainActor.run {
+                        var updatedModule = module
+                        updatedModule.estimatedMinutes = durationMinutes
+                        modulesWithRealDurations[index] = updatedModule
+                    }
+                } catch {
+                    print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Course 5 Module List View
 struct Course5ModuleListView: View {
     let course: AdvancedCourse
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @State private var selectedModule: Course5Module?
-    
-    // Course 5 modules data
+    @State private var modulesWithRealDurations: [Course5Module] = []
+
+    // Course 5 modules data - will be updated with real durations
     private let course5Modules = [
         Course5Module(
             id: "5-1",
             title: "5.1 Introduction to Electric Vehicles",
-            description: "Comprehensive exploration of EV history, powertrain fundamentals, and charging infrastructure standards.",
+            description: "Overview of EV history and evolution, comparison between conventional, hybrid, and fully electric vehicles, key components of EV powertrains, EV charging infrastructure and standards, and environmental impact and advantages of EVs.",
             muxPlaybackId: "lJjDsHFQ1J5c9tcfy3Bh6OP00SbOQcWMEJ243Lk102Yyk",
-            estimatedMinutes: 90,
+            estimatedMinutes: nil, // Start with nil - will be updated with real duration
             xpReward: 150
         ),
         Course5Module(
-            id: "5-2", 
+            id: "5-2",
             title: "5.2 Electric Vehicle Energy Storage Systems",
-            description: "Advanced study of battery chemistry, cell technology, and thermal management systems.",
+            description: "Basics of battery technology and cell chemistry, types of batteries used in EVs (lithium-ion, LFP, NMC), battery management systems and thermal management, energy capacity, power density, efficiency concepts, charging and discharging characteristics, and future trends in EV battery technology.",
             muxPlaybackId: "00KESDsUll4nd8vc88PV01OpJqH7tKC01kqNAgydDmdbx8",
-            estimatedMinutes: 90,
+            estimatedMinutes: nil, // Start with nil - will be updated with real duration
             xpReward: 150
         ),
         Course5Module(
             id: "5-3",
-            title: "5.3 EV Architecture, Motors & Controllers", 
-            description: "Master-level analysis of EV powertrain architectures and motor control systems.",
+            title: "5.3 Electric Vehicle Architecture, Motors & Controllers",
+            description: "EV powertrain architectures (in-wheel, centralized), types of electric motors used in EVs (permanent magnet, induction), motor control systems and power electronics, regenerative braking systems, and efficiency and performance characteristics of EV drivetrains.",
             muxPlaybackId: "5UtPR00oJZQUAJrnv701jdM7S02zmkCBWYI02lGqMiwbAn4",
-            estimatedMinutes: 90,
+            estimatedMinutes: nil, // Start with nil - will be updated with real duration
             xpReward: 150
         )
     ]
@@ -167,8 +726,8 @@ struct Course5ModuleListView: View {
                 // Module list
                 ScrollView {
                     LazyVStack(spacing: 12) {
-                        ForEach(course5Modules) { module in
-                            Course5ModuleCard(module: module) {
+                        ForEach(modulesWithRealDurations.isEmpty ? course5Modules : modulesWithRealDurations) { module in
+                            CourseModuleCard(module: module) {
                                 selectedModule = module
                             }
                         }
@@ -186,6 +745,9 @@ struct Course5ModuleListView: View {
                     }
                 }
             }
+            .onAppear {
+                fetchRealDurations()
+            }
         }
         .sheet(item: $selectedModule) { module in
             // Convert Course5Module to AdvancedCourse for UnifiedVideoPlayer
@@ -195,7 +757,7 @@ struct Course5ModuleListView: View {
                 description: module.description,
                 prerequisiteCourseId: "course_5",
                 muxPlaybackId: module.muxPlaybackId,
-                estimatedHours: Double(module.estimatedMinutes) / 60.0,
+                estimatedHours: Double(module.estimatedMinutes ?? 0) / 60.0,
                 certificateType: .evFundamentalsAdvanced,
                 xpReward: module.xpReward,
                 skillLevel: .master
@@ -204,27 +766,122 @@ struct Course5ModuleListView: View {
             UnifiedVideoPlayer(advancedCourse: advancedCourse)
         }
     }
+
+    // MARK: - Real Duration Fetching
+
+    private func fetchRealDurations() {
+        // Initialize with modules that have nil durations (show ... until real duration is fetched)
+        modulesWithRealDurations = course5Modules
+
+        print("🎬 Fetching real video durations from Mux for Course 5...")
+
+        // Fetch real durations for each module asynchronously
+        for (index, module) in course5Modules.enumerated() {
+            Task {
+                do {
+                    let duration = try await MuxVideoMetadata.getVideoDuration(muxPlaybackId: module.muxPlaybackId)
+                    let durationMinutes = max(1, Int(duration / 60)) // Convert seconds to minutes, minimum 1 minute
+
+                    print("✅ \(module.id): Real duration = \(durationMinutes) minutes (\(Int(duration)) seconds)")
+
+                    // Update the module with real duration on main thread
+                    await MainActor.run {
+                        var updatedModule = module
+                        updatedModule.estimatedMinutes = durationMinutes
+                        modulesWithRealDurations[index] = updatedModule
+                    }
+                } catch {
+                    print("❌ \(module.id): Error fetching duration - \(error.localizedDescription)")
+                    // Keep nil duration on error to show ... instead of wrong placeholder
+                }
+            }
+        }
+    }
 }
 
-// MARK: - Course 5 Module Data Model
-struct Course5Module: Identifiable {
+// MARK: - Course Module Data Models
+
+protocol CourseModule: Identifiable {
+    var id: String { get }
+    var title: String { get }
+    var description: String { get }
+    var muxPlaybackId: String { get }
+    var estimatedMinutes: Int? { get set }
+    var xpReward: Int { get }
+    var formattedDuration: String { get }
+}
+
+extension CourseModule {
+    var formattedDuration: String {
+        guard let minutes = estimatedMinutes else {
+            return "..." // Show loading indicator instead of placeholder
+        }
+
+        if minutes >= 60 {
+            let hours = minutes / 60
+            let mins = minutes % 60
+            return mins > 0 ? "\(hours)h \(mins)m" : "\(hours)h"
+        } else {
+            return "\(minutes)m"
+        }
+    }
+}
+
+// Course 1 Module
+struct Course1Module: CourseModule {
     let id: String
     let title: String
     let description: String
     let muxPlaybackId: String
-    let estimatedMinutes: Int
+    var estimatedMinutes: Int?
     let xpReward: Int
-    
-    var formattedDuration: String {
-        return "\(estimatedMinutes) min"
-    }
 }
 
-// MARK: - Course 5 Module Card
-struct Course5ModuleCard: View {
-    let module: Course5Module
+// Course 2 Module
+struct Course2Module: CourseModule {
+    let id: String
+    let title: String
+    let description: String
+    let muxPlaybackId: String
+    var estimatedMinutes: Int?
+    let xpReward: Int
+}
+
+// Course 3 Module
+struct Course3Module: CourseModule {
+    let id: String
+    let title: String
+    let description: String
+    let muxPlaybackId: String
+    var estimatedMinutes: Int?
+    let xpReward: Int
+}
+
+// Course 4 Module
+struct Course4Module: CourseModule {
+    let id: String
+    let title: String
+    let description: String
+    let muxPlaybackId: String
+    var estimatedMinutes: Int?
+    let xpReward: Int
+}
+
+// Course 5 Module
+struct Course5Module: CourseModule {
+    let id: String
+    let title: String
+    let description: String
+    let muxPlaybackId: String
+    var estimatedMinutes: Int?
+    let xpReward: Int
+}
+
+// MARK: - Generic Course Module Card
+struct CourseModuleCard<T: CourseModule>: View {
+    let module: T
     let onTap: () -> Void
-    
+
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 12) {
@@ -235,26 +892,26 @@ struct Course5ModuleCard: View {
                             .fontWeight(.semibold)
                             .foregroundColor(.primary)
                             .multilineTextAlignment(.leading)
-                        
-                        Text("Advanced Module • \(module.formattedDuration)")
+
+                        Text(module.formattedDuration)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     Spacer()
-                    
+
                     VStack(spacing: 4) {
                         Image(systemName: "star.fill")
                             .font(.title2)
                             .foregroundColor(.orange)
-                        
+
                         Text("\(module.xpReward) XP")
                             .font(.caption2)
                             .fontWeight(.bold)
                             .foregroundColor(.orange)
                     }
                 }
-                
+
                 Text(module.description)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -322,7 +979,7 @@ struct AdvancedCourseCard: View {
                 
                 // Course details
                 HStack {
-                    Label("\(String(format: "%.1f", course.estimatedHours)) hours", systemImage: "clock")
+                    Label(course.formattedDuration, systemImage: "clock")
                     
                     Spacer()
                     
@@ -355,7 +1012,7 @@ struct AdvancedCourseCard: View {
     @MainActor private var courseStatusIcon: String {
         let isPurchased = subscriptionManager.isCourseUnlocked(courseId: course.id)
         let prerequisiteComplete = course.isUnlocked
-        
+
         if isPurchased && prerequisiteComplete {
             return "play.circle.fill"  // Ready to play
         } else if isPurchased {
@@ -368,7 +1025,7 @@ struct AdvancedCourseCard: View {
     @MainActor private var courseStatusColor: Color {
         let isPurchased = subscriptionManager.isCourseUnlocked(courseId: course.id)
         let prerequisiteComplete = course.isUnlocked
-        
+
         if isPurchased && prerequisiteComplete {
             return .green  // Ready to play
         } else if isPurchased {
@@ -381,7 +1038,7 @@ struct AdvancedCourseCard: View {
     @MainActor private var courseStatusText: String {
         let isPurchased = subscriptionManager.isCourseUnlocked(courseId: course.id)
         let prerequisiteComplete = course.isUnlocked
-        
+
         if isPurchased && prerequisiteComplete {
             return "Ready"
         } else if isPurchased {
@@ -526,7 +1183,7 @@ struct CoursePaywallView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Image(systemName: "clock")
-                        Text("\(String(format: "%.1f", course.estimatedHours)) hours of content")
+                        Text("\(course.formattedDuration) of content")
                     }
                     HStack {
                         Image(systemName: "star.fill")

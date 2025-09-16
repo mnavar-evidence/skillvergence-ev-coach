@@ -7,6 +7,7 @@
     <dimen name="transport_button_size_large">72dp</dimen>
     <dimen name="transport_button_size_main">64dp</dimen>
     <dimen name="transport_button_spacing">24dp</dimen>
-    <dimen name="transport_icon_size_large">36dp</dimen>
-    <dimen name="transport_icon_size_main">32dp</dimen>
+    <dimen name="transport_button_padding_large">16dp</dimen>
+    <dimen name="transport_button_padding_main">12dp</dimen>
+    <dimen name="transport_button_radius">16dp</dimen>
 </resources>

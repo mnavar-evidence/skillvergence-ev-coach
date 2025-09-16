@@ -190,44 +190,41 @@
                 android:layout_marginBottom="32dp">
 
                 <!-- Skip Backward -->
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                <ImageButton
                     android:id="@+id/skip_backward_button"
                     android:layout_width="@dimen/transport_button_size_main"
                     android:layout_height="@dimen/transport_button_size_main"
+                    android:background="@drawable/rounded_transport_button"
                     android:src="@drawable/ic_replay_15_24dp"
+                    android:padding="@dimen/transport_button_padding_main"
+                    android:scaleType="centerInside"
                     android:contentDescription="Skip backward 15 seconds"
                     app:tint="?attr/colorOnPrimary"
-                    app:backgroundTint="?attr/colorPrimary"
-                    app:elevation="4dp"
-                    app:fabSize="mini"
-                    app:maxImageSize="@dimen/transport_icon_size_main"
                     android:layout_marginEnd="@dimen/transport_button_spacing" />
 
                 <!-- Play/Pause Button -->
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                <ImageButton
                     android:id="@+id/play_pause_button"
                     android:layout_width="@dimen/transport_button_size_large"
                     android:layout_height="@dimen/transport_button_size_large"
+                    android:background="@drawable/rounded_transport_button"
                     android:src="@drawable/ic_play_circle_24dp"
+                    android:padding="@dimen/transport_button_padding_large"
+                    android:scaleType="centerInside"
                     android:contentDescription="Play/Pause"
-                    app:tint="?attr/colorOnPrimary"
-                    app:backgroundTint="?attr/colorPrimary"
-                    app:elevation="6dp"
-                    app:fabSize="normal"
-                    app:maxImageSize="@dimen/transport_icon_size_large" />
+                    app:tint="?attr/colorOnPrimary" />
 
                 <!-- Skip Forward -->
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                <ImageButton
                     android:id="@+id/skip_forward_button"
                     android:layout_width="@dimen/transport_button_size_main"
                     android:layout_height="@dimen/transport_button_size_main"
+                    android:background="@drawable/rounded_transport_button"
                     android:src="@drawable/ic_forward_15_24dp"
+                    android:padding="@dimen/transport_button_padding_main"
+                    android:scaleType="centerInside"
                     android:contentDescription="Skip forward 15 seconds"
                     app:tint="?attr/colorOnPrimary"
-                    app:backgroundTint="?attr/colorPrimary"
-                    app:elevation="4dp"
-                    app:fabSize="mini"
-                    app:maxImageSize="@dimen/transport_icon_size_main"
                     android:layout_marginStart="@dimen/transport_button_spacing" />
 
             </LinearLayout>

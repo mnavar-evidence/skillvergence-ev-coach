@@ -17,7 +17,8 @@ import com.skillvergence.mindsherpa.data.model.Podcast
  */
 class PodcastAdapter(
     private val podcasts: List<Podcast>,
-    private val onPodcastClick: (Podcast) -> Unit
+    private val onPodcastClick: (Podcast) -> Unit,
+    private val onPlayButtonClick: (Podcast) -> Unit = onPodcastClick
 ) : RecyclerView.Adapter<PodcastAdapter.PodcastViewHolder>() {
 
     inner class PodcastViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -49,7 +50,7 @@ class PodcastAdapter(
                 .error(R.drawable.ic_headphones_24dp)
                 .into(podcastThumbnail)
 
-            // Set click listener
+            // Set click listener for the entire card
             cardView.setOnClickListener {
                 onPodcastClick(podcast)
             }
@@ -58,6 +59,11 @@ class PodcastAdapter(
             if (podcast.isMuxStream()) {
                 playIcon.setImageResource(R.drawable.ic_play_circle_24dp)
                 playIcon.visibility = View.VISIBLE
+
+                // Set click listener for the play button (different action - autoplay)
+                playIcon.setOnClickListener {
+                    onPlayButtonClick(podcast)
+                }
             } else {
                 playIcon.visibility = View.GONE
             }

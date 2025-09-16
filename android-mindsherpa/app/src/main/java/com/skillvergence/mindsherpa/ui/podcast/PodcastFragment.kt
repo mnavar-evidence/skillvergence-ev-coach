@@ -129,14 +129,22 @@ class PodcastFragment : Fragment() {
 
         // Setup RecyclerView for this course's podcasts
         podcastRecyclerView.layoutManager = LinearLayoutManager(context)
-        podcastRecyclerView.adapter = PodcastAdapter(podcasts) { podcast ->
-            onPodcastSelected(podcast)
-        }
+        podcastRecyclerView.adapter = PodcastAdapter(
+            podcasts = podcasts,
+            onPodcastClick = { podcast ->
+                // Card click - navigate without autoplay
+                onPodcastSelected(podcast, autoPlay = false)
+            },
+            onPlayButtonClick = { podcast ->
+                // Play button click - navigate with autoplay
+                onPodcastSelected(podcast, autoPlay = true)
+            }
+        )
 
         podcastContentLayout.addView(courseSectionView)
     }
 
-    private fun onPodcastSelected(podcast: Podcast) {
+    private fun onPodcastSelected(podcast: Podcast, autoPlay: Boolean = false) {
         podcastViewModel.selectPodcast(podcast)
 
         // Launch dedicated podcast player activity
@@ -148,7 +156,8 @@ class PodcastFragment : Fragment() {
             muxPlaybackId = podcast.getMuxPlaybackId(),
             thumbnailUrl = podcast.resolveThumbnailUrl(),
             episodeNumber = podcast.episodeNumber,
-            courseTitle = podcastViewModel.getCourseTitle(podcast.courseId ?: "")
+            courseTitle = podcastViewModel.getCourseTitle(podcast.courseId ?: ""),
+            autoPlay = autoPlay
         )
         startActivity(intent)
     }

@@ -74,6 +74,7 @@ class PodcastPlayerActivity : AppCompatActivity() {
     private var thumbnailUrl: String = ""
     private var episodeNumber: Int? = null
     private var courseTitle: String = ""
+    private var shouldAutoPlay: Boolean = false
 
     companion object {
         private const val EXTRA_PODCAST_ID = "podcast_id"
@@ -83,6 +84,7 @@ class PodcastPlayerActivity : AppCompatActivity() {
         private const val EXTRA_THUMBNAIL_URL = "thumbnail_url"
         private const val EXTRA_EPISODE_NUMBER = "episode_number"
         private const val EXTRA_COURSE_TITLE = "course_title"
+        private const val EXTRA_AUTOPLAY = "autoplay"
 
         fun createIntent(
             context: Context,
@@ -92,7 +94,8 @@ class PodcastPlayerActivity : AppCompatActivity() {
             muxPlaybackId: String?,
             thumbnailUrl: String,
             episodeNumber: Int?,
-            courseTitle: String
+            courseTitle: String,
+            autoPlay: Boolean = false
         ): Intent {
             return Intent(context, PodcastPlayerActivity::class.java).apply {
                 putExtra(EXTRA_PODCAST_ID, podcastId)
@@ -102,6 +105,7 @@ class PodcastPlayerActivity : AppCompatActivity() {
                 putExtra(EXTRA_THUMBNAIL_URL, thumbnailUrl)
                 putExtra(EXTRA_EPISODE_NUMBER, episodeNumber)
                 putExtra(EXTRA_COURSE_TITLE, courseTitle)
+                putExtra(EXTRA_AUTOPLAY, autoPlay)
             }
         }
 
@@ -165,10 +169,12 @@ class PodcastPlayerActivity : AppCompatActivity() {
         thumbnailUrl = intent.getStringExtra(EXTRA_THUMBNAIL_URL) ?: ""
         episodeNumber = intent.getIntExtra(EXTRA_EPISODE_NUMBER, -1).takeIf { it != -1 }
         courseTitle = intent.getStringExtra(EXTRA_COURSE_TITLE) ?: ""
+        shouldAutoPlay = intent.getBooleanExtra(EXTRA_AUTOPLAY, false)
 
         logToFile(this, "🎵 Loading podcast: $podcastTitle_")
         logToFile(this, "🎵 Mux ID: $muxPlaybackId")
         logToFile(this, "🎵 Episode: $episodeNumber")
+        logToFile(this, "🎵 Auto-play: $shouldAutoPlay")
     }
 
     private fun setupUI() {
@@ -302,6 +308,13 @@ class PodcastPlayerActivity : AppCompatActivity() {
                             totalDurationSeconds = (muxPlayer?.duration ?: 0) / 1000
                             totalTimeText.text = formatTime(totalDurationSeconds.toInt())
                             startProgressTracking()
+
+                            // Auto-play if requested
+                            if (shouldAutoPlay) {
+                                logToFile(this@PodcastPlayerActivity, "🎵 Auto-starting playback")
+                                muxPlayer?.play()
+                                shouldAutoPlay = false // Reset flag to prevent auto-play on future state changes
+                            }
                         }
                         Player.STATE_ENDED -> {
                             logToFile(this@PodcastPlayerActivity, "🎵 Player state: ENDED")
@@ -392,6 +405,13 @@ class PodcastPlayerActivity : AppCompatActivity() {
                             totalDurationSeconds = (fallbackExoPlayer?.duration ?: 0) / 1000
                             totalTimeText.text = formatTime(totalDurationSeconds.toInt())
                             startProgressTracking()
+
+                            // Auto-play if requested
+                            if (shouldAutoPlay) {
+                                logToFile(this@PodcastPlayerActivity, "🔄 Auto-starting ExoPlayer playback")
+                                fallbackExoPlayer?.play()
+                                shouldAutoPlay = false // Reset flag to prevent auto-play on future state changes
+                            }
                         }
                         Player.STATE_ENDED -> {
                             logToFile(this@PodcastPlayerActivity, "🔄 ExoPlayer state: ENDED")

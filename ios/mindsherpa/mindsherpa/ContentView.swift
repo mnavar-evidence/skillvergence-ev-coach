@@ -26,19 +26,19 @@ struct ContentView: View {
                 // Top Section: Coach & Progress
                 CoachHeaderView(viewModel: viewModel)
                 
-                // Top Navigation Bar
-                HStack {
-                    Spacer()
-                    
-                    NavigationLink(destination: MyCertificatesView()) {
-                        Image(systemName: "graduationcap")
-                            .font(.title2)
-                            .foregroundColor(.blue)
-                            .padding(.trailing)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 8)
+                // Top Navigation Bar - Certificates hidden for TestFlight
+                // HStack {
+                //     Spacer()
+                //
+                //     NavigationLink(destination: MyCertificatesView()) {
+                //         Image(systemName: "graduationcap")
+                //             .font(.title2)
+                //             .foregroundColor(.blue)
+                //             .padding(.trailing)
+                //     }
+                // }
+                // .padding(.horizontal)
+                // .padding(.bottom, 8)
                 
                 // Media Tabs
                 MediaTabsView(selectedTab: $selectedTab)

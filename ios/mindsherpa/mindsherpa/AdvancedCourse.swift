@@ -19,10 +19,21 @@ struct AdvancedCourse: Identifiable, Codable {
     let certificateType: AdvancedCertificateType
     let xpReward: Int
     let skillLevel: AdvancedSkillLevel
-    
+
     @MainActor var isUnlocked: Bool {
         // Check if prerequisite course is completed
         return ProgressStore.shared.isCourseCompleted(courseId: prerequisiteCourseId)
+    }
+
+    var formattedDuration: String {
+        let totalMinutes = Int(estimatedHours * 60)
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+        return if hours > 0 {
+            "\(hours)h \(minutes)m"
+        } else {
+            "\(minutes)m"
+        }
     }
 }
 

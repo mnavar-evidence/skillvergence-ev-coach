@@ -36,7 +36,7 @@ struct AdvancedCourseListView: View {
                         .font(.headline)
                         .fontWeight(.semibold)
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 8) {
                         // Certificates hidden for TestFlight
@@ -222,13 +222,9 @@ struct Course1ModuleListView: View {
                 Spacer()
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Button("Done") {
+                dismiss()
+            })
             .onAppear {
                 fetchRealDurations()
             }
@@ -361,13 +357,9 @@ struct Course2ModuleListView: View {
                 Spacer()
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Button("Done") {
+                dismiss()
+            })
             .onAppear {
                 fetchRealDurations()
             }
@@ -383,7 +375,7 @@ struct Course2ModuleListView: View {
                 estimatedHours: Double(module.estimatedMinutes ?? 0) / 60.0,
                 certificateType: .evFundamentalsAdvanced,
                 xpReward: module.xpReward,
-                skillLevel: .intermediate
+                skillLevel: .expert
             )
 
             UnifiedVideoPlayer(advancedCourse: advancedCourse)
@@ -484,13 +476,9 @@ struct Course3ModuleListView: View {
                 Spacer()
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Button("Done") {
+                dismiss()
+            })
             .onAppear {
                 fetchRealDurations()
             }
@@ -506,7 +494,7 @@ struct Course3ModuleListView: View {
                 estimatedHours: Double(module.estimatedMinutes ?? 0) / 60.0,
                 certificateType: .evFundamentalsAdvanced,
                 xpReward: module.xpReward,
-                skillLevel: .advanced
+                skillLevel: .expert
             )
 
             UnifiedVideoPlayer(advancedCourse: advancedCourse)
@@ -607,13 +595,9 @@ struct Course4ModuleListView: View {
                 Spacer()
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Button("Done") {
+                dismiss()
+            })
             .onAppear {
                 fetchRealDurations()
             }
@@ -738,13 +722,9 @@ struct Course5ModuleListView: View {
                 Spacer()
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Button("Done") {
+                dismiss()
+            })
             .onAppear {
                 fetchRealDurations()
             }
@@ -1122,13 +1102,9 @@ struct CoursePrerequisiteView: View {
             }
             .padding()
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Button("Done") {
+                dismiss()
+            })
         }
     }
 }
@@ -1246,13 +1222,9 @@ struct CoursePaywallView: View {
             }
             .padding()
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Close") {
-                        dismiss()
-                    }
-                }
-            }
+            .navigationBarItems(trailing: Button("Close") {
+                dismiss()
+            })
         }
     }
     

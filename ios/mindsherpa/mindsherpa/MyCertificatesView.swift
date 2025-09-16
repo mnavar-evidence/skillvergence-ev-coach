@@ -604,6 +604,16 @@ struct ShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
+// MARK: - Date Formatter Extension
+
+extension DateFormatter {
+    static let longDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        return formatter
+    }()
+}
+
 // MARK: - Detail Row
 
 struct DetailRow: View {

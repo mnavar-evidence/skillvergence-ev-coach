@@ -18,6 +18,7 @@ import com.skillvergence.mindsherpa.data.api.ApiResult
 import com.skillvergence.mindsherpa.data.model.Course
 import com.skillvergence.mindsherpa.data.model.SkillLevel
 import com.skillvergence.mindsherpa.data.model.Video
+import com.skillvergence.mindsherpa.data.persistence.ProgressStore
 import com.skillvergence.mindsherpa.data.repository.CourseRepository
 import com.skillvergence.mindsherpa.ui.adapter.VideoAdapter
 import kotlinx.coroutines.launch
@@ -48,6 +49,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private lateinit var videosRecyclerView: RecyclerView
     private lateinit var videoAdapter: VideoAdapter
     private lateinit var courseRepository: CourseRepository
+    private lateinit var progressStore: ProgressStore
     private var currentCourse: Course? = null
 
     companion object {
@@ -118,9 +120,10 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_player)
 
-        // Initialize views and repository
+        // Initialize views, repository, and progress store
         initializeViews()
         courseRepository = CourseRepository()
+        progressStore = ProgressStore.getInstance(this)
 
         // Get course data from intent
         val courseId = intent.getStringExtra(EXTRA_COURSE_ID) ?: ""

@@ -1,9 +1,13 @@
 package com.skillvergence.mindsherpa.ui.video
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -11,7 +15,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.skillvergence.mindsherpa.R
 import com.skillvergence.mindsherpa.data.model.Course
+import com.skillvergence.mindsherpa.data.persistence.ProgressStore
 import com.skillvergence.mindsherpa.ui.adapter.CourseAdapter
+import com.skillvergence.mindsherpa.ui.progress.LevelDetailsActivity
 
 /**
  * Video Fragment - Matches iOS VideoView
@@ -23,6 +29,12 @@ class VideoFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var courseAdapter: CourseAdapter
+    private lateinit var progressStore: ProgressStore
+
+    // Gaming UI elements
+    private lateinit var levelIndicator: LinearLayout
+    private lateinit var levelIcon: ImageView
+    private lateinit var levelText: TextView
 
 
     override fun onCreateView(
@@ -33,10 +45,12 @@ class VideoFragment : Fragment() {
         // Inflate the proper layout
         val rootView = inflater.inflate(R.layout.fragment_video, container, false)
 
-        // Initialize ViewModel
+        // Initialize ViewModel and ProgressStore
         videoViewModel = ViewModelProvider(this)[VideoViewModel::class.java]
+        progressStore = ProgressStore.getInstance(requireContext())
 
-        // Setup RecyclerView
+        // Setup UI
+        setupGamingUI(rootView)
         setupRecyclerView(rootView)
 
         // Observe data
@@ -46,6 +60,40 @@ class VideoFragment : Fragment() {
         videoViewModel.loadCourses()
 
         return rootView
+    }
+
+    private fun setupGamingUI(rootView: View) {
+        levelIndicator = rootView.findViewById(R.id.level_indicator)
+        levelIcon = rootView.findViewById(R.id.level_icon)
+        levelText = rootView.findViewById(R.id.level_text)
+
+        // Set click listener to open level details
+        levelIndicator.setOnClickListener {
+            val intent = LevelDetailsActivity.createIntent(requireContext())
+            startActivity(intent)
+        }
+
+        // Update level display
+        updateLevelDisplay()
+    }
+
+    private fun updateLevelDisplay() {
+        val currentLevel = progressStore.getCurrentLevel()
+        val levelTitle = progressStore.getLevelTitle()
+        val totalXP = progressStore.getTotalXP()
+
+        levelText.text = "Level $currentLevel • $totalXP XP"
+
+        // Set level icon color based on XP level
+        val xpLevel = progressStore.getCurrentXPLevel()
+        val iconColor = when (xpLevel) {
+            com.skillvergence.mindsherpa.data.model.XPLevel.BRONZE -> R.color.brown
+            com.skillvergence.mindsherpa.data.model.XPLevel.SILVER -> R.color.gray
+            com.skillvergence.mindsherpa.data.model.XPLevel.GOLD -> R.color.gold
+            com.skillvergence.mindsherpa.data.model.XPLevel.PLATINUM -> R.color.purple
+            com.skillvergence.mindsherpa.data.model.XPLevel.DIAMOND -> R.color.blue_500
+        }
+        levelIcon.setColorFilter(androidx.core.content.ContextCompat.getColor(requireContext(), iconColor))
     }
 
     private fun setupRecyclerView(rootView: View) {
@@ -111,6 +159,19 @@ class VideoFragment : Fragment() {
                 println("🎬 [VideoFragment] AI error: '$it'")
                 courseAdapter.showAIError(it)
             }
+        }
+
+        // Gaming system observers
+        progressStore.totalXP.observe(viewLifecycleOwner) {
+            updateLevelDisplay()
+        }
+
+        progressStore.currentLevel.observe(viewLifecycleOwner) {
+            updateLevelDisplay()
+        }
+
+        progressStore.currentStreak.observe(viewLifecycleOwner) {
+            updateLevelDisplay()
         }
     }
 

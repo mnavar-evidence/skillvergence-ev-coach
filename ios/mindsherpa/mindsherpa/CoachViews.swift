@@ -646,7 +646,11 @@ struct TabButton: View {
 struct CoachHeaderView: View {
     @ObservedObject var viewModel: EVCoachViewModel
     @ObservedObject private var progressStore = ProgressStore.shared
+    @ObservedObject private var accessControl = AccessControlManager.shared
     @State private var showNamePrompt = false
+    @State private var tapCount = 0
+    @State private var showTeacherModeAlert = false
+    @State private var showPaywall = false
     
     var body: some View {
         VStack(spacing: 16) {
@@ -657,6 +661,9 @@ struct CoachHeaderView: View {
                         .foregroundStyle(.blue)
                         .font(.title2)
                         .symbolRenderingMode(.hierarchical)
+                        .onTapGesture {
+                            handleCoachNovaTap()
+                        }
                     VStack(alignment: .leading, spacing: 2) {
                         let userName = progressStore.getUserName()
                         Text(userName.isEmpty ? "Coach Nova • personalized" : "Welcome back, \(userName)!")
@@ -721,9 +728,45 @@ struct CoachHeaderView: View {
                     showNamePrompt = true
                 }
             }
+
+            // Check if paywall should be shown at 50 XP threshold
+            if accessControl.shouldShowPaywall() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showPaywall = true
+                }
+            }
         }
         .sheet(isPresented: $showNamePrompt) {
             NameCollectionView()
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
+        .alert("Teacher Mode", isPresented: $showTeacherModeAlert) {
+            Button("Enter Teacher Mode") {
+                accessControl.attemptTeacherModeAccess()
+            }
+            Button("Cancel", role: .cancel) {
+                tapCount = 0
+            }
+        } message: {
+            Text("You've discovered the hidden teacher mode! Enter teacher mode to access student management and analytics.")
+        }
+    }
+
+    private func handleCoachNovaTap() {
+        tapCount += 1
+
+        if tapCount >= 5 {
+            showTeacherModeAlert = true
+            tapCount = 0
+        } else {
+            // Reset tap count after 3 seconds if not completed
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                if tapCount < 5 {
+                    tapCount = 0
+                }
+            }
         }
     }
     

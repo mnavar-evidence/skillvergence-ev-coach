@@ -17,14 +17,19 @@ extension Array {
 struct ContentView: View {
     @StateObject private var viewModel = EVCoachViewModel()
     @StateObject private var analyticsManager = AnalyticsManager.shared
+    @StateObject private var accessControl = AccessControlManager.shared
     @State private var selectedTab = 0
     @State private var previousTab = 0
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Top Section: Coach & Progress
-                CoachHeaderView(viewModel: viewModel)
+        // Show teacher dashboard if teacher mode is enabled
+        if accessControl.isTeacherModeEnabled {
+            TeacherDashboardView()
+        } else {
+            NavigationStack {
+                VStack(spacing: 0) {
+                    // Top Section: Coach & Progress
+                    CoachHeaderView(viewModel: viewModel)
                 
                 // Top Navigation Bar - Certificates hidden for TestFlight
                 // HStack {
@@ -62,11 +67,12 @@ struct ContentView: View {
                 
                 Spacer()
             }
-            .background(Color(UIColor.systemBackground))
-            .navigationBarHidden(true)
-        }
-        .onAppear {
-            viewModel.loadCourses()
+                .background(Color(UIColor.systemBackground))
+                .navigationBarHidden(true)
+            }
+            .onAppear {
+                viewModel.loadCourses()
+            }
         }
     }
 }

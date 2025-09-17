@@ -1019,7 +1019,96 @@ struct AdvancedCourseCard: View {
 struct CoursePrerequisiteView: View {
     let course: AdvancedCourse
     @Environment(\.dismiss) private var dismiss
-    
+    @StateObject private var viewModel = EVCoachViewModel()
+
+    private func findPrerequisiteCourse() -> Course? {
+        let courseNumber = course.prerequisiteCourseId.replacingOccurrences(of: "course_", with: "")
+
+        // Try to find the actual course from the loaded courses first
+        if !viewModel.courses.isEmpty {
+            switch courseNumber {
+            case "1":
+                return viewModel.courses.first { $0.title.contains("High Voltage") || $0.title.contains("Safety") }
+            case "2":
+                return viewModel.courses.first { $0.title.contains("Electrical Fundamentals") }
+            case "3":
+                return viewModel.courses.first { $0.title.contains("Advanced Electrical") || $0.title.contains("Diagnostics") }
+            case "4":
+                return viewModel.courses.first { $0.title.contains("EV Charging") || $0.title.contains("Charging Systems") }
+            case "5":
+                return viewModel.courses.first { $0.title.contains("Advanced EV Systems") }
+            default:
+                return nil
+            }
+        }
+
+        // Fallback to placeholder courses if data not loaded yet
+        switch courseNumber {
+        case "1":
+            return Course(
+                id: "high-voltage-safety",
+                title: "High Voltage Safety Foundation",
+                description: "Essential safety training for working with high voltage electric vehicle systems",
+                level: "Level 1",
+                estimatedHours: 2.5,
+                videos: [],
+                podcasts: nil,
+                thumbnailUrl: nil,
+                sequenceOrder: 1
+            )
+        case "2":
+            return Course(
+                id: "electrical-fundamentals",
+                title: "Electrical Fundamentals",
+                description: "Master the electrical principles powering electric vehicles",
+                level: "Level 1",
+                estimatedHours: 4.0,
+                videos: [],
+                podcasts: nil,
+                thumbnailUrl: nil,
+                sequenceOrder: 2
+            )
+        case "3":
+            return Course(
+                id: "advanced-electrical-diagnostics",
+                title: "Advanced Electrical Diagnostics",
+                description: "Advanced diagnostic techniques for electric vehicle systems",
+                level: "Level 2",
+                estimatedHours: 3.5,
+                videos: [],
+                podcasts: nil,
+                thumbnailUrl: nil,
+                sequenceOrder: 3
+            )
+        case "4":
+            return Course(
+                id: "ev-charging-systems",
+                title: "EV Charging Systems",
+                description: "Understanding electric vehicle charging infrastructure and protocols",
+                level: "Level 2",
+                estimatedHours: 3.0,
+                videos: [],
+                podcasts: nil,
+                thumbnailUrl: nil,
+                sequenceOrder: 4
+            )
+        case "5":
+            return Course(
+                id: "advanced-ev-systems",
+                title: "Advanced EV Systems",
+                description: "Advanced concepts in electric vehicle technology and integration",
+                level: "Level 3",
+                estimatedHours: 0.4, // 24 minutes as mentioned by user
+                videos: [],
+                podcasts: nil,
+                thumbnailUrl: nil,
+                sequenceOrder: 5
+            )
+        default:
+            return nil
+        }
+    }
+
     private var prerequisiteCourseName: String {
         let courseNumber = course.prerequisiteCourseId.replacingOccurrences(of: "course_", with: "")
         switch courseNumber {
@@ -1076,6 +1165,30 @@ struct CoursePrerequisiteView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
+
+                    // Go to Basic Course Button
+                    if let prerequisiteCourse = findPrerequisiteCourse() {
+                        NavigationLink(destination: CourseDetailView(course: prerequisiteCourse, viewModel: EVCoachViewModel())) {
+                            HStack {
+                                Image(systemName: "arrow.right.circle.fill")
+                                Text("Go to \(prerequisiteCourseName)")
+                                    .fontWeight(.medium)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(Color.blue)
+                            .cornerRadius(8)
+                        }
+                        .padding(.top, 8)
+                    } else {
+                        Button("Find Basic Courses") {
+                            // Dismiss this view to go back to course selection
+                            dismiss()
+                        }
+                        .foregroundColor(.blue)
+                        .padding(.top, 8)
+                    }
                 }
                 .padding()
                 .background(
@@ -1090,6 +1203,12 @@ struct CoursePrerequisiteView: View {
             .navigationBarItems(trailing: Button("Done") {
                 dismiss()
             })
+        }
+        .onAppear {
+            // Load courses if not already loaded
+            if viewModel.courses.isEmpty {
+                viewModel.loadCourses()
+            }
         }
     }
 }

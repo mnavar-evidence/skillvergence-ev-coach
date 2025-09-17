@@ -111,8 +111,19 @@ public class ProgressStore: ObservableObject {
             updatedActivity[todayKey] = dailyRecord
         }
         
+        // Check if video was just completed and update level-based friend codes
+        let wasCompleted = existing?.completed ?? false
+        let justCompleted = completed && !wasCompleted
+
         snapshot = ProgressSnapshot(videos: updatedVideos, courses: snapshot.courses, activity: updatedActivity, aiInteractions: snapshot.aiInteractions)
-        
+
+        // If video was just completed, check for friend code generation
+        if justCompleted {
+            Task { @MainActor in
+                AccessControlManager.shared.checkAndGenerateFriendCodes()
+            }
+        }
+
         // Save to disk
         saveToDisk()
     }

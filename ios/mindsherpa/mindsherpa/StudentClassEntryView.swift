@@ -18,6 +18,7 @@ struct StudentClassEntryView: View {
     @State private var email = ""
     @State private var showSuccessAlert = false
     @State private var showErrorAlert = false
+    @State private var showChangeClassAlert = false
     @FocusState private var focusedField: Field?
 
     enum Field {
@@ -156,8 +157,7 @@ struct StudentClassEntryView: View {
                                 }
 
                                 Button("Change Class") {
-                                    progressAPI.clearStudentInfo()
-                                    clearForm()
+                                    showChangeClassAlert = true
                                 }
                                 .font(.caption)
                                 .foregroundColor(.blue)
@@ -170,26 +170,34 @@ struct StudentClassEntryView: View {
 
                     Spacer(minLength: 32)
 
-                    // Action Buttons
-                    VStack(spacing: 12) {
-                        Button(action: joinClass) {
-                            HStack {
-                                if progressAPI.isLoading {
-                                    ProgressView()
-                                        .scaleEffect(0.8)
-                                } else {
-                                    Image(systemName: "person.badge.plus")
+                    // Action Buttons - Only show if not linked to a class
+                    if !progressAPI.isStudentLinked {
+                        VStack(spacing: 12) {
+                            Button(action: joinClass) {
+                                HStack {
+                                    if progressAPI.isLoading {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                    } else {
+                                        Image(systemName: "person.badge.plus")
+                                    }
+                                    Text("Join Class")
                                 }
-                                Text(progressAPI.isStudentLinked ? "Update Information" : "Join Class")
                             }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(!canJoinClass || progressAPI.isLoading)
+                            .buttonStyle(.borderedProminent)
+                            .disabled(!canJoinClass || progressAPI.isLoading)
 
-                        Button("Cancel") {
+                            Button("Cancel") {
+                                dismiss()
+                            }
+                            .buttonStyle(.borderless)
+                        }
+                    } else {
+                        // If already linked, just show done button
+                        Button("Done") {
                             dismiss()
                         }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.borderedProminent)
                     }
                 }
                 .padding()
@@ -220,6 +228,19 @@ struct StudentClassEntryView: View {
             Button("OK") { }
         } message: {
             Text(progressAPI.lastError ?? "Failed to join class. Please check your information and try again.")
+        }
+        .alert("Change Class", isPresented: $showChangeClassAlert) {
+            Button("Change Class", role: .destructive) {
+                progressAPI.clearStudentInfo()
+                clearForm()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            if let teacherName = progressAPI.studentInfo?.classDetails?.teacherName {
+                Text("Are you sure you want to leave \(teacherName)'s class? You can join a new class afterwards.")
+            } else {
+                Text("Are you sure you want to leave your current class? You can join a new class afterwards.")
+            }
         }
     }
 

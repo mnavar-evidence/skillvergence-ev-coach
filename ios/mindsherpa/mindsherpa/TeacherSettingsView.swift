@@ -12,36 +12,21 @@ import SwiftUI
 struct TeacherSettingsView: View {
     @ObservedObject var viewModel: TeacherViewModel
     @StateObject private var settingsManager = TeacherSettingsManager()
-    @State private var showingLogoutAlert = false
     @State private var showingStudentImport = false
     @State private var showingClassCodeGenerator = false
 
     var body: some View {
         NavigationView {
             List {
-                // Teacher Profile Section
-                teacherProfileSection
-
                 // Class Management Section
                 classManagementSection
 
                 // Certificate Settings Section
                 certificateSettingsSection
 
-                // Notification Settings Section
-                notificationSettingsSection
-
-                // Data & Privacy Section
-                dataPrivacySection
-
-                // Help & Support Section
-                helpSupportSection
-
                 // Account Actions Section
                 accountActionsSection
             }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.large)
         }
         .sheet(isPresented: $showingStudentImport) {
             StudentImportView(settingsManager: settingsManager)
@@ -51,100 +36,18 @@ struct TeacherSettingsView: View {
                 ClassCodeGeneratorView(teacher: teacher)
             }
         }
-        .alert("Sign Out", isPresented: $showingLogoutAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Sign Out", role: .destructive) {
-                settingsManager.signOut()
-            }
-        } message: {
-            Text("Are you sure you want to sign out of your teacher account?")
-        }
     }
 
-    private var teacherProfileSection: some View {
-        Section {
-            HStack(spacing: 16) {
-                // Teacher Avatar
-                Circle()
-                    .fill(.blue.gradient)
-                    .frame(width: 60, height: 60)
-                    .overlay(
-                        Text((viewModel.currentTeacher?.fullName ?? "DJ").prefix(2))
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                    )
-
-                VStack(alignment: .leading, spacing: 4) {
-                    if let teacherName = AccessControlManager.shared.teacherData?.name {
-                        Text(teacherName)
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                    }
-
-                    if let program = AccessControlManager.shared.teacherData?.program {
-                        Text(program)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-
-                    if let school = AccessControlManager.shared.teacherData?.school {
-                        Text(school)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                Spacer()
-
-                Button("Edit") {
-                    // Navigate to profile editing
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-            }
-            .padding(.vertical, 8)
-        } header: {
-            Text("Teacher Profile")
-        }
-    }
 
     private var classManagementSection: some View {
         Section {
             SettingsRow(
-                icon: "person.3.fill",
-                title: "Manage Students",
-                subtitle: "\(viewModel.totalStudents) students enrolled",
-                color: .blue
-            ) {
-                // Navigate to student management
-            }
-
-            SettingsRow(
-                icon: "square.and.arrow.up",
-                title: "Import Students",
-                subtitle: "Add students from CSV or roster",
-                color: .green
-            ) {
-                showingStudentImport = true
-            }
-
-            SettingsRow(
                 icon: "qrcode",
                 title: "Class Join Code",
-                subtitle: "Generate code for student enrollment",
+                subtitle: "Students use this code to join your class and unlock access to basic foundational courses",
                 color: .purple
             ) {
                 showingClassCodeGenerator = true
-            }
-
-            SettingsRow(
-                icon: "chart.bar.xaxis",
-                title: "Grade Export",
-                subtitle: "Export to gradebook or LMS",
-                color: .orange
-            ) {
-                settingsManager.exportGrades()
             }
         } header: {
             Text("Class Management")
@@ -154,24 +57,6 @@ struct TeacherSettingsView: View {
     private var certificateSettingsSection: some View {
         Section {
             Toggle("Auto-approve certificates", isOn: $settingsManager.autoApproveCertificates)
-
-            SettingsRow(
-                icon: "doc.badge.plus",
-                title: "Certificate Templates",
-                subtitle: "Customize certificate designs",
-                color: .indigo
-            ) {
-                // Navigate to certificate templates
-            }
-
-            SettingsRow(
-                icon: "signature",
-                title: "Digital Signature",
-                subtitle: "Add your signature to certificates",
-                color: .brown
-            ) {
-                // Navigate to signature setup
-            }
 
             HStack {
                 Label("Minimum completion for certificate", systemImage: "percent")
@@ -193,118 +78,15 @@ struct TeacherSettingsView: View {
         }
     }
 
-    private var notificationSettingsSection: some View {
-        Section {
-            Toggle("Certificate requests", isOn: $settingsManager.notifyOnCertificateRequests)
-            Toggle("Student milestones", isOn: $settingsManager.notifyOnStudentMilestones)
-            Toggle("Weekly progress summary", isOn: $settingsManager.weeklyProgressSummary)
-            Toggle("Inactive student alerts", isOn: $settingsManager.inactiveStudentAlerts)
 
-            Picker("Email digest frequency", selection: $settingsManager.emailDigestFrequency) {
-                Text("Daily").tag(EmailDigestFrequency.daily)
-                Text("Weekly").tag(EmailDigestFrequency.weekly)
-                Text("Monthly").tag(EmailDigestFrequency.monthly)
-                Text("Never").tag(EmailDigestFrequency.never)
-            }
-        } header: {
-            Text("Notifications")
-        }
-    }
-
-    private var dataPrivacySection: some View {
-        Section {
-            SettingsRow(
-                icon: "shield.fill",
-                title: "Privacy Policy",
-                subtitle: "Review our privacy practices",
-                color: .green
-            ) {
-                settingsManager.openPrivacyPolicy()
-            }
-
-            SettingsRow(
-                icon: "doc.text.fill",
-                title: "Data Usage",
-                subtitle: "See how student data is used",
-                color: .blue
-            ) {
-                settingsManager.openDataUsageInfo()
-            }
-
-            SettingsRow(
-                icon: "square.and.arrow.down",
-                title: "Export Class Data",
-                subtitle: "Download your class information",
-                color: .orange
-            ) {
-                settingsManager.exportClassData()
-            }
-
-            SettingsRow(
-                icon: "trash.fill",
-                title: "Delete Class Data",
-                subtitle: "Permanently remove all class data",
-                color: .red
-            ) {
-                settingsManager.showDeleteClassDataAlert()
-            }
-        } header: {
-            Text("Data & Privacy")
-        }
-    }
-
-    private var helpSupportSection: some View {
-        Section {
-            SettingsRow(
-                icon: "questionmark.circle.fill",
-                title: "Help Center",
-                subtitle: "Find answers and tutorials",
-                color: .blue
-            ) {
-                settingsManager.openHelpCenter()
-            }
-
-            SettingsRow(
-                icon: "message.fill",
-                title: "Contact Support",
-                subtitle: "Get help from our team",
-                color: .green
-            ) {
-                settingsManager.contactSupport()
-            }
-
-            SettingsRow(
-                icon: "star.fill",
-                title: "Rate MindSherpa",
-                subtitle: "Share your feedback",
-                color: .yellow
-            ) {
-                settingsManager.openAppStore()
-            }
-
-            HStack {
-                Label("App Version", systemImage: "info.circle")
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("2.1.0 (Build 47)")
-                    .foregroundColor(.secondary)
-            }
-        } header: {
-            Text("Help & Support")
-        }
-    }
 
     private var accountActionsSection: some View {
         Section {
-            Button("Exit Teacher Mode") {
-                AccessControlManager.shared.exitTeacherMode()
-            }
-            .foregroundColor(.red)
-
-            Button("Sign Out") {
-                showingLogoutAlert = true
-            }
-            .foregroundColor(.red)
+            Label("Exit Teacher Mode", systemImage: "arrow.backward.circle.fill")
+                .foregroundColor(.red)
+                .onTapGesture {
+                    AccessControlManager.shared.exitTeacherMode()
+                }
         }
     }
 }
@@ -469,13 +251,11 @@ struct StudentImportView: View {
     }
 }
 
-// MARK: - Class Code Generator View
+// MARK: - Class Code Share View
 
 struct ClassCodeGeneratorView: View {
     let teacher: Teacher
     @Environment(\.dismiss) private var dismiss
-    @State private var generatedCode = ""
-    @State private var expirationDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
 
     var body: some View {
         NavigationView {
@@ -491,28 +271,28 @@ struct ClassCodeGeneratorView: View {
                         .foregroundColor(.secondary)
                 }
 
-                // Generated Code Display
-                if !generatedCode.isEmpty {
-                    VStack(spacing: 16) {
-                        Text("Class Join Code")
-                            .font(.headline)
+                // Current Code Display
+                VStack(spacing: 16) {
+                    Text("Class Join Code")
+                        .font(.headline)
 
-                        Text(generatedCode)
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                            .padding()
-                            .background(.blue.opacity(0.1))
-                            .cornerRadius(12)
+                    Text(teacher.classCode ?? "No Code Available")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.blue)
+                        .padding()
+                        .background(.blue.opacity(0.1))
+                        .cornerRadius(12)
 
-                        Text("Students can use this code to join your class")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                    Text("Students use this code to join your class and unlock access to basic foundational courses")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
 
+                    if let classCode = teacher.classCode {
                         HStack(spacing: 16) {
                             Button("Copy Code") {
-                                UIPasteboard.general.string = generatedCode
+                                UIPasteboard.general.string = classCode
                             }
                             .buttonStyle(.bordered)
 
@@ -524,49 +304,18 @@ struct ClassCodeGeneratorView: View {
                     }
                 }
 
-                // Settings
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Code Settings")
-                        .font(.headline)
-
-                    DatePicker("Expires on", selection: $expirationDate, displayedComponents: .date)
-
-                    Toggle("Allow new student registration", isOn: .constant(true))
-                }
-                .padding()
-                .background(.gray.opacity(0.05))
-                .cornerRadius(12)
-
                 Spacer()
 
-                // Action Buttons
-                HStack(spacing: 16) {
-                    Button("Close") {
-                        dismiss()
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button(generatedCode.isEmpty ? "Generate Code" : "Regenerate Code") {
-                        generateClassCode()
-                    }
-                    .buttonStyle(.borderedProminent)
+                // Action Button
+                Button("Close") {
+                    dismiss()
                 }
+                .buttonStyle(.borderedProminent)
             }
             .padding()
             .navigationTitle("Class Join Code")
             .navigationBarTitleDisplayMode(.inline)
         }
-        .onAppear {
-            if generatedCode.isEmpty {
-                generateClassCode()
-            }
-        }
-    }
-
-    private func generateClassCode() {
-        // Generate a 6-character alphanumeric code
-        let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        generatedCode = String((0..<6).map { _ in characters.randomElement()! })
     }
 }
 
@@ -576,16 +325,6 @@ struct ClassCodeGeneratorView: View {
 class TeacherSettingsManager: ObservableObject {
     @Published var autoApproveCertificates = false
     @Published var minimumCompletionForCertificate: Double = 80.0
-    @Published var notifyOnCertificateRequests = true
-    @Published var notifyOnStudentMilestones = true
-    @Published var weeklyProgressSummary = true
-    @Published var inactiveStudentAlerts = true
-    @Published var emailDigestFrequency: EmailDigestFrequency = .weekly
-
-    func signOut() {
-        // Implementation for signing out
-        print("Teacher signed out")
-    }
 
     func exportGrades() {
         // Implementation for exporting grades
@@ -596,41 +335,6 @@ class TeacherSettingsManager: ObservableObject {
         // Implementation for importing students
         print("Importing students via \(method): \(data)")
     }
-
-    func openPrivacyPolicy() {
-        // Implementation for opening privacy policy
-        print("Opening privacy policy...")
-    }
-
-    func openDataUsageInfo() {
-        // Implementation for opening data usage info
-        print("Opening data usage info...")
-    }
-
-    func exportClassData() {
-        // Implementation for exporting class data
-        print("Exporting class data...")
-    }
-
-    func showDeleteClassDataAlert() {
-        // Implementation for showing delete alert
-        print("Showing delete class data alert...")
-    }
-
-    func openHelpCenter() {
-        // Implementation for opening help center
-        print("Opening help center...")
-    }
-
-    func contactSupport() {
-        // Implementation for contacting support
-        print("Contacting support...")
-    }
-
-    func openAppStore() {
-        // Implementation for opening app store
-        print("Opening app store...")
-    }
 }
 
 // MARK: - Enums
@@ -639,18 +343,6 @@ enum ImportMethod {
     case csv, rosterCode, manual
 }
 
-enum EmailDigestFrequency: CaseIterable {
-    case daily, weekly, monthly, never
-
-    var displayName: String {
-        switch self {
-        case .daily: return "Daily"
-        case .weekly: return "Weekly"
-        case .monthly: return "Monthly"
-        case .never: return "Never"
-        }
-    }
-}
 
 // MARK: - Preview
 

@@ -10,8 +10,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.skillvergence.mindsherpa.MainActivity
@@ -33,6 +35,9 @@ class TeacherSettingsFragment : Fragment() {
     private lateinit var accessControlManager: AccessControlManager
     private lateinit var currentClassCodeText: TextView
     private lateinit var copyCodeButton: ImageView
+    private lateinit var autoApproveSwitch: SwitchCompat
+    private lateinit var completionPercentageSlider: SeekBar
+    private lateinit var completionPercentageText: TextView
     private var currentClassCode: String? = null
 
     private val teacherApiService: TeacherApiService by lazy {
@@ -64,6 +69,12 @@ class TeacherSettingsFragment : Fragment() {
     private fun setupViews(view: View) {
         currentClassCodeText = view.findViewById(R.id.current_class_code)
         copyCodeButton = view.findViewById(R.id.copy_code_button)
+        autoApproveSwitch = view.findViewById(R.id.auto_approve_switch)
+        completionPercentageSlider = view.findViewById(R.id.completion_percentage_slider)
+        completionPercentageText = view.findViewById(R.id.completion_percentage_text)
+
+        // Setup certificate settings
+        setupCertificateSettings()
     }
 
     private fun setupClickListeners(view: View) {
@@ -115,6 +126,56 @@ class TeacherSettingsFragment : Fragment() {
                 "Class code copied: $code",
                 Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun setupCertificateSettings() {
+        // Load saved settings
+        val sharedPrefs = requireContext().getSharedPreferences("teacher_prefs", Context.MODE_PRIVATE)
+        val autoApprove = sharedPrefs.getBoolean("auto_approve_certificates", false)
+        val completionThreshold = sharedPrefs.getInt("completion_threshold", 80)
+
+        // Set initial values
+        autoApproveSwitch.isChecked = autoApprove
+        updateSliderValue(completionThreshold)
+
+        // Setup listeners
+        autoApproveSwitch.setOnCheckedChangeListener { _, isChecked ->
+            sharedPrefs.edit()
+                .putBoolean("auto_approve_certificates", isChecked)
+                .apply()
+        }
+
+        completionPercentageSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    val percentage = progress + 50 // Range 50-100
+                    updateCompletionText(percentage)
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                val percentage = (seekBar?.progress ?: 30) + 50
+                sharedPrefs.edit()
+                    .putInt("completion_threshold", percentage)
+                    .apply()
+            }
+        })
+    }
+
+    private fun updateSliderValue(percentage: Int) {
+        val progress = percentage - 50 // Convert 50-100 range to 0-50 for SeekBar
+        completionPercentageSlider.progress = progress.coerceIn(0, 50)
+        updateCompletionText(percentage)
+    }
+
+    private fun updateCompletionText(percentage: Int) {
+        completionPercentageText.text = "$percentage%"
+
+        // Update the footer text as well
+        val footerText = view?.findViewById<TextView>(R.id.completion_footer_text)
+        footerText?.text = "Students must complete at least $percentage% of a course to be eligible for a certificate."
     }
 
     private fun exitTeacherMode() {

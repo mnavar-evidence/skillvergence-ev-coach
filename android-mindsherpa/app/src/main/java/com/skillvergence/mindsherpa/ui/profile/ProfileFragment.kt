@@ -90,68 +90,36 @@ class ProfileFragment : Fragment() {
             showComingSoon("Notifications Settings")
         }
 
-        // General Settings
-        view.findViewById<View>(R.id.general_settings_item).setOnClickListener {
-            // TODO: Navigate to general settings
-            showComingSoon("General Settings")
-        }
-
         // Join Class
         view.findViewById<View>(R.id.join_class_item).setOnClickListener {
             val intent = Intent(requireContext(), JoinClassActivity::class.java)
             startActivity(intent)
         }
 
-        // Teacher Access (subtle entrance to teacher mode)
+        // Change Class
+        view.findViewById<View>(R.id.change_class_item).setOnClickListener {
+            showChangeClassConfirmation()
+        }
+
+        // Teacher Access (entrance to teacher mode)
         view.findViewById<View>(R.id.teacher_access_item).setOnClickListener {
-            showTeacherAccessOptions()
+            val intent = Intent(requireContext(), TeacherCodeEntryActivity::class.java)
+            startActivity(intent)
         }
     }
 
-    private fun showTeacherAccessOptions() {
-        val options = if (studentProgressAPI.isStudentLinked()) {
-            arrayOf("Teacher Dashboard", "Leave Current Class", "Cancel")
-        } else {
-            arrayOf("Teacher Dashboard", "Join a Class", "Cancel")
-        }
-
-        val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
-        builder.setTitle("Teacher Access")
-            .setItems(options) { _, which ->
-                when (options[which]) {
-                    "Teacher Dashboard" -> {
-                        val intent = Intent(requireContext(), TeacherCodeEntryActivity::class.java)
-                        startActivity(intent)
-                    }
-                    "Join a Class" -> {
-                        showJoinClassDialog()
-                    }
-                    "Leave Current Class" -> {
-                        showLeaveClassConfirmation()
-                    }
-                }
-            }
-            .show()
-    }
-
-    private fun showJoinClassDialog() {
-        // Navigate to the proper class entry activity that handles the full flow
-        val intent = Intent(requireContext(), com.skillvergence.mindsherpa.ui.codes.CodeEntryActivity::class.java)
-        startActivity(intent)
-    }
-
-    private fun showLeaveClassConfirmation() {
+    private fun showChangeClassConfirmation() {
         val studentInfo = studentProgressAPI.studentInfo.value
         val teacherName = studentInfo?.classDetails?.teacherName ?: "your teacher"
 
         val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
-        builder.setTitle("Leave Class")
-            .setMessage("Are you sure you want to leave $teacherName's class?")
-            .setPositiveButton("Leave") { _, _ ->
+        builder.setTitle("Change Class")
+            .setMessage("Are you sure you want to leave $teacherName's class? You can join a new class afterwards.")
+            .setPositiveButton("Change Class") { _, _ ->
                 studentProgressAPI.clearStudentInfo()
                 view?.let { updateProfileInfo(it) }
                 Toast.makeText(requireContext(),
-                    "Left class successfully.",
+                    "Left class successfully. You can now join a new class.",
                     Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)

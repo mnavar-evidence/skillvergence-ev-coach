@@ -79,7 +79,7 @@
             <LinearLayout
                 android:id="@+id/my_certificates_item"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:padding="8dp"
@@ -92,22 +92,39 @@
                     android:layout_height="24dp"
                     android:src="@drawable/ic_certificate_24dp"
                     android:tint="?attr/colorPrimary"
-                    android:layout_marginEnd="16dp" />
+                    android:layout_marginEnd="16dp"
+                    android:layout_gravity="top"
+                    android:layout_marginTop="4dp" />
 
-                <TextView
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="My Certificates"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="My Certificates"
+                        android:textSize="16sp"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Your certificates will be stored here"
+                        android:textSize="12sp"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                </LinearLayout>
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_arrow_back_24dp"
                     android:rotation="180"
-                    android:tint="?attr/colorOnSurfaceVariant" />
+                    android:tint="?attr/colorOnSurfaceVariant"
+                    android:layout_gravity="center_vertical" />
 
             </LinearLayout>
 
@@ -135,7 +152,7 @@
             <LinearLayout
                 android:id="@+id/notifications_item"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:padding="8dp"
@@ -148,57 +165,39 @@
                     android:layout_height="24dp"
                     android:src="@drawable/ic_notifications_black_24dp"
                     android:tint="?attr/colorPrimary"
-                    android:layout_marginEnd="16dp" />
+                    android:layout_marginEnd="16dp"
+                    android:layout_gravity="top"
+                    android:layout_marginTop="4dp" />
 
-                <TextView
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Notifications"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Notifications"
+                        android:textSize="16sp"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Notifications coming soon"
+                        android:textSize="12sp"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                </LinearLayout>
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_arrow_back_24dp"
                     android:rotation="180"
-                    android:tint="?attr/colorOnSurfaceVariant" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/general_settings_item"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_settings_24dp"
-                    android:tint="?attr/colorPrimary"
-                    android:layout_marginEnd="16dp" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="General Settings"
-                    android:textSize="16sp"
-                    android:textColor="?attr/colorOnSurface" />
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/ic_arrow_back_24dp"
-                    android:rotation="180"
-                    android:tint="?attr/colorOnSurfaceVariant" />
+                    android:tint="?attr/colorOnSurfaceVariant"
+                    android:layout_gravity="center_vertical" />
 
             </LinearLayout>
 
@@ -244,6 +243,41 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Join Class"
+                    android:textSize="16sp"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_arrow_back_24dp"
+                    android:rotation="180"
+                    android:tint="?attr/colorOnSurfaceVariant" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/change_class_item"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_forward_24dp"
+                    android:tint="?attr/colorPrimary"
+                    android:layout_marginEnd="16dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Change Class"
                     android:textSize="16sp"
                     android:textColor="?attr/colorOnSurface" />
 

@@ -137,25 +137,56 @@ class Database {
         throw new Error(`This Class does not exist`);
       }
 
-      // Create or find student with hash-based unique ID (email + device)
-      const studentId = await this.generateUniqueStudentId(firstName, lastName, email, deviceId);
       const now = new Date().toISOString();
 
-      await this.run(`
-        INSERT OR REPLACE INTO students
-        (id, school_id, teacher_id, first_name, last_name, email, class_code, joined_at, last_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?,
-          COALESCE((SELECT joined_at FROM students WHERE id = ?), ?),
-          ?)
-      `, [studentId, teacherData.school_id, teacherData.id, firstName, lastName, email, classCode, studentId, now, now]);
+      // DUPLICATE PREVENTION: Check for existing student by email first
+      let existingStudent = null;
+      if (email) {
+        existingStudent = await this.get(`
+          SELECT id, first_name, last_name, school_id, teacher_id
+          FROM students
+          WHERE email = ? AND teacher_id = ?
+        `, [email, teacherData.id]);
+      }
 
-      // Link device to student
+      let studentId;
+
+      if (existingStudent) {
+        // MERGE: Use existing student, update info if needed
+        studentId = existingStudent.id;
+        console.log(`🔗 Found existing student with email ${email}: ${existingStudent.first_name} ${existingStudent.last_name}`);
+
+        // Update student info with latest details
+        await this.run(`
+          UPDATE students
+          SET first_name = ?, last_name = ?, last_active = ?
+          WHERE id = ?
+        `, [firstName, lastName, now, studentId]);
+
+        // MERGE DEVICE ACTIVITY: Link any unlinked device activity to this student
+        await this.mergeUnlinkedDeviceActivity(deviceId, studentId);
+
+      } else {
+        // CREATE NEW: Generate unique ID and create new student
+        studentId = await this.generateUniqueStudentId(firstName, lastName, email, deviceId);
+
+        await this.run(`
+          INSERT INTO students
+          (id, school_id, teacher_id, first_name, last_name, email, class_code, joined_at, last_active)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [studentId, teacherData.school_id, teacherData.id, firstName, lastName, email, classCode, now, now]);
+
+        console.log(`👥 Created new student: ${firstName} ${lastName} (${studentId})`);
+      }
+
+      // Link device to student (always update this)
       await this.run(
         'UPDATE devices SET student_id = ?, last_seen = ? WHERE device_id = ?',
         [studentId, now, deviceId]
       );
 
-      console.log(`👥 Device ${deviceId} linked to student: ${firstName} ${lastName}`);
+      console.log(`📱 Device ${deviceId} linked to student: ${firstName} ${lastName} (${studentId})`);
+
       return {
         success: true,
         studentId,
@@ -173,6 +204,37 @@ class Database {
     } catch (error) {
       console.error('❌ Device-student linking failed:', error);
       throw error;
+    }
+  }
+
+  // HELPER: Merge unlinked device activity to existing student
+  async mergeUnlinkedDeviceActivity(deviceId, studentId) {
+    try {
+      // Update any daily_activity records with no student_id for this device
+      const result = await this.run(`
+        UPDATE daily_activity
+        SET student_id = ?
+        WHERE device_id = ? AND student_id IS NULL
+      `, [studentId, deviceId]);
+
+      if (result.changes > 0) {
+        console.log(`🔄 Merged ${result.changes} unlinked activity records for device ${deviceId} to student ${studentId}`);
+      }
+
+      // Update any video_progress records with no student_id for this device
+      const videoResult = await this.run(`
+        UPDATE video_progress
+        SET student_id = ?
+        WHERE device_id = ? AND student_id IS NULL
+      `, [studentId, deviceId]);
+
+      if (videoResult.changes > 0) {
+        console.log(`🎥 Merged ${videoResult.changes} unlinked video progress records for device ${deviceId} to student ${studentId}`);
+      }
+
+    } catch (error) {
+      console.error('❌ Failed to merge unlinked device activity:', error);
+      // Don't throw - this is cleanup, not critical
     }
   }
 

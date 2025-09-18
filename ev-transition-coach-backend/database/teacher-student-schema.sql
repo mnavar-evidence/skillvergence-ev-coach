@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS students (
     joined_at TEXT DEFAULT (datetime('now')),
     last_active TEXT,
     FOREIGN KEY (school_id) REFERENCES schools(id),
-    FOREIGN KEY (teacher_id) REFERENCES teachers(id)
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id),
+    UNIQUE(email, teacher_id) -- Prevent duplicate emails within same teacher's class
 );
 
 CREATE TABLE IF NOT EXISTS devices (

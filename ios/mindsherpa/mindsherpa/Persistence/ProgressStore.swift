@@ -27,8 +27,12 @@ public class ProgressStore: ObservableObject {
     }
     
     // MARK: - User Profile Methods
-    
+
     @Published public var userName: String = ""
+    @Published public var totalXP: Int = 0
+    @Published public var hasClassAccess: Bool = false
+
+    private let xpPaywallThreshold = 50 // XP threshold for Basic content paywall
     
     public func setUserName(_ name: String) {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -46,6 +50,36 @@ public class ProgressStore: ObservableObject {
     
     private func loadUserName() {
         userName = UserDefaults.standard.string(forKey: "user_name") ?? ""
+        totalXP = UserDefaults.standard.integer(forKey: "total_xp")
+        hasClassAccess = StudentProgressAPI.shared.isStudentLinked
+    }
+
+    // MARK: - XP and Access Control Methods
+
+    public func addXP(_ points: Int) {
+        totalXP += points
+        UserDefaults.standard.set(totalXP, forKey: "total_xp")
+        objectWillChange.send()
+    }
+
+    public func shouldShowPaywall() -> Bool {
+        // Show paywall if user has exceeded XP threshold AND no basic access of any kind
+        return totalXP >= xpPaywallThreshold && !hasAnyBasicAccess()
+    }
+
+    public func canAccessBasicContent() -> Bool {
+        // Can access if under XP threshold OR has any form of basic access
+        return totalXP < xpPaywallThreshold || hasAnyBasicAccess()
+    }
+
+    private func hasAnyBasicAccess() -> Bool {
+        // Check all forms of basic access: Student (class), Friend, Individual, or BasicPaid tier
+        return hasClassAccess || AccessControlManager.shared.currentUserTier != .free
+    }
+
+    public func updateClassAccess() {
+        hasClassAccess = StudentProgressAPI.shared.isStudentLinked
+        objectWillChange.send()
     }
     
     // MARK: - Read Methods
@@ -95,6 +129,12 @@ public class ProgressStore: ObservableObject {
         // Store in memory
         var updatedVideos = snapshot.videos
         updatedVideos[videoId] = record
+
+        // Award XP for completing videos (only once per video)
+        if completed && (existing?.completed != true) {
+            let xpEarned = 10 // 10 XP per completed video
+            addXP(xpEarned)
+        }
         
         // Update daily activity tracking if there's new progress
         var updatedActivity = snapshot.activity
@@ -126,6 +166,18 @@ public class ProgressStore: ObservableObject {
 
         // Save to disk
         saveToDisk()
+
+        // Sync to backend if student is linked
+        Task {
+            await StudentProgressAPI.shared.syncVideoProgress(
+                videoId: videoId,
+                courseId: courseId,
+                watchedSeconds: watchedSec,
+                totalDuration: duration,
+                isCompleted: completed,
+                lastPosition: currentTime
+            )
+        }
     }
 
     // MARK: - AI Interaction Methods

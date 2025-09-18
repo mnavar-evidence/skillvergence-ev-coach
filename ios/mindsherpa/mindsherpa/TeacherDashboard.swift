@@ -15,7 +15,7 @@ struct TeacherDashboardView: View {
 
     var body: some View {
         NavigationView {
-            TabView(selection: $selectedTab) {
+            FixedTabView(selection: $selectedTab) {
                 // Class Overview Tab
                 ClassOverviewView(viewModel: teacherViewModel)
                     .tabItem {
@@ -56,8 +56,10 @@ struct TeacherDashboardView: View {
                     }
                     .tag(4)
             }
-            .navigationTitle("CTE Transportation Tech")
+            .navigationTitle("Teacher Dashboard")
             .navigationBarTitleDisplayMode(.large)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(Color(.systemBackground), for: .navigationBar)
             .onAppear {
                 teacherViewModel.loadClassData()
             }
@@ -78,17 +80,29 @@ struct ClassOverviewView: View {
 
                 // Quick Stats Cards
                 statsCardsSection
-
-                // Recent Activity
-                recentActivitySection
-
-                // Quick Actions
-                quickActionsSection
             }
             .padding()
         }
         .refreshable {
-            await viewModel.refreshClassData()
+            await viewModel.forceRefreshClassData()
+        }
+        .onAppear {
+            // Only load data if not already loaded
+            viewModel.loadClassData()
+        }
+        .overlay {
+            if viewModel.isLoading && viewModel.students.isEmpty {
+                VStack {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Text("Loading class data...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 8)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(.ultraThinMaterial)
+            }
         }
     }
 
@@ -107,25 +121,44 @@ struct ClassOverviewView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Mr. Dennis Johnson")
-                        .font(.title2)
-                        .fontWeight(.bold)
-
-                    Text("CTE Transportation Technology")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    Text("Fallbrook High School")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    HStack(spacing: 4) {
-                        Image(systemName: "envelope.fill")
-                            .font(.caption)
-                        Text("djohnson@fuhsd.net")
-                            .font(.caption)
+                    if let teacherName = AccessControlManager.shared.teacherData?.name {
+                        Text(teacherName)
+                            .font(.title2)
+                            .fontWeight(.bold)
                     }
-                    .foregroundColor(.blue)
+
+                    if let program = AccessControlManager.shared.teacherData?.program {
+                        Text(program)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if let school = AccessControlManager.shared.teacherData?.school {
+                        Text(school)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if let email = AccessControlManager.shared.teacherData?.email {
+                        HStack(spacing: 4) {
+                            Image(systemName: "envelope.fill")
+                                .font(.caption)
+                            Text(email)
+                                .font(.caption)
+                        }
+                        .foregroundColor(.blue)
+                    }
+
+                    if let classCode = AccessControlManager.shared.teacherData?.classCode {
+                        HStack(spacing: 4) {
+                            Image(systemName: "qrcode")
+                                .font(.caption)
+                            Text("Class Code: \(classCode)")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                        .foregroundColor(.green)
+                    }
                 }
 
                 Spacer()

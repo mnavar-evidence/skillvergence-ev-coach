@@ -113,7 +113,7 @@ class CoursePaywallActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         backButton.setOnClickListener {
-            finish()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         unlockButton.setOnClickListener {

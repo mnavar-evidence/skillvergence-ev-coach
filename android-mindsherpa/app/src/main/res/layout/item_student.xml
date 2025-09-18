@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:gravity="center_vertical"
+    android:background="?android:attr/selectableItemBackground">
+
+    <!-- Avatar -->
+    <FrameLayout
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp">
+
+        <!-- Circular background -->
+        <View
+            android:id="@+id/avatar_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/circle_background" />
+
+        <!-- Initial letter -->
+        <TextView
+            android:id="@+id/student_initial"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="A"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+    </FrameLayout>
+
+    <!-- Student Info -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Name -->
+        <TextView
+            android:id="@+id/student_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Student Name"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="?attr/colorOnSurface"
+            android:layout_marginBottom="4dp" />
+
+        <!-- XP and Level -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- XP -->
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_star_24dp"
+                android:tint="#FF9800"
+                android:layout_marginEnd="4dp" />
+
+            <TextView
+                android:id="@+id/student_xp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1,494 XP"
+                android:textSize="14sp"
+                android:textColor="#FF9800"
+                android:layout_marginEnd="16dp" />
+
+            <!-- Level -->
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_trending_up_24dp"
+                android:tint="#9C27B0"
+                android:layout_marginEnd="4dp" />
+
+            <TextView
+                android:id="@+id/student_level"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Level 3"
+                android:textSize="14sp"
+                android:textColor="#9C27B0" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Activity Status -->
+    <TextView
+        android:id="@+id/student_activity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No activity"
+        android:textSize="14sp"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:layout_marginEnd="8dp" />
+
+    <!-- Chevron -->
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_arrow_forward_24dp"
+        android:tint="?attr/colorOnSurfaceVariant" />
+
+</LinearLayout>

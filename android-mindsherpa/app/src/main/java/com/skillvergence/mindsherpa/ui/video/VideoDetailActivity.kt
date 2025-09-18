@@ -22,6 +22,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.ui.PlayerView
@@ -32,6 +33,7 @@ import com.mux.player.MuxPlayer
 import com.mux.player.media.MediaItems
 import com.skillvergence.mindsherpa.R
 import com.skillvergence.mindsherpa.data.model.MuxMigrationData
+import com.skillvergence.mindsherpa.data.persistence.ProgressStore
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileWriter
@@ -82,6 +84,10 @@ open class VideoDetailActivity : AppCompatActivity() {
     // Audio management
     private lateinit var audioManager: AudioManager
 
+    // Progress management
+    private lateinit var progressStore: ProgressStore
+    private var hasSeekToSavedPosition = false
+
     companion object {
         private const val EXTRA_VIDEO_ID = "video_id"
         private const val EXTRA_VIDEO_TITLE = "video_title"
@@ -127,9 +133,10 @@ open class VideoDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_detail)
 
-        // Initialize views and audio manager
+        // Initialize views, audio manager, and progress store
         initializeViews()
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        progressStore = ProgressStore.getInstance(this)
 
         // Get video data from intent
         extractIntentData()
@@ -233,6 +240,12 @@ open class VideoDetailActivity : AppCompatActivity() {
                                 logToFile(this@VideoDetailActivity, "🎬 Duration: ${muxPlayer.duration}ms")
                                 totalDurationSeconds = muxPlayer.duration / 1000
 
+                                // Seek to saved position if available and not already done
+                                if (!hasSeekToSavedPosition) {
+                                    seekToSavedPosition()
+                                    hasSeekToSavedPosition = true
+                                }
+
                                 startProgressTracking()
                             }
                             Player.STATE_ENDED -> logToFile(this@VideoDetailActivity, "🎬 Player state: ENDED")
@@ -281,6 +294,7 @@ open class VideoDetailActivity : AppCompatActivity() {
                 // Connect player to view
                 logToFile(this, "🎬 Connecting player to view...")
                 playerView.player = muxPlayer
+                bindControllerFullscreenButton()
                 logToFile(this, "🎬 Player connected to view")
 
                 // Don't start playback automatically - let user press play
@@ -328,6 +342,31 @@ open class VideoDetailActivity : AppCompatActivity() {
                 .setWakeMode(androidx.media3.common.C.WAKE_MODE_NETWORK)
                 .build()
 
+            // Add listener for fallback player
+            fallbackPlayer.addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    when (playbackState) {
+                        Player.STATE_READY -> {
+                            logToFile(this@VideoDetailActivity, "🎬 Fallback Player state: READY")
+                            totalDurationSeconds = fallbackPlayer.duration / 1000
+
+                            // Seek to saved position if available and not already done
+                            if (!hasSeekToSavedPosition) {
+                                seekToSavedPosition()
+                                hasSeekToSavedPosition = true
+                            }
+
+                            startProgressTracking()
+                        }
+                        Player.STATE_ENDED -> logToFile(this@VideoDetailActivity, "🎬 Fallback Player state: ENDED")
+                    }
+                }
+
+                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                    logToFile(this@VideoDetailActivity, "❌ Fallback Player error: ${error.message}")
+                }
+            })
+
             // Set player volume to ensure audibility
             fallbackPlayer.volume = 1.0f
 
@@ -343,6 +382,7 @@ open class VideoDetailActivity : AppCompatActivity() {
 
             // Connect to view
             playerView.player = fallbackPlayer
+            bindControllerFullscreenButton()
 
             // Store reference for cleanup
             fallbackExoPlayer = fallbackPlayer
@@ -365,12 +405,10 @@ open class VideoDetailActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         backButton.setOnClickListener {
-            finish()
+            onBackPressedDispatcher.onBackPressed()
         }
 
-        fullscreenButton.setOnClickListener {
-            togglePortraitFullscreen()
-        }
+        fullscreenButton.setOnClickListener { handleFullscreenButtonPressed() }
 
         // Set up overlay hiding for landscape mode
         if (isLandscape) {
@@ -378,6 +416,20 @@ open class VideoDetailActivity : AppCompatActivity() {
                 toggleOverlayVisibility()
             }
         }
+    }
+
+    private fun handleFullscreenButtonPressed() {
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            enableLandscapeFullscreen()
+        } else {
+            togglePortraitFullscreen()
+        }
+    }
+
+    private fun bindControllerFullscreenButton() {
+        val listener = View.OnClickListener { handleFullscreenButtonPressed() }
+        playerView.findViewById<View>(androidx.media3.ui.R.id.exo_fullscreen)?.setOnClickListener(listener)
+        playerView.findViewById<View>(androidx.media3.ui.R.id.exo_minimal_fullscreen)?.setOnClickListener(listener)
     }
 
     private fun startProgressTracking() {
@@ -428,16 +480,67 @@ open class VideoDetailActivity : AppCompatActivity() {
     }
 
     private fun loadSavedProgress() {
-        // TODO: Load saved progress from local storage or API
-        // For now, just log
-        logToFile(this, "📱 Loading saved progress for video: $videoId")
+        try {
+            val progressRecord = progressStore.getVideoProgress(videoId)
+            val savedPosition = progressRecord?.lastPositionSec?.toInt() ?: 0
+            logToFile(this, "📱 Loading saved progress for video: $videoId - Position: ${savedPosition}s")
+
+            // Update current time for initial UI display
+            if (savedPosition > 0) {
+                currentTimeSeconds = savedPosition.toLong()
+                updateProgressUI()
+                logToFile(this, "📱 Restored progress UI to: ${savedPosition}s")
+            }
+        } catch (e: Exception) {
+            logToFile(this, "❌ Failed to load saved progress: ${e.message}")
+        }
+    }
+
+    private fun seekToSavedPosition() {
+        try {
+            val progressRecord = progressStore.getVideoProgress(videoId)
+            val savedPosition = progressRecord?.lastPositionSec?.toInt() ?: 0
+
+            if (savedPosition > 5) { // Only seek if more than 5 seconds watched
+                val seekPositionMs = savedPosition * 1000L
+
+                // Handle both Mux Player and fallback ExoPlayer
+                val player = if (::muxPlayer.isInitialized) {
+                    muxPlayer
+                } else {
+                    fallbackExoPlayer
+                }
+
+                player?.seekTo(seekPositionMs)
+                currentTimeSeconds = savedPosition.toLong()
+                updateProgressUI()
+
+                logToFile(this, "📱 Seeked to saved position: ${savedPosition}s (${(savedPosition/60).toInt()}:${String.format("%02d", (savedPosition%60).toInt())})")
+            } else {
+                logToFile(this, "📱 No significant progress to restore (${savedPosition}s)")
+            }
+        } catch (e: Exception) {
+            logToFile(this, "❌ Failed to seek to saved position: ${e.message}")
+        }
     }
 
     private fun saveProgress() {
-        // TODO: Save progress to local storage and/or API
-        // For now, just log occasionally
-        if (currentTimeSeconds % 10 == 0L) { // Log every 10 seconds
-            logToFile(this, "📱 Progress: ${currentTimeSeconds}s / ${totalDurationSeconds}s")
+        try {
+            // Save progress using the correct ProgressStore method
+            progressStore.updateVideoProgress(
+                videoId = videoId,
+                courseId = courseId,
+                currentTime = currentTimeSeconds.toDouble(),
+                duration = totalDurationSeconds.toDouble(),
+                isPlaying = true
+            )
+
+            // Log progress occasionally for debugging
+            if (currentTimeSeconds % 10 == 0L) { // Log every 10 seconds
+                logToFile(this, "📱 Progress saved: ${currentTimeSeconds}s / ${totalDurationSeconds}s")
+            }
+        } catch (e: Exception) {
+            logToFile(this, "❌ Failed to save progress: ${e.message}")
         }
     }
 
@@ -521,6 +624,8 @@ open class VideoDetailActivity : AppCompatActivity() {
     private fun enableLandscapeFullscreen() {
         logToFile(this, "🎬 Enabling landscape fullscreen mode")
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         // Hide system UI for immersive experience
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.let { controller ->
@@ -553,6 +658,8 @@ open class VideoDetailActivity : AppCompatActivity() {
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
         }
+
+        WindowCompat.setDecorFitsSystemWindows(window, true)
 
         // Allow screen to turn off normally
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

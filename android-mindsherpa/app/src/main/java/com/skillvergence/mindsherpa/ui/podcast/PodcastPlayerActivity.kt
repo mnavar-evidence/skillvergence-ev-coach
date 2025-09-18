@@ -238,7 +238,7 @@ class PodcastPlayerActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         backButton.setOnClickListener {
-            finish()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         playPauseButton.setOnClickListener {

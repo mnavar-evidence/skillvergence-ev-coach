@@ -11,574 +11,415 @@ import SwiftUI
 
 struct CertificateManagementView: View {
     @ObservedObject var viewModel: TeacherViewModel
-    @StateObject private var certificateManager = TeacherCertificateManager()
-    @State private var selectedStatus: CertificateStatus = .pendingApproval
-    @State private var showingCertificateDetail = false
-    @State private var selectedCertificate: SkillvergenceCertificate?
+    @State private var selectedTab: CertificateTab = .all
 
-    var filteredCertificates: [SkillvergenceCertificate] {
-        certificateManager.certificates.filter { $0.status == selectedStatus }
+    enum CertificateTab: String, CaseIterable {
+        case all = "All"
+        case pending = "Pending"
+        case approved = "Approved"
+    }
+
+    var filteredCertificates: [SimpleCertificate] {
+        let certificates = viewModel.certificates.map { apiCert in
+            SimpleCertificate(
+                id: apiCert.id,
+                courseTitle: apiCert.courseTitle,
+                studentName: apiCert.studentName,
+                completedDate: apiCert.completedDate,
+                status: apiCert.status
+            )
+        }
+
+        switch selectedTab {
+        case .all:
+            return certificates
+        case .pending:
+            return certificates.filter { $0.status == "pending" }
+        case .approved:
+            return certificates.filter { $0.status == "approved" }
+        }
+    }
+
+    var pendingCount: Int {
+        viewModel.certificates.filter { $0.status == "pending" }.count
+    }
+
+    var approvedCount: Int {
+        viewModel.certificates.filter { $0.status == "approved" }.count
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header with Status Tabs
+            // Header with Stats
             headerSection
+
+            // Filter Tabs
+            filterTabsSection
 
             // Certificate List
             certificateListSection
         }
-        .navigationTitle("Certificate Management")
+        .navigationTitle("Certificates")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
-            certificateManager.loadCertificates()
-        }
-        .sheet(isPresented: $showingCertificateDetail) {
-            if let certificate = selectedCertificate {
-                CertificateDetailView(
-                    certificate: certificate,
-                    certificateManager: certificateManager
-                )
-            }
+            viewModel.loadClassData()
         }
     }
 
     private var headerSection: some View {
-        VStack(spacing: 16) {
-            // Summary Stats
-            HStack(spacing: 20) {
-                CertificateStatCard(
-                    title: "Pending",
-                    count: certificateManager.getCertificatesByStatus(.pendingApproval).count,
-                    color: .orange
-                )
+        HStack(spacing: 16) {
+            // Pending Certificates Card
+            VStack(spacing: 8) {
+                HStack {
+                    Image(systemName: "clock.badge")
+                        .font(.title3)
+                        .foregroundColor(.orange)
+                    Spacer()
+                    Text("\(pendingCount)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.orange)
+                }
 
-                CertificateStatCard(
-                    title: "Approved",
-                    count: certificateManager.getCertificatesByStatus(.approved).count,
-                    color: .green
-                )
-
-                CertificateStatCard(
-                    title: "Issued",
-                    count: certificateManager.getCertificatesByStatus(.issued).count,
-                    color: .blue
-                )
-
-                CertificateStatCard(
-                    title: "Rejected",
-                    count: certificateManager.getCertificatesByStatus(.rejected).count,
-                    color: .red
-                )
+                HStack {
+                    Text("Pending")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                    Spacer()
+                }
             }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.orange.opacity(0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(.orange.opacity(0.3), lineWidth: 1)
+                    )
+            )
 
-            // Status Filter Tabs
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(CertificateStatus.allCases, id: \.self) { status in
-                        StatusTab(
-                            status: status,
-                            count: certificateManager.getCertificatesByStatus(status).count,
-                            isSelected: selectedStatus == status
-                        ) {
-                            selectedStatus = status
-                        }
-                    }
+            // Approved Certificates Card
+            VStack(spacing: 8) {
+                HStack {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.title3)
+                        .foregroundColor(.green)
+                    Spacer()
+                    Text("\(approvedCount)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.green)
                 }
-                .padding(.horizontal)
+
+                HStack {
+                    Text("Approved")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                    Spacer()
+                }
             }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.green.opacity(0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(.green.opacity(0.3), lineWidth: 1)
+                    )
+            )
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.ultraThinMaterial)
+    }
 
-            // Quick Actions
-            HStack(spacing: 16) {
-                Button("Approve All Pending") {
-                    certificateManager.bulkApproveAllPending()
+    private var filterTabsSection: some View {
+        HStack(spacing: 8) {
+            ForEach(CertificateTab.allCases, id: \.self) { tab in
+                Button(action: { selectedTab = tab }) {
+                    Text(tab.rawValue)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(selectedTab == tab ?
+                                      LinearGradient(colors: [.blue.opacity(0.8), .blue], startPoint: .top, endPoint: .bottom) :
+                                      LinearGradient(colors: [.gray.opacity(0.1), .gray.opacity(0.2)], startPoint: .top, endPoint: .bottom)
+                                )
+                        )
+                        .foregroundColor(selectedTab == tab ? .white : .primary)
+                        .shadow(color: selectedTab == tab ? .blue.opacity(0.3) : .clear, radius: 4, x: 0, y: 2)
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(certificateManager.getCertificatesByStatus(.pendingApproval).isEmpty)
-
-                Button("Export Report") {
-                    certificateManager.exportCertificateReport()
-                }
-                .buttonStyle(.bordered)
+                .buttonStyle(.plain)
             }
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(.ultraThinMaterial)
     }
 
     private var certificateListSection: some View {
         ScrollView {
-            LazyVStack(spacing: 1) {
-                ForEach(filteredCertificates, id: \.id) { certificate in
-                    CertificateRowView(certificate: certificate) {
-                        selectedCertificate = certificate
-                        showingCertificateDetail = true
+            LazyVStack(spacing: 16) {
+                if filteredCertificates.isEmpty {
+                    EmptyStateView(filter: getCertificateFilter(for: selectedTab))
+                        .padding(.top, 40)
+                } else {
+                    ForEach(filteredCertificates, id: \.id) { certificate in
+                        CertificateRowView(
+                            certificate: certificate,
+                            onApprove: { approveCertificate(certificate.id) },
+                            onReject: { rejectCertificate(certificate.id) }
+                        )
                     }
-                    .background(Color(.systemBackground))
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
         }
         .refreshable {
-            certificateManager.loadCertificates()
+            viewModel.refreshData()
+        }
+    }
+
+    private func approveCertificate(_ certificateId: String) {
+        Task {
+            await performCertificateAction(certificateId: certificateId, action: "approve")
+        }
+    }
+
+    private func rejectCertificate(_ certificateId: String) {
+        Task {
+            await performCertificateAction(certificateId: certificateId, action: "reject")
+        }
+    }
+
+    private func performCertificateAction(certificateId: String, action: String) async {
+        do {
+            let _ = try await TeacherAPIService.shared.approveCertificate(
+                certId: certificateId,
+                action: action,
+                teacherId: "teacher-djohnson"
+            )
+
+            // Reload certificates to reflect changes
+            await MainActor.run {
+                viewModel.refreshData()
+            }
+        } catch {
+            print("Error performing certificate action: \(error)")
+        }
+    }
+
+    private func getCertificateFilter(for tab: CertificateTab) -> MyCertificatesView.CertificateFilter {
+        switch tab {
+        case .all:
+            return .all
+        case .pending:
+            return .pending
+        case .approved:
+            return .issued
         }
     }
 }
 
 // MARK: - Supporting Views
 
-struct CertificateStatCard: View {
-    let title: String
-    let count: Int
-    let color: Color
-
-    var body: some View {
-        VStack(spacing: 4) {
-            Text("\(count)")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(color)
-
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-    }
-}
-
-struct StatusTab: View {
-    let status: CertificateStatus
-    let count: Int
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                Text(status.displayName)
-                    .font(.caption)
-                    .fontWeight(.medium)
-
-                Text("(\(count))")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(isSelected ? status.color : .gray.opacity(0.2))
-            .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(16)
-        }
-        .buttonStyle(.plain)
-    }
+struct SimpleCertificate {
+    let id: String
+    let courseTitle: String
+    let studentName: String
+    let completedDate: String
+    let status: String
 }
 
 struct CertificateRowView: View {
-    let certificate: SkillvergenceCertificate
-    let action: () -> Void
+    let certificate: SimpleCertificate
+    let onApprove: () -> Void
+    let onReject: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                // Status Indicator
-                Circle()
-                    .fill(certificate.status.color)
-                    .frame(width: 12, height: 12)
+        VStack(spacing: 0) {
+            // Certificate Header with Icon and Status
+            HStack(spacing: 12) {
+                // Certificate Icon
+                Image(systemName: "award.fill")
+                    .font(.title2)
+                    .foregroundColor(.yellow)
+                    .frame(width: 40, height: 40)
+                    .background(
+                        Circle()
+                            .fill(.yellow.opacity(0.1))
+                    )
 
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text(certificate.userFullName)
-                            .font(.headline)
-                            .foregroundColor(.primary)
-
-                        Spacer()
-
-                        Text(certificate.status.displayName)
-                            .font(.caption)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(certificate.status.color.opacity(0.1))
-                            .foregroundColor(certificate.status.color)
-                            .cornerRadius(8)
-                    }
-
+                VStack(alignment: .leading, spacing: 4) {
                     Text(certificate.courseTitle)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
+
+                    Text(certificate.studentName)
                         .font(.subheadline)
+                        .fontWeight(.medium)
                         .foregroundColor(.secondary)
 
-                    HStack(spacing: 16) {
-                        Label(certificate.certificateType.displayName, systemImage: certificate.certificateType.badgeIcon)
+                    HStack(spacing: 8) {
+                        Image(systemName: "calendar")
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.secondary)
 
-                        Label("\(String(format: "%.1f", certificate.totalWatchedHours))h", systemImage: "clock.fill")
+                        Text(formattedDate)
                             .font(.caption)
-                            .foregroundColor(.green)
-
-                        if let score = certificate.finalScore {
-                            Label("\(Int(score))%", systemImage: "star.fill")
-                                .font(.caption)
-                                .foregroundColor(.orange)
-                        }
-
-                        Spacer()
-
-                        Text(RelativeDateTimeFormatter().localizedString(for: certificate.completionDate, relativeTo: Date()))
-                            .font(.caption2)
                             .foregroundColor(.secondary)
                     }
                 }
 
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .padding()
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Certificate Detail View
-
-struct CertificateDetailView: View {
-    let certificate: SkillvergenceCertificate
-    @ObservedObject var certificateManager: TeacherCertificateManager
-    @Environment(\.dismiss) private var dismiss
-    @State private var adminNotes = ""
-    @State private var showingCertificatePreview = false
-
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Certificate Header
-                    certificateHeaderSection
-
-                    // Student Information
-                    studentInfoSection
-
-                    // Course Details
-                    courseDetailsSection
-
-                    // Certificate Preview
-                    certificatePreviewSection
-
-                    // Admin Actions
-                    adminActionsSection
-                }
-                .padding()
-            }
-            .navigationTitle("Certificate Review")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Cancel") { dismiss() },
-                trailing: Button("Save") {
-                    certificateManager.updateCertificateNotes(certificate.id, notes: adminNotes)
-                    dismiss()
-                }
-            )
-        }
-        .onAppear {
-            adminNotes = certificate.adminNotes ?? ""
-        }
-        .sheet(isPresented: $showingCertificatePreview) {
-            CertificateTemplateView(certificate: certificate, size: .large)
-        }
-    }
-
-    private var certificateHeaderSection: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Image(systemName: certificate.certificateType.badgeIcon)
-                    .font(.largeTitle)
-                    .foregroundColor(certificate.status.color)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(certificate.certificateType.displayName)
-                        .font(.title2)
-                        .fontWeight(.bold)
-
-                    Text("Certificate #\(certificate.certificateNumber)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(certificate.status.displayName)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(certificate.status.color.opacity(0.1))
-                        .foregroundColor(certificate.status.color)
-                        .cornerRadius(8)
-
-                    Text("Completed \(RelativeDateTimeFormatter().localizedString(for: certificate.completionDate, relativeTo: Date()))")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
+                // Status Badge
+                statusBadge
             }
-        }
-        .padding()
-        .background(.ultraThinMaterial)
-        .cornerRadius(16)
-    }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
 
-    private var studentInfoSection: some View {
-        GroupBox("Student Information") {
-            VStack(alignment: .leading, spacing: 12) {
-                InfoRow(label: "Name", value: certificate.userFullName)
-                InfoRow(label: "Email", value: certificate.userEmail)
-                InfoRow(label: "User ID", value: certificate.userId)
-                InfoRow(label: "Completion Date", value: DateFormatter.certificateLongDate.string(from: certificate.completionDate))
-            }
-        }
-    }
+            // Action Buttons for Pending Certificates
+            if certificate.status == "pending" {
+                Divider()
+                    .padding(.horizontal, 20)
 
-    private var courseDetailsSection: some View {
-        GroupBox("Course Details") {
-            VStack(alignment: .leading, spacing: 12) {
-                InfoRow(label: "Course", value: certificate.courseTitle)
-                InfoRow(label: "Skill Level", value: certificate.skillLevel.displayName)
-                InfoRow(label: "Watch Time", value: "\(String(format: "%.1f", certificate.totalWatchedHours)) hours")
-                InfoRow(label: "Instructor", value: certificate.instructorName)
-
-                if let score = certificate.finalScore {
-                    InfoRow(label: "Final Score", value: "\(Int(score))%")
-                }
-
-                InfoRow(label: "Verification Code", value: certificate.credentialVerificationCode)
-            }
-        }
-    }
-
-    private var certificatePreviewSection: some View {
-        GroupBox("Certificate Preview") {
-            VStack(spacing: 16) {
-                Button("View Full Certificate") {
-                    showingCertificatePreview = true
-                }
-                .buttonStyle(.borderedProminent)
-
-                // Mini preview thumbnail
-                CertificateTemplateView(certificate: certificate, size: .standard)
-                    .scaleEffect(0.3)
-                    .frame(height: 150)
-                    .clipped()
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(.gray.opacity(0.3), lineWidth: 1)
-                    )
-            }
-        }
-    }
-
-    private var adminActionsSection: some View {
-        GroupBox("Admin Actions") {
-            VStack(spacing: 16) {
-                // Admin Notes
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Admin Notes")
-                        .font(.headline)
-                        .fontWeight(.medium)
-
-                    TextEditor(text: $adminNotes)
-                        .frame(minHeight: 80)
-                        .padding(8)
-                        .background(.gray.opacity(0.1))
-                        .cornerRadius(8)
-                }
-
-                // Action Buttons
-                if certificate.status == .pendingApproval {
-                    HStack(spacing: 16) {
-                        Button("Approve") {
-                            certificateManager.approveCertificate(certificate.id, adminNotes: adminNotes)
-                            dismiss()
+                HStack(spacing: 16) {
+                    Button {
+                        onReject()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "xmark.circle.fill")
+                            Text("Reject")
+                                .fontWeight(.semibold)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.green)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            LinearGradient(
+                                colors: [.red.opacity(0.8), .red],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .cornerRadius(10)
+                    }
 
-                        Button("Reject") {
-                            certificateManager.rejectCertificate(certificate.id, adminNotes: adminNotes)
-                            dismiss()
+                    Button {
+                        onApprove()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill")
+                            Text("Approve")
+                                .fontWeight(.semibold)
                         }
-                        .buttonStyle(.bordered)
-                        .tint(.red)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            LinearGradient(
+                                colors: [.green.opacity(0.8), .green],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .cornerRadius(10)
                     }
-                } else if certificate.status == .approved {
-                    Button("Issue Certificate") {
-                        certificateManager.issueCertificate(certificate.id, adminNotes: adminNotes)
-                        dismiss()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.blue)
                 }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
             }
         }
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(certificateBorderColor, lineWidth: 1.5)
+                )
+        )
+        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+        .padding(.horizontal, 4)
     }
-}
 
-struct InfoRow: View {
-    let label: String
-    let value: String
+    private var statusBadge: some View {
+        VStack(spacing: 2) {
+            Image(systemName: statusIconName)
+                .font(.title3)
+                .foregroundColor(statusColor)
 
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.secondary)
-                .frame(width: 100, alignment: .leading)
+            Text(certificate.status.capitalized)
+                .font(.caption2)
+                .fontWeight(.bold)
+                .foregroundColor(statusColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(width: 70, height: 70)
+        .background(
+            Circle()
+                .fill(statusColor.opacity(0.1))
+                .overlay(
+                    Circle()
+                        .stroke(statusColor.opacity(0.3), lineWidth: 2)
+                )
+        )
+    }
 
-            Text(value)
-                .font(.subheadline)
-                .foregroundColor(.primary)
+    private var certificateBorderColor: Color {
+        switch certificate.status {
+        case "pending":
+            return .orange.opacity(0.3)
+        case "approved":
+            return .green.opacity(0.3)
+        default:
+            return .gray.opacity(0.3)
+        }
+    }
 
-            Spacer()
+    private var statusIconName: String {
+        switch certificate.status {
+        case "pending":
+            return "clock.fill"
+        case "approved":
+            return "checkmark.seal.fill"
+        default:
+            return "xmark.seal.fill"
+        }
+    }
+
+    private var formattedDate: String {
+        let formatter = ISO8601DateFormatter()
+        if let date = formatter.date(from: certificate.completedDate) {
+            let displayFormatter = DateFormatter()
+            displayFormatter.dateFormat = "MMM dd"
+            return displayFormatter.string(from: date)
+        }
+        return "Recent"
+    }
+
+    private var statusColor: Color {
+        switch certificate.status {
+        case "pending":
+            return .orange
+        case "approved":
+            return .green
+        default:
+            return .red
         }
     }
 }
 
-// MARK: - Teacher Certificate Manager
-
-@MainActor
-class TeacherCertificateManager: ObservableObject {
-    @Published var certificates: [SkillvergenceCertificate] = []
-    @Published var isLoading = false
-
-    func loadCertificates() {
-        isLoading = true
-
-        // Simulate loading certificates from backend
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.certificates = self.generateSampleCertificates()
-            self.isLoading = false
-        }
-    }
-
-    func getCertificatesByStatus(_ status: CertificateStatus) -> [SkillvergenceCertificate] {
-        return certificates.filter { $0.status == status }
-    }
-
-    func approveCertificate(_ certificateId: String, adminNotes: String?) {
-        updateCertificateStatus(certificateId, status: .approved, adminNotes: adminNotes)
-    }
-
-    func rejectCertificate(_ certificateId: String, adminNotes: String?) {
-        updateCertificateStatus(certificateId, status: .rejected, adminNotes: adminNotes)
-    }
-
-    func issueCertificate(_ certificateId: String, adminNotes: String?) {
-        updateCertificateStatus(certificateId, status: .issued, adminNotes: adminNotes)
-    }
-
-    func bulkApproveAllPending() {
-        let pendingCertificates = getCertificatesByStatus(.pendingApproval)
-        for certificate in pendingCertificates {
-            approveCertificate(certificate.id, adminNotes: "Bulk approved by teacher")
-        }
-    }
-
-    func updateCertificateNotes(_ certificateId: String, notes: String) {
-        if let index = certificates.firstIndex(where: { $0.id == certificateId }) {
-            // Note: This would normally update the backend
-            print("Updated notes for certificate \(certificateId): \(notes)")
-        }
-    }
-
-    func exportCertificateReport() {
-        // Implementation for exporting certificate report
-        print("Exporting certificate report...")
-    }
-
-    private func updateCertificateStatus(_ certificateId: String, status: CertificateStatus, adminNotes: String?) {
-        if let index = certificates.firstIndex(where: { $0.id == certificateId }) {
-            // Note: This would normally make an API call to update the backend
-            print("Updated certificate \(certificateId) to status: \(status.displayName)")
-            // Reload certificates to reflect changes
-            loadCertificates()
-        }
-    }
-
-    private func generateSampleCertificates() -> [SkillvergenceCertificate] {
-        let sampleStudents = [
-            ("Marcus Williams", "marcus.williams@student.fuhsd.net"),
-            ("Emma Chen", "emma.chen@student.fuhsd.net"),
-            ("Sofia Garcia", "sofia.garcia@student.fuhsd.net"),
-            ("Ethan Thompson", "ethan.thompson@student.fuhsd.net"),
-            ("Ava Martinez", "ava.martinez@student.fuhsd.net"),
-            ("Noah Johnson", "noah.johnson@student.fuhsd.net"),
-            ("Isabella Brown", "isabella.brown@student.fuhsd.net"),
-            ("Liam Davis", "liam.davis@student.fuhsd.net")
-        ]
-
-        var certificates: [SkillvergenceCertificate] = []
-
-        for (index, student) in sampleStudents.enumerated() {
-            let status: CertificateStatus = {
-                switch index % 4 {
-                case 0: return .pendingApproval
-                case 1: return .approved
-                case 2: return .issued
-                default: return .rejected
-                }
-            }()
-
-            let certificateType: AdvancedCertificateType = {
-                switch index % 5 {
-                case 0: return .evFundamentalsAdvanced
-                case 1: return .batterySystemsExpert
-                case 2: return .chargingInfrastructureSpecialist
-                case 3: return .motorControlAdvanced
-                default: return .diagnosticsExpert
-                }
-            }()
-
-            let certificate = SkillvergenceCertificate(
-                userId: "student_\(index + 1)",
-                userFullName: student.0,
-                userEmail: student.1,
-                courseId: "course_\(index % 5 + 1)",
-                courseTitle: getCourseTitle(for: index % 5 + 1),
-                certificateType: certificateType,
-                skillLevel: .expert,
-                completionDate: Calendar.current.date(byAdding: .day, value: -Int.random(in: 1...30), to: Date()) ?? Date(),
-                totalWatchedHours: Double.random(in: 8...25),
-                finalScore: Double.random(in: 75...100)
-            )
-
-            certificates.append(certificate)
-        }
-
-        return certificates.sorted { $0.completionDate > $1.completionDate }
-    }
-
-    private func getCourseTitle(for courseNumber: Int) -> String {
-        switch courseNumber {
-        case 1: return "High Voltage Safety Foundation"
-        case 2: return "Electrical Fundamentals"
-        case 3: return "Advanced Electrical Diagnostics"
-        case 4: return "EV Charging Systems"
-        case 5: return "Advanced EV Systems"
-        default: return "Course \(courseNumber)"
-        }
-    }
-}
-
-// MARK: - Extensions
-
-extension DateFormatter {
-    static let certificateLongDate: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        formatter.timeStyle = .none
-        return formatter
-    }()
-}
 
 // MARK: - Preview
 

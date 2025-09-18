@@ -647,10 +647,12 @@ struct CoachHeaderView: View {
     @ObservedObject var viewModel: EVCoachViewModel
     @ObservedObject private var progressStore = ProgressStore.shared
     @ObservedObject private var accessControl = AccessControlManager.shared
+    @ObservedObject private var studentAPI = StudentProgressAPI.shared
     @State private var showNamePrompt = false
     @State private var tapCount = 0
     @State private var showTeacherModeAlert = false
     @State private var showPaywall = false
+    @State private var showStudentClassEntry = false
     
     var body: some View {
         VStack(spacing: 16) {
@@ -677,7 +679,22 @@ struct CoachHeaderView: View {
                 }
                 
                 Spacer()
-                
+
+                // Student class button
+                Button {
+                    showStudentClassEntry = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: studentAPI.isStudentLinked ? "checkmark.circle.fill" : "graduationcap")
+                            .font(.caption)
+                            .foregroundColor(studentAPI.isStudentLinked ? .green : .blue)
+                        Text(studentAPI.isStudentLinked ? "Linked" : "Class")
+                            .font(.caption.weight(.medium))
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
                 // Share streak button (only show if user has a streak > 1)
                 let currentStreak = progressStore.getCurrentStreak()
                 if currentStreak > 1 {
@@ -742,15 +759,21 @@ struct CoachHeaderView: View {
         .sheet(isPresented: $showPaywall) {
             PaywallView()
         }
-        .alert("Teacher Mode", isPresented: $showTeacherModeAlert) {
-            Button("Enter Teacher Mode") {
+        .sheet(isPresented: $accessControl.showTeacherCodeEntry) {
+            TeacherCodeEntryView()
+        }
+        .sheet(isPresented: $showStudentClassEntry) {
+            StudentClassEntryView()
+        }
+        .alert("Teacher Mode Discovered", isPresented: $showTeacherModeAlert) {
+            Button("Enter Access Code") {
                 accessControl.attemptTeacherModeAccess()
             }
             Button("Cancel", role: .cancel) {
                 tapCount = 0
             }
         } message: {
-            Text("You've discovered the hidden teacher mode! Enter teacher mode to access student management and analytics.")
+            Text("You've discovered the hidden teacher mode! You'll need a valid teacher access code to continue.")
         }
     }
 

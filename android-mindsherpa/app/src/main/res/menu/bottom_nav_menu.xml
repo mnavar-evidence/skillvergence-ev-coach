@@ -16,4 +16,9 @@
         android:icon="@drawable/ic_star_24dp"
         android:title="@string/title_premium" />
 
+    <item
+        android:id="@+id/navigation_profile"
+        android:icon="@drawable/ic_person_24dp"
+        android:title="@string/title_profile" />
+
 </menu>

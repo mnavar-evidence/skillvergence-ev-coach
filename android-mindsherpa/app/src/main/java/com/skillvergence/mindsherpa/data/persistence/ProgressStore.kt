@@ -7,7 +7,12 @@ import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.skillvergence.mindsherpa.data.model.*
+import com.skillvergence.mindsherpa.data.api.StudentProgressAPI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.*
+import java.util.UUID
 import kotlin.math.max
 import kotlin.math.min
 
@@ -31,6 +36,7 @@ class ProgressStore private constructor(private val context: Context) {
     private val sharedPrefs: SharedPreferences =
         context.getSharedPreferences("progress_store", Context.MODE_PRIVATE)
     private val gson = Gson()
+    private val studentProgressAPI = StudentProgressAPI.getInstance(context)
 
     // In-memory storage for performance
     private val videoProgressMap = mutableMapOf<String, VideoProgressRecord>()
@@ -137,8 +143,19 @@ class ProgressStore private constructor(private val context: Context) {
             updatedAt = now
         )
 
+        // Check if video was just completed for friend code generation
+        val wasCompleted = existing?.completed ?: false
+        val justCompleted = completed && !wasCompleted
+
         // Store in memory
         videoProgressMap[videoId] = record
+
+        // If video was just completed, trigger friend code generation
+        if (justCompleted) {
+            // Access the AccessControlManager to generate friend codes
+            val accessControlManager = AccessControlManager.getInstance(context)
+            accessControlManager.checkAndGenerateFriendCodes()
+        }
 
         // Update daily activity tracking if there's new progress
         if (newWatchingTime > 0) {
@@ -157,6 +174,18 @@ class ProgressStore private constructor(private val context: Context) {
         // Save to disk
         saveToDisk()
         updateLiveData()
+
+        // Sync to backend if student is linked
+        CoroutineScope(Dispatchers.IO).launch {
+            studentProgressAPI.syncVideoProgress(
+                videoId = videoId,
+                courseId = courseId,
+                watchedSeconds = watchedSec,
+                totalDuration = duration,
+                isCompleted = completed,
+                lastPosition = currentTime
+            )
+        }
     }
 
     // MARK: - Daily Activity Methods
@@ -329,6 +358,34 @@ class ProgressStore private constructor(private val context: Context) {
             needed = neededForNext,
             percentage = min(percentage, 1.0)
         )
+    }
+
+    // MARK: - Access Control Methods
+
+    private val xpPaywallThreshold = 50 // XP threshold for Basic content paywall
+
+    fun shouldShowPaywall(): Boolean {
+        // Show paywall if user has exceeded XP threshold AND no basic access of any kind
+        return getTotalXP() >= xpPaywallThreshold && !hasAnyBasicAccess()
+    }
+
+    fun canAccessBasicContent(): Boolean {
+        // Can access if under XP threshold OR has any basic access
+        return getTotalXP() < xpPaywallThreshold || hasAnyBasicAccess()
+    }
+
+    fun hasClassAccess(): Boolean {
+        return studentProgressAPI.isStudentLinked()
+    }
+
+    fun hasAnyBasicAccess(): Boolean {
+        // Has basic access if enrolled in class OR has any tier above free
+        return hasClassAccess() || AccessControlManager.getInstance(context).currentUserTier.value != UserTier.FREE
+    }
+
+    fun updateClassAccess() {
+        // Trigger LiveData update when class access status changes
+        updateLiveData()
     }
 
     // MARK: - Professional Certification Methods
@@ -538,9 +595,9 @@ class ProgressStore private constructor(private val context: Context) {
     }
 
     private fun updateLiveData() {
-        _totalXP.value = getTotalXP()
-        _currentLevel.value = getCurrentLevel()
-        _currentStreak.value = getCurrentStreak()
+        _totalXP.postValue(getTotalXP())
+        _currentLevel.postValue(getCurrentLevel())
+        _currentStreak.postValue(getCurrentStreak())
     }
 
     // MARK: - Utility Methods
@@ -575,6 +632,89 @@ class ProgressStore private constructor(private val context: Context) {
         calendar.time = date
         calendar.add(Calendar.DAY_OF_YEAR, days)
         return calendar.time
+    }
+
+    // MARK: - User Profile Methods
+
+    fun setUserFirstName(firstName: String) {
+        sharedPrefs.edit().putString("user_first_name", firstName).apply()
+    }
+
+    fun getUserFirstName(): String {
+        return sharedPrefs.getString("user_first_name", "") ?: ""
+    }
+
+    fun setUserLastName(lastName: String) {
+        sharedPrefs.edit().putString("user_last_name", lastName).apply()
+    }
+
+    fun getUserLastName(): String {
+        return sharedPrefs.getString("user_last_name", "") ?: ""
+    }
+
+    fun setUserEmail(email: String) {
+        sharedPrefs.edit().putString("user_email", email).apply()
+    }
+
+    fun getUserEmail(): String {
+        return sharedPrefs.getString("user_email", "") ?: ""
+    }
+
+    fun getUserFullName(): String {
+        val firstName = getUserFirstName()
+        val lastName = getUserLastName()
+        return when {
+            firstName.isNotEmpty() && lastName.isNotEmpty() -> "$firstName $lastName"
+            firstName.isNotEmpty() -> firstName
+            lastName.isNotEmpty() -> lastName
+            else -> ""
+        }
+    }
+
+    fun hasUserProfileInfo(): Boolean {
+        return getUserFirstName().isNotEmpty() || getUserLastName().isNotEmpty() || getUserEmail().isNotEmpty()
+    }
+
+    // MARK: - Device ID and Class Access Methods
+
+    fun getDeviceId(): String {
+        var deviceId = sharedPrefs.getString("device_id", null)
+        if (deviceId == null) {
+            deviceId = "android-${UUID.randomUUID()}"
+            sharedPrefs.edit().putString("device_id", deviceId).apply()
+        }
+        return deviceId
+    }
+
+    fun setHasClassAccess(hasAccess: Boolean) {
+        sharedPrefs.edit().putBoolean("has_class_access", hasAccess).apply()
+    }
+
+    // Class/Teacher assignment methods
+    fun setAssignedTeacher(teacherName: String, classCode: String) {
+        sharedPrefs.edit()
+            .putString("assigned_teacher_name", teacherName)
+            .putString("assigned_class_code", classCode)
+            .apply()
+    }
+
+    fun getAssignedTeacherName(): String {
+        return sharedPrefs.getString("assigned_teacher_name", "") ?: ""
+    }
+
+    fun getAssignedClassCode(): String {
+        return sharedPrefs.getString("assigned_class_code", "") ?: ""
+    }
+
+    fun hasTeacherAssignment(): Boolean {
+        return getAssignedTeacherName().isNotEmpty()
+    }
+
+    fun clearTeacherAssignment() {
+        sharedPrefs.edit()
+            .remove("assigned_teacher_name")
+            .remove("assigned_class_code")
+            .apply()
     }
 }
 

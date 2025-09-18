@@ -29,9 +29,36 @@ class AccessControlManager: ObservableObject {
     // MARK: - Teacher Mode Access
 
     func attemptTeacherModeAccess() {
-        // Hidden teacher mode - no authentication for now
-        isTeacherModeEnabled = true
-        print("🎓 Teacher mode activated")
+        // Show teacher code entry view instead of direct access
+        showTeacherCodeEntry = true
+    }
+
+    @Published var showTeacherCodeEntry = false
+    @Published var teacherData: TeacherInfo?
+
+    func validateTeacherCode(_ code: String) async -> Bool {
+        let normalizedCode = code.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
+
+        do {
+            let response = try await TeacherAPIService.shared.validateTeacherCode(normalizedCode)
+
+            if response.valid {
+                isTeacherModeEnabled = true
+                showTeacherCodeEntry = false
+                teacherData = response.teacher
+                print("🎓 Teacher mode activated with code: \(normalizedCode)")
+                if let teacher = response.teacher {
+                    print("🎓 Teacher info: \(teacher.name), Class Code: \(teacher.classCode ?? "N/A")")
+                }
+                return true
+            } else {
+                print("❌ Invalid teacher code: \(normalizedCode)")
+                return false
+            }
+        } catch {
+            print("❌ Teacher code validation error: \(error)")
+            return false
+        }
     }
 
     func exitTeacherMode() {
@@ -61,7 +88,8 @@ class AccessControlManager: ObservableObject {
 
         // Apply the code benefits
         switch codeType {
-        case .basic:
+        case .classAccess:
+            // Class Access codes give basic access to continue beyond 50 XP
             currentUserTier = .basicPaid
             usedCodes.insert(normalizedCode)
             saveAccessData()
@@ -74,10 +102,18 @@ class AccessControlManager: ObservableObject {
             return .successPremium
 
         case .friend:
+            // Friend codes give basic access (Class Access equivalent)
             currentUserTier = .basicPaid
             usedCodes.insert(normalizedCode)
             saveAccessData()
             return .successFriend
+
+        case .individual:
+            // Individual purchase codes give basic access (Class Access equivalent)
+            currentUserTier = .basicPaid
+            usedCodes.insert(normalizedCode)
+            saveAccessData()
+            return .successIndividual
         }
     }
 
@@ -189,17 +225,19 @@ enum UserTier: String, CaseIterable {
 }
 
 enum CodeType: String, CaseIterable {
-    case basic = "B"
+    case classAccess = "C"  // Changed from basic to class access
     case premium = "P"
     case friend = "F"
+    case individual = "I"   // Individual purchaser codes
 
     var prefix: String { rawValue }
 
     var displayName: String {
         switch self {
-        case .basic: return "Basic Access"
+        case .classAccess: return "Class Access"
         case .premium: return "Premium Access"
         case .friend: return "Friend Referral"
+        case .individual: return "Individual Purchase"
         }
     }
 
@@ -214,6 +252,7 @@ enum CodeRedemptionResult {
     case successBasic
     case successPremium
     case successFriend
+    case successIndividual
     case invalid
     case alreadyUsed
 
@@ -225,6 +264,8 @@ enum CodeRedemptionResult {
             return "🌟 Premium access unlocked! You now have access to premium content and certifications."
         case .successFriend:
             return "👥 Friend code redeemed! You now have basic access thanks to your friend."
+        case .successIndividual:
+            return "💳 Individual access unlocked! You now have full access to all basic courses."
         case .invalid:
             return "❌ Invalid code. Please check the code and try again."
         case .alreadyUsed:
@@ -234,7 +275,7 @@ enum CodeRedemptionResult {
 
     var isSuccess: Bool {
         switch self {
-        case .successBasic, .successPremium, .successFriend:
+        case .successBasic, .successPremium, .successFriend, .successIndividual:
             return true
         case .invalid, .alreadyUsed:
             return false
@@ -250,10 +291,14 @@ struct SchoolConfiguration {
     let xpThreshold: Int
     let bulkLicenseCount: Int
 
+    // School configurations will be loaded from database via API
+}
+
+extension SchoolConfiguration {
     static let fallbrookHigh = SchoolConfiguration(
         schoolName: "Fallbrook High School",
-        program: "CTE Pathway: Transportation Technology",
-        instructor: "Dennis Johnson",
+        program: "CTE Transportation Technology",
+        instructor: "Mr. Dennis Johnson",
         email: "djohnson@fuhsd.net",
         xpThreshold: 50,
         bulkLicenseCount: 250

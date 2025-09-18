@@ -2,6 +2,8 @@ package com.skillvergence.mindsherpa.ui.video
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,10 +16,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.skillvergence.mindsherpa.R
+import com.skillvergence.mindsherpa.data.model.AccessControlManager
 import com.skillvergence.mindsherpa.data.model.Course
 import com.skillvergence.mindsherpa.data.persistence.ProgressStore
 import com.skillvergence.mindsherpa.ui.adapter.CourseAdapter
 import com.skillvergence.mindsherpa.ui.progress.LevelDetailsActivity
+import com.skillvergence.mindsherpa.ui.teacher.TeacherCodeEntryActivity
 
 /**
  * Video Fragment - Matches iOS VideoView
@@ -30,11 +34,17 @@ class VideoFragment : Fragment() {
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var courseAdapter: CourseAdapter
     private lateinit var progressStore: ProgressStore
+    private lateinit var accessControlManager: AccessControlManager
 
     // Gaming UI elements
     private lateinit var levelIndicator: LinearLayout
     private lateinit var levelIcon: ImageView
     private lateinit var levelText: TextView
+
+    // Coach Nova tap gesture for hidden teacher access
+    private var coachNovaTapCount = 0
+    private val tapResetHandler = Handler(Looper.getMainLooper())
+    private val tapResetRunnable = Runnable { coachNovaTapCount = 0 }
 
 
     override fun onCreateView(
@@ -48,10 +58,12 @@ class VideoFragment : Fragment() {
         // Initialize ViewModel and ProgressStore
         videoViewModel = ViewModelProvider(this)[VideoViewModel::class.java]
         progressStore = ProgressStore.getInstance(requireContext())
+        accessControlManager = AccessControlManager.getInstance(requireContext())
 
         // Setup UI
         setupGamingUI(rootView)
         setupRecyclerView(rootView)
+        setupCoachNovaGesture(rootView)
 
         // Observe data
         observeViewModel()
@@ -183,6 +195,32 @@ class VideoFragment : Fragment() {
         val intent = VideoPlayerActivity.createIntent(requireContext(), course)
         startActivity(intent)
         println("✅ Launching video player for: ${course.title}")
+    }
+
+    private fun setupCoachNovaGesture(rootView: View) {
+        // Find all Coach Nova icons in the RecyclerView (handled via adapter)
+        // The gesture will be set up when the CourseAdapter creates the AI footer
+
+        // Set up gesture handling for Coach Nova icon in CourseAdapter
+        courseAdapter.setCoachNovaClickListener { handleCoachNovaTap() }
+    }
+
+    private fun handleCoachNovaTap() {
+        coachNovaTapCount++
+
+        // Reset tap count after 2 seconds if no more taps
+        tapResetHandler.removeCallbacks(tapResetRunnable)
+        tapResetHandler.postDelayed(tapResetRunnable, 2000)
+
+        if (coachNovaTapCount >= 5) {
+            // Reset tap count
+            coachNovaTapCount = 0
+            tapResetHandler.removeCallbacks(tapResetRunnable)
+
+            // Launch teacher code entry
+            val intent = Intent(requireContext(), TeacherCodeEntryActivity::class.java)
+            startActivity(intent)
+        }
     }
 }
 

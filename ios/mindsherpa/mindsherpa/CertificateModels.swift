@@ -42,7 +42,8 @@ struct SkillvergenceCertificate: Identifiable, Codable {
         completionDate: Date,
         totalWatchedHours: Double,
         finalScore: Double? = nil,
-        instructorName: String = "Dr. Sarah Chen"
+        instructorName: String = "Dr. Sarah Chen",
+        status: CertificateStatus = .pendingApproval
     ) {
         self.id = UUID().uuidString
         self.userId = userId
@@ -55,7 +56,7 @@ struct SkillvergenceCertificate: Identifiable, Codable {
         self.completionDate = completionDate
         self.issuedDate = nil
         self.certificateNumber = CertificateNumberGenerator.generate(type: certificateType)
-        self.status = .pendingApproval
+        self.status = status
         self.adminNotes = nil
         self.totalWatchedHours = totalWatchedHours
         self.finalScore = finalScore

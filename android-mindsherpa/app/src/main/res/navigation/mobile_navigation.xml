@@ -19,4 +19,9 @@
         android:id="@+id/navigation_premium"
         android:name="com.skillvergence.mindsherpa.ui.premium.PremiumFragment"
         android:label="@string/title_premium" />
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="com.skillvergence.mindsherpa.ui.profile.ProfileFragment"
+        android:label="@string/title_profile" />
 </navigation>

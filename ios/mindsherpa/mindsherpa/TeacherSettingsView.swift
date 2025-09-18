@@ -47,7 +47,9 @@ struct TeacherSettingsView: View {
             StudentImportView(settingsManager: settingsManager)
         }
         .sheet(isPresented: $showingClassCodeGenerator) {
-            ClassCodeGeneratorView(teacher: viewModel.currentTeacher)
+            if let teacher = viewModel.currentTeacher {
+                ClassCodeGeneratorView(teacher: teacher)
+            }
         }
         .alert("Sign Out", isPresented: $showingLogoutAlert) {
             Button("Cancel", role: .cancel) { }
@@ -67,24 +69,30 @@ struct TeacherSettingsView: View {
                     .fill(.blue.gradient)
                     .frame(width: 60, height: 60)
                     .overlay(
-                        Text(viewModel.currentTeacher.fullName.prefix(2))
+                        Text((viewModel.currentTeacher?.fullName ?? "DJ").prefix(2))
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                     )
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(viewModel.currentTeacher.fullName)
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                    if let teacherName = AccessControlManager.shared.teacherData?.name {
+                        Text(teacherName)
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                    }
 
-                    Text(viewModel.currentTeacher.department)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    if let program = AccessControlManager.shared.teacherData?.program {
+                        Text(program)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
 
-                    Text(viewModel.currentTeacher.school)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    if let school = AccessControlManager.shared.teacherData?.school {
+                        Text(school)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 Spacer()
@@ -288,6 +296,11 @@ struct TeacherSettingsView: View {
 
     private var accountActionsSection: some View {
         Section {
+            Button("Exit Teacher Mode") {
+                AccessControlManager.shared.exitTeacherMode()
+            }
+            .foregroundColor(.red)
+
             Button("Sign Out") {
                 showingLogoutAlert = true
             }

@@ -3,7 +3,7 @@ package com.skillvergence.mindsherpa.data.repository
 import com.skillvergence.mindsherpa.data.model.Podcast
 import com.skillvergence.mindsherpa.data.model.PodcastData
 import com.skillvergence.mindsherpa.data.model.PodcastProgress as LocalPodcastProgress
-import com.skillvergence.mindsherpa.data.api.PodcastProgress as ApiPodcastProgress
+import com.skillvergence.mindsherpa.data.api.PodcastProgressData as ApiPodcastProgress
 import com.skillvergence.mindsherpa.data.api.PodcastProgressRequest
 import com.skillvergence.mindsherpa.data.model.PodcastsResponse
 import com.skillvergence.mindsherpa.data.api.ApiService

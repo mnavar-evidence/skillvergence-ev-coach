@@ -11,6 +11,9 @@ object AppConfig {
     // Primary: Custom domain with SSL certificate
     const val BASE_URL = "https://api.mindsherpa.ai"  // Custom domain URL
 
+    // Development: Local backend
+    const val DEV_BASE_URL = "http://192.168.86.46:3000"  // Local development server
+
     // Fallback: Direct Railway URLs (update when needed)
     const val FALLBACK_BASE_URL = "https://backend-production-f873.up.railway.app"
     const val CONFIGURATION_URL = "https://skillvergence.mindsherpa.ai/config.json"  // Dynamic config
@@ -21,7 +24,7 @@ object AppConfig {
     private var _dynamicBaseURL: String? = null
 
     val currentBaseURL: String
-        get() = _dynamicBaseURL ?: BASE_URL
+        get() = _dynamicBaseURL ?: if (IS_PRODUCTION) BASE_URL else DEV_BASE_URL
 
     val apiURL: String
         get() = "$currentBaseURL/api/"
@@ -84,7 +87,7 @@ object AppConfig {
             println("   🌐 Using Railway production backend")
             println("   📡 Testing network connectivity...")
         } else {
-            println("   ⚠️  Development mode - using local backend")
+            println("   ⚠️  Development mode - using local backend: $DEV_BASE_URL")
             println("   📶 Ensure your device is on the same WiFi network")
         }
     }
@@ -94,7 +97,11 @@ object AppConfig {
         printConfiguration()
         println("🔧 Android API Debug:")
         println("   Full courses URL: $coursesEndpoint")
-        println("   Expected: https://api.mindsherpa.ai/api/courses")
+        if (IS_PRODUCTION) {
+            println("   Expected: https://api.mindsherpa.ai/api/courses")
+        } else {
+            println("   Expected: http://192.168.86.46:3000/api/courses")
+        }
     }
 }
 

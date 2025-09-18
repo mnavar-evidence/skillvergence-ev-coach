@@ -59,7 +59,7 @@ struct CodeEntryView: View {
                             .foregroundColor(.secondary)
 
                         HStack(spacing: 20) {
-                            CodeTypeIndicator(prefix: "B", description: "Basic Access", color: .blue)
+                            CodeTypeIndicator(prefix: "C", description: "Class Access", color: .blue)
                             CodeTypeIndicator(prefix: "P", description: "Premium Access", color: .purple)
                             CodeTypeIndicator(prefix: "F", description: "Friend Referral", color: .green)
                         }

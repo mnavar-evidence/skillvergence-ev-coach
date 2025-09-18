@@ -62,7 +62,7 @@ struct PaywallView: View {
                             .font(.title2)
                             .fontWeight(.bold)
 
-                        Text("Choose how you'd like to unlock full access to all courses and earn industry certifications:")
+                        Text("Choose how you'd like to continue your learning journey with basic courses:")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -70,9 +70,9 @@ struct PaywallView: View {
                         // Option 1: School Code
                         PaywallOptionCard(
                             icon: "graduationcap.fill",
-                            title: "School Access Code",
+                            title: "Class Access Code",
                             subtitle: "Get a code from your instructor",
-                            description: "Ask Mr. Dennis Johnson (djohnson@fuhsd.net) for your class access code",
+                            description: "Ask your instructor for your class access code",
                             buttonText: "Enter Code",
                             buttonColor: .blue,
                             isRecommended: true
@@ -85,7 +85,7 @@ struct PaywallView: View {
                             icon: "creditcard.fill",
                             title: "Individual Access",
                             subtitle: "One-time purchase",
-                            description: "Full access to all courses and certification tracking",
+                            description: "Continue with basic courses and podcasts beyond 50 XP",
                             buttonText: purchaseInProgress ? "Processing..." : "Buy for $49",
                             buttonColor: .green,
                             isRecommended: false
@@ -101,11 +101,11 @@ struct PaywallView: View {
                             .fontWeight(.semibold)
 
                         VStack(alignment: .leading, spacing: 12) {
-                            BenefitRow(icon: "play.circle.fill", text: "All 5 EV training courses", color: .blue)
+                            BenefitRow(icon: "play.circle.fill", text: "Continue all 5 basic video courses", color: .blue)
+                            BenefitRow(icon: "headphones", text: "Access to all podcast content", color: .indigo)
                             BenefitRow(icon: "star.fill", text: "Unlimited XP earning potential", color: .orange)
-                            BenefitRow(icon: "graduationcap.fill", text: "Industry certification tracking", color: .purple)
                             BenefitRow(icon: "person.3.fill", text: "Friend referral codes to share", color: .green)
-                            BenefitRow(icon: "chart.line.uptrend.xyaxis", text: "Advanced progress analytics", color: .red)
+                            BenefitRow(icon: "chart.line.uptrend.xyaxis", text: "Progress tracking and analytics", color: .red)
                         }
                     }
                     .padding()
@@ -122,7 +122,7 @@ struct PaywallView: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
 
-                        Text("Instructor: Mr. Dennis Johnson")
+                        Text("Instructor: Loading...")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

@@ -25,6 +25,8 @@ class CourseAdapter(
     private val onQuickQuestionClick: (String) -> Unit = {}
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
+    private var coachNovaClickListener: (() -> Unit)? = null
+
     companion object {
         private const val VIEW_TYPE_COURSE = 0
         private const val VIEW_TYPE_AI_FOOTER = 1
@@ -45,6 +47,12 @@ class CourseAdapter(
         notifyDataSetChanged()
     }
 
+    fun setCoachNovaClickListener(listener: () -> Unit) {
+        coachNovaClickListener = listener
+        // Update existing AI footer if it exists
+        aiFooterViewHolder?.setCoachNovaClickListener(listener)
+    }
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
@@ -58,6 +66,10 @@ class CourseAdapter(
                     .inflate(R.layout.item_ai_footer, parent, false)
                 val holder = AIFooterViewHolder(view)
                 aiFooterViewHolder = holder
+                // Set Coach Nova click listener if available
+                coachNovaClickListener?.let { listener ->
+                    holder.setCoachNovaClickListener(listener)
+                }
                 holder
             }
             else -> throw IllegalArgumentException("Unknown view type: $viewType")
@@ -178,6 +190,7 @@ class CourseAdapter(
         private val aiResponseScroll: ScrollView = itemView.findViewById(R.id.ai_response_scroll)
         private val aiResponseText: TextView = itemView.findViewById(R.id.ai_response_text)
         private val aiLoadingLayout: LinearLayout = itemView.findViewById(R.id.ai_loading_layout)
+        private val coachIcon: ImageView = itemView.findViewById(R.id.coach_icon)
 
         fun bind() {
             println("🤖 [AIFooterViewHolder] Binding AI footer")
@@ -193,8 +206,22 @@ class CourseAdapter(
                 }
             }
 
+            // Setup Coach Nova tap gesture for hidden teacher access
+            setupCoachNovaGesture()
+
             // Setup quick questions
             setupQuickQuestions()
+        }
+
+        private fun setupCoachNovaGesture() {
+            // Set Coach Nova click listener from parent adapter
+            coachNovaClickListener?.let { listener ->
+                coachIcon.setOnClickListener { listener() }
+            }
+        }
+
+        fun setCoachNovaClickListener(listener: () -> Unit) {
+            coachIcon.setOnClickListener { listener() }
         }
 
         private fun setupQuickQuestions() {

@@ -168,6 +168,11 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun initializeViews() {
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowHomeEnabled(true)
+            title = ""
+        }
         courseIcon = findViewById(R.id.course_icon)
         courseTitle = findViewById(R.id.course_title)
         courseCategory = findViewById(R.id.course_category)
@@ -307,7 +312,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         toolbar.setNavigationOnClickListener {
-            finish()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         continueWatchingCard.setOnClickListener {
@@ -315,6 +320,11 @@ class VideoPlayerActivity : AppCompatActivity() {
             println("▶️ Continue watching current video")
             // TODO: Launch actual video player
         }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressedDispatcher.onBackPressed()
+        return true
     }
 
     private fun onVideoSelected(video: Video) {

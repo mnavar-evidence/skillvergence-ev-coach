@@ -1,52 +1,134 @@
 const express = require('express');
 const router = express.Router();
+const database = require('../database/db');
+
+// POST /api/progress/register-device - Register a new device
+router.post('/register-device', async (req, res) => {
+  try {
+    const { deviceId, platform, appVersion, deviceName } = req.body;
+
+    if (!deviceId || !platform) {
+      return res.status(400).json({
+        error: 'Missing required fields: deviceId, platform'
+      });
+    }
+
+    await database.initialize();
+    const result = await database.registerDevice(deviceId, platform, appVersion, deviceName);
+
+    res.json({
+      success: true,
+      deviceId,
+      message: 'Device registered successfully'
+    });
+
+  } catch (error) {
+    console.error('Device registration error:', error);
+    res.status(500).json({
+      error: 'Failed to register device',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// POST /api/progress/join-class - Link device to student via class code
+router.post('/join-class', async (req, res) => {
+  try {
+    const { deviceId, classCode, firstName, lastName, email } = req.body;
+
+    if (!deviceId || !classCode || !firstName || !lastName) {
+      return res.status(400).json({
+        error: 'Missing required fields: deviceId, classCode, firstName, lastName'
+      });
+    }
+
+    await database.initialize();
+    const result = await database.linkDeviceToStudent(deviceId, classCode, firstName, lastName, email);
+
+    res.json({
+      success: true,
+      studentId: result.studentId,
+      teacherId: result.teacherId,
+      schoolId: result.schoolId,
+      classDetails: result.classDetails,
+      message: `Successfully joined class ${classCode}`
+    });
+
+  } catch (error) {
+    console.error('Class join error:', error);
+
+    // Check if it's a "Class does not exist" error
+    if (error.message && error.message.includes('This Class does not exist')) {
+      return res.status(404).json({
+        error: 'This Class does not exist',
+        success: false
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to join class',
+      success: false,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
 
 // POST /api/progress/video - Update video progress
 router.post('/video', async (req, res) => {
   try {
-    const { 
-      videoId, 
-      deviceId, 
-      watchedSeconds, 
-      totalDuration, 
-      isCompleted, 
-      courseId 
+    const {
+      videoId,
+      deviceId,
+      watchedSeconds,
+      totalDuration,
+      isCompleted,
+      courseId,
+      lastPosition
     } = req.body;
 
     if (!videoId || !deviceId || watchedSeconds === undefined || !totalDuration) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: videoId, deviceId, watchedSeconds, totalDuration' 
+      return res.status(400).json({
+        error: 'Missing required fields: videoId, deviceId, watchedSeconds, totalDuration'
       });
     }
 
-    // Calculate progress percentage
-    const progressPercentage = Math.min(100, Math.max(0, (watchedSeconds / totalDuration) * 100));
-    const completed = isCompleted || progressPercentage >= 95;
+    // Ensure database is initialized
+    await database.initialize();
 
-    // In a real implementation, you would save to database
-    // For now, we'll just return the progress data
+    // Register device if not exists
+    await database.registerDevice(deviceId, 'unknown', '1.0.0');
+
+    // Update video progress in database
+    const result = await database.updateVideoProgress(
+      deviceId,
+      videoId,
+      courseId || 'unknown',
+      lastPosition || watchedSeconds,
+      Math.floor(watchedSeconds),
+      Math.floor(totalDuration),
+      isCompleted
+    );
+
     const progressData = {
       videoId,
       deviceId,
       watchedSeconds: Math.floor(watchedSeconds),
       totalDuration: Math.floor(totalDuration),
-      progressPercentage: Math.floor(progressPercentage),
-      isCompleted: completed,
+      progressPercentage: result.progressPercentage,
+      isCompleted: result.completed,
       lastWatchedAt: new Date().toISOString(),
       courseId
     };
 
-    console.log(`📺 Video Progress Update:`, progressData);
-
     res.json({
       success: true,
       progress: progressData,
-      message: completed ? 'Video completed!' : 'Progress saved'
+      message: result.completed ? 'Video completed!' : 'Progress saved'
     });
 
   } catch (error) {
     console.error('Video progress update error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to update video progress',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });

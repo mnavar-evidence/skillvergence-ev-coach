@@ -86,9 +86,12 @@ class CourseRepository {
     ): ApiResult<Unit> {
         val request = com.skillvergence.mindsherpa.data.api.VideoProgressRequest(
             videoId = videoId,
-            watchedSeconds = watchedSeconds,
-            totalDuration = totalDuration,
-            courseId = courseId
+            deviceId = "android-${android.os.Build.ID}",
+            watchedSeconds = watchedSeconds.toDouble(),
+            totalDuration = totalDuration.toDouble(),
+            isCompleted = watchedSeconds >= totalDuration * 0.9,
+            courseId = courseId ?: "",
+            lastPosition = watchedSeconds.toDouble()
         )
 
         return when (val result = safeApiCall {
@@ -99,10 +102,5 @@ class CourseRepository {
         }
     }
 
-    suspend fun getVideoProgress(videoId: String): ApiResult<com.skillvergence.mindsherpa.data.api.VideoProgress?> {
-        return safeApiCall {
-            apiService.getVideoProgress(videoId)
-        }
-    }
 
 }

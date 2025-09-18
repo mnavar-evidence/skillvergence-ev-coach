@@ -3,27 +3,19 @@ import Foundation
 struct AppConfig {
     // MARK: - API Configuration
     
-    // Primary: Custom domain with SSL certificate
-    static let baseURL = "https://api.mindsherpa.ai"  // Custom domain URL
-    
     // Fallback: Direct Railway URLs (update when needed)
     static let fallbackBaseURL = "https://backend-production-f873.up.railway.app"
     static let configurationURL = "https://skillvergence.mindsherpa.ai/config.json"  // Dynamic config
     
-    static let isProduction = true
-    
-    // Uncomment below for development
-    /*
     #if DEBUG
-    // Development - Local server  
-    static let baseURL = "http://192.168.86.46:3000"  // Your Mac's IP address
+    // Development - Railway deployment (same as production for release)
+    static let baseURL = "https://api.mindsherpa.ai"  // Custom domain URL
     static let isProduction = false
     #else
     // Production - Railway deployment
-    static let baseURL = "https://backend-production-f873.up.railway.app"
+    static let baseURL = "https://api.mindsherpa.ai"  // Custom domain URL
     static let isProduction = true
     #endif
-    */
     
     // MARK: - API Endpoints (Updated to use dynamic configuration)
     

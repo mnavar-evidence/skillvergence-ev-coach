@@ -8,6 +8,8 @@ const courseRoutes = require('./routes/courses');
 const aiRoutes = require('./routes/ai');
 const analyticsRoutes = require('./routes/analytics');
 const progressRoutes = require('./routes/progress');
+const teacherRoutes = require('./routes/teacher');
+const schoolSetupRoutes = require('./routes/school-setup');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +46,8 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/school', schoolSetupRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

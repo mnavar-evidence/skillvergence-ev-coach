@@ -36,71 +36,185 @@ interface ApiService {
         @Body request: AIRequest
     ): Response<AIResponse>
 
+    // Student Device Management
+    @POST("progress/register-device")
+    suspend fun registerDevice(
+        @Body request: DeviceRegistrationRequest
+    ): Response<DeviceRegistrationResponse>
+
+    @POST("progress/join-class")
+    suspend fun joinClass(
+        @Body request: ClassJoinRequest
+    ): Response<ClassJoinResponse>
+
     // Progress tracking endpoints
-    @GET("video/progress/{videoId}")
-    suspend fun getVideoProgress(
-        @retrofit2.http.Path("videoId") videoId: String
-    ): Response<VideoProgress>
-
-    @retrofit2.http.POST("video/progress")
+    @POST("progress/video")
     suspend fun updateVideoProgress(
-        @retrofit2.http.Body request: VideoProgressRequest
-    ): Response<Void>
+        @Body request: VideoProgressRequest
+    ): Response<VideoProgressResponse>
 
-    // Podcast progress endpoints
-    @GET("podcast/progress/{podcastId}")
-    suspend fun getPodcastProgress(
-        @retrofit2.http.Path("podcastId") podcastId: String
-    ): Response<PodcastProgress>
-
-    @retrofit2.http.POST("podcast/progress")
+    @POST("progress/podcast")
     suspend fun updatePodcastProgress(
-        @retrofit2.http.Body request: PodcastProgressRequest
-    ): Response<Void>
+        @Body request: PodcastProgressRequest
+    ): Response<PodcastProgressResponse>
+
+    @GET("progress/device/{deviceId}")
+    suspend fun getDeviceProgress(
+        @retrofit2.http.Path("deviceId") deviceId: String
+    ): Response<DeviceProgressResponse>
 
     // Analytics endpoint
     @retrofit2.http.POST("analytics/events")
     suspend fun trackEvent(
         @retrofit2.http.Body event: AnalyticsEvent
     ): Response<Void>
+
+    // Teacher API methods
+    companion object {
+        private var teacherService: TeacherApiService? = null
+
+        fun getTeacherService(): TeacherApiService {
+            return teacherService ?: NetworkModule.createTeacherApiService().also { teacherService = it }
+        }
+
+        suspend fun validateTeacherCode(code: String, schoolId: String = "fallbrook_high") =
+            getTeacherService().validateTeacherCode(TeacherCodeRequest(code, schoolId))
+
+        suspend fun getSchoolConfig(schoolId: String = "fallbrook_high") =
+            getTeacherService().getSchoolConfig(schoolId)
+
+        suspend fun getStudentRoster(schoolId: String = "fallbrook_high", level: String? = null) =
+            getTeacherService().getStudentRoster(schoolId, level)
+
+        suspend fun getCertificates(schoolId: String = "fallbrook_high", status: String = "all") =
+            getTeacherService().getCertificates(schoolId, status)
+
+        suspend fun getCodeUsage(schoolId: String = "fallbrook_high") =
+            getTeacherService().getCodeUsage(schoolId)
+    }
 }
 
 
 /**
- * Video Progress models
+ * Device Registration
  */
-data class VideoProgress(
-    val videoId: String,
-    val watchedSeconds: Int,
-    val totalDuration: Int,
-    val completed: Boolean,
-    val lastWatchedAt: String? = null
+data class DeviceRegistrationRequest(
+    val deviceId: String,
+    val platform: String,
+    val appVersion: String,
+    val deviceName: String
 )
 
+data class DeviceRegistrationResponse(
+    val success: Boolean,
+    val deviceId: String,
+    val message: String
+)
+
+/**
+ * Class Join
+ */
+data class ClassJoinRequest(
+    val deviceId: String,
+    val classCode: String,
+    val firstName: String,
+    val lastName: String,
+    val email: String? = null
+)
+
+data class ClassJoinResponse(
+    val success: Boolean,
+    val studentId: String,
+    val teacherId: String,
+    val schoolId: String,
+    val message: String? = null,
+    val classDetails: ClassDetails? = null
+)
+
+data class ClassDetails(
+    val teacherName: String,
+    val teacherEmail: String,
+    val schoolName: String,
+    val programName: String,
+    val classCode: String
+)
+
+/**
+ * Video Progress models
+ */
 data class VideoProgressRequest(
     val videoId: String,
+    val deviceId: String,
+    val watchedSeconds: Double,
+    val totalDuration: Double,
+    val isCompleted: Boolean,
+    val courseId: String,
+    val lastPosition: Double
+)
+
+data class VideoProgressResponse(
+    val success: Boolean,
+    val progress: VideoProgressData,
+    val message: String
+)
+
+data class VideoProgressData(
+    val videoId: String,
+    val deviceId: String,
     val watchedSeconds: Int,
     val totalDuration: Int,
-    val courseId: String? = null
+    val progressPercentage: Int,
+    val isCompleted: Boolean,
+    val lastWatchedAt: String,
+    val courseId: String
 )
 
 /**
  * Podcast Progress models
  */
-data class PodcastProgress(
-    val podcastId: String,
-    val playbackPosition: Int,
-    val totalDuration: Int,
-    val isCompleted: Boolean,
-    val lastPlayedAt: String? = null
-)
-
 data class PodcastProgressRequest(
     val podcastId: String,
+    val deviceId: String,
+    val playbackPosition: Double,
+    val totalDuration: Double,
+    val isCompleted: Boolean,
+    val courseId: String
+)
+
+data class PodcastProgressResponse(
+    val success: Boolean,
+    val progress: PodcastProgressData,
+    val message: String
+)
+
+data class PodcastProgressData(
+    val podcastId: String,
+    val deviceId: String,
     val playbackPosition: Int,
     val totalDuration: Int,
-    val courseId: String? = null,
-    val isCompleted: Boolean = false
+    val progressPercentage: Int,
+    val isCompleted: Boolean,
+    val lastPlayedAt: String,
+    val courseId: String
+)
+
+/**
+ * Device Progress
+ */
+data class DeviceProgressResponse(
+    val success: Boolean,
+    val progress: DeviceProgressData
+)
+
+data class DeviceProgressData(
+    val deviceId: String,
+    val videoProgress: Map<String, Any>,
+    val podcastProgress: Map<String, Any>,
+    val completedVideos: List<String>,
+    val completedPodcasts: List<String>,
+    val totalWatchTime: Int,
+    val coursesStarted: List<String>,
+    val lastSync: String
 )
 
 /**

@@ -209,7 +209,7 @@ class CourseModuleListActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         backButton.setOnClickListener {
-            finish()
+            onBackPressedDispatcher.onBackPressed()
         }
     }
 

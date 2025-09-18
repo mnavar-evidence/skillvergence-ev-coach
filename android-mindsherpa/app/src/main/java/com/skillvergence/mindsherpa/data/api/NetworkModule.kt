@@ -70,6 +70,19 @@ object NetworkModule {
 
         return newRetrofit.create(ApiService::class.java)
     }
+
+    /**
+     * Create teacher API service
+     */
+    fun createTeacherApiService(baseUrl: String = AppConfig.apiURL): TeacherApiService {
+        val newRetrofit = Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+
+        return newRetrofit.create(TeacherApiService::class.java)
+    }
 }
 
 /**

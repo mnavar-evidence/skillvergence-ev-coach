@@ -3,6 +3,7 @@
     <string name="title_video">AI / Video</string>
     <string name="title_podcast">Podcast</string>
     <string name="title_premium">Premium</string>
+    <string name="title_profile">Profile</string>
 
     <!-- Course content -->
     <string name="course_duration_format">%d:%02d</string>

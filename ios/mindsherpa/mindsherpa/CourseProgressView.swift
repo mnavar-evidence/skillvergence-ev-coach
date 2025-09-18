@@ -7,276 +7,282 @@
 
 import SwiftUI
 
-// MARK: - Course Progress Analytics View
+// MARK: - Course Progress View (matching Android implementation)
 
 struct CourseProgressView: View {
     @ObservedObject var viewModel: TeacherViewModel
-    @StateObject private var analyticsManager = CourseAnalyticsManager()
-    @State private var selectedTimeframe: TimeFrame = .week
-    @State private var selectedCourse: String = "all"
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                // Header Controls
-                headerControlsSection
+            VStack(spacing: 20) {
+                // Summary Stats (matching Android)
+                summaryStatsSection
 
-                // Overview Stats
-                overviewStatsSection
+                // Course Progress Section
+                courseProgressSection
 
-                // Course Completion Chart
-                courseCompletionChartSection
+                // Podcast Engagement Section
+                podcastEngagementSection
 
-                // Student Engagement Chart
-                studentEngagementSection
-
-                // Performance by Course Level
-                performanceByCourseSection
-
-                // Top Performers
+                // Top Performers Section
                 topPerformersSection
 
-                // Students Needing Attention
-                studentsNeedingAttentionSection
+                // Recent Activity Section
+                recentActivitySection
             }
             .padding()
         }
-        .navigationTitle("Course Analytics")
+        .background(Color(.systemBackground))
+        .navigationTitle("Progress")
         .navigationBarTitleDisplayMode(.large)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color(.systemBackground), for: .navigationBar)
+        .refreshable {
+            await viewModel.refreshClassData()
+        }
         .onAppear {
-            analyticsManager.loadAnalytics(for: viewModel.students)
+            viewModel.loadClassData()
         }
     }
 
-    private var headerControlsSection: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Text("Analytics Dashboard")
+    // MARK: - Summary Stats Section
+
+    private var summaryStatsSection: some View {
+        HStack(spacing: 12) {
+            // Total Students Box
+            VStack(spacing: 8) {
+                Image(systemName: "person.3.fill")
                     .font(.title2)
-                    .fontWeight(.bold)
-                Spacer()
-                Button("Export Report") {
-                    analyticsManager.exportAnalyticsReport()
-                }
-                .buttonStyle(.bordered)
-            }
+                    .foregroundColor(.blue)
 
-            // Time Frame Selector
-            Picker("Time Frame", selection: $selectedTimeframe) {
-                ForEach(TimeFrame.allCases, id: \.self) { timeframe in
-                    Text(timeframe.displayName).tag(timeframe)
-                }
-            }
-            .pickerStyle(.segmented)
-
-            // Course Filter
-            Picker("Course", selection: $selectedCourse) {
-                Text("All Courses").tag("all")
-                ForEach(analyticsManager.availableCourses, id: \.self) { course in
-                    Text(course).tag(course)
-                }
-            }
-            .pickerStyle(.menu)
-        }
-        .padding()
-        .background(.ultraThinMaterial)
-        .cornerRadius(16)
-    }
-
-    private var overviewStatsSection: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible())
-        ], spacing: 16) {
-            AnalyticsCard(
-                title: "Class Average",
-                value: "\(Int(analyticsManager.classAverage))%",
-                subtitle: "Course Completion",
-                icon: "chart.line.uptrend.xyaxis",
-                color: .blue,
-                trend: analyticsManager.completionTrend
-            )
-
-            AnalyticsCard(
-                title: "Engagement Rate",
-                value: "\(Int(analyticsManager.engagementRate))%",
-                subtitle: "Daily Active Users",
-                icon: "person.3.fill",
-                color: .green,
-                trend: analyticsManager.engagementTrend
-            )
-
-            AnalyticsCard(
-                title: "Avg Watch Time",
-                value: "\(String(format: "%.1f", analyticsManager.averageWatchTime))h",
-                subtitle: "Per Student",
-                icon: "clock.fill",
-                color: .orange,
-                trend: analyticsManager.watchTimeTrend
-            )
-        }
-    }
-
-    private var courseCompletionChartSection: some View {
-        GroupBox("Course Completion Progress") {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Course completion data visualization would be displayed here")
-                    .foregroundColor(.secondary)
-                    .frame(height: 200)
-                    .frame(maxWidth: .infinity)
-                    .background(.gray.opacity(0.1))
-                    .cornerRadius(8)
-                    .overlay(
-                        Text("Chart View")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                    )
-            }
-        }
-    }
-
-    private var studentEngagementSection: some View {
-        GroupBox("Student Engagement Over Time") {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Student engagement trends would be displayed here")
-                    .foregroundColor(.secondary)
-                    .frame(height: 200)
-                    .frame(maxWidth: .infinity)
-                    .background(.gray.opacity(0.1))
-                    .cornerRadius(8)
-                    .overlay(
-                        Text("Line Chart View")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                    )
-            }
-        }
-    }
-
-    private var performanceByCourseSection: some View {
-        GroupBox("Performance by Course Level") {
-            VStack(alignment: .leading, spacing: 16) {
-                ForEach(CTECourseLevel.allCases, id: \.self) { level in
-                    let studentsInLevel = viewModel.getStudentsByLevel(level)
-                    let averageXP = studentsInLevel.map(\.totalXP).reduce(0, +) / max(studentsInLevel.count, 1)
-                    let completionRate = Double(studentsInLevel.filter { !$0.coursesCompleted.isEmpty }.count) / Double(max(studentsInLevel.count, 1)) * 100
-
-                    CourseLevelRow(
-                        level: level,
-                        studentCount: studentsInLevel.count,
-                        averageXP: averageXP,
-                        completionRate: completionRate
-                    )
-                }
-            }
-        }
-    }
-
-    private var topPerformersSection: some View {
-        GroupBox("Top Performers") {
-            VStack(alignment: .leading, spacing: 12) {
-                ForEach(viewModel.getTopPerformingStudents(limit: 5).prefix(5), id: \.id) { student in
-                    StudentPerformanceRow(student: student, rank: viewModel.getTopPerformingStudents().firstIndex(where: { $0.id == student.id })! + 1)
-                }
-            }
-        }
-    }
-
-    private var studentsNeedingAttentionSection: some View {
-        GroupBox("Students Needing Attention") {
-            VStack(alignment: .leading, spacing: 12) {
-                let needingAttention = viewModel.getStudentsNeedingAttention().prefix(5)
-                if needingAttention.isEmpty {
-                    Text("All students are on track! 🎉")
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding()
-                } else {
-                    ForEach(Array(needingAttention), id: \.id) { student in
-                        StudentAttentionRow(student: student)
-                    }
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Supporting Views
-
-struct AnalyticsCard: View {
-    let title: String
-    let value: String
-    let subtitle: String
-    let icon: String
-    let color: Color
-    let trend: Double
-
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Image(systemName: icon)
+                Text("\(viewModel.totalStudents)")
                     .font(.title2)
-                    .foregroundColor(color)
-                Spacer()
-                TrendIndicator(trend: trend)
-            }
-
-            VStack(spacing: 4) {
-                Text(value)
-                    .font(.title)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
 
-                Text(title)
+                Text("Total Students")
                     .font(.caption)
-                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(.ultraThinMaterial)
+            .cornerRadius(12)
+
+            // Active Today Box
+            VStack(spacing: 8) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.title2)
+                    .foregroundColor(.green)
+
+                Text("\(viewModel.activeToday)")
+                    .font(.title2)
+                    .fontWeight(.bold)
                     .foregroundColor(.primary)
 
-                Text(subtitle)
-                    .font(.caption2)
+                Text("Active Today")
+                    .font(.caption)
                     .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(.ultraThinMaterial)
+            .cornerRadius(12)
+
+            // Average XP Box
+            VStack(spacing: 8) {
+                Image(systemName: "star.fill")
+                    .font(.title2)
+                    .foregroundColor(.orange)
+
+                Text("\(calculateAverageXP())")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+
+                Text("Avg XP")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(.ultraThinMaterial)
+            .cornerRadius(12)
+        }
+    }
+
+    // MARK: - Course Progress Section
+
+    private var courseProgressSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Course Progress")
+                .font(.headline)
+                .fontWeight(.semibold)
+
+            VStack(spacing: 8) {
+                ForEach(getCourseProgressData(), id: \.id) { course in
+                    ProgressCourseRow(course: course)
+                }
             }
         }
         .padding()
         .background(.ultraThinMaterial)
         .cornerRadius(12)
     }
-}
 
-struct TrendIndicator: View {
-    let trend: Double
+    // MARK: - Podcast Engagement Section
 
-    var body: some View {
-        HStack(spacing: 2) {
-            Image(systemName: trend >= 0 ? "arrow.up" : "arrow.down")
-                .font(.caption2)
-            Text("\(String(format: "%.1f", abs(trend)))%")
-                .font(.caption2)
-                .fontWeight(.medium)
+    private var podcastEngagementSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Podcast Engagement")
+                .font(.headline)
+                .fontWeight(.semibold)
+
+            VStack(spacing: 8) {
+                ForEach(getPodcastEngagementData(), id: \.id) { podcast in
+                    PodcastEngagementRow(podcast: podcast)
+                }
+            }
         }
-        .foregroundColor(trend >= 0 ? .green : .red)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
-        .background((trend >= 0 ? Color.green : Color.red).opacity(0.1))
-        .cornerRadius(8)
+        .padding()
+        .background(.ultraThinMaterial)
+        .cornerRadius(12)
+    }
+
+    // MARK: - Top Performers Section
+
+    private var topPerformersSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Top Performers")
+                .font(.headline)
+                .fontWeight(.semibold)
+
+            VStack(spacing: 8) {
+                ForEach(getTopPerformers(), id: \.id) { performer in
+                    TopPerformerRow(performer: performer)
+                }
+            }
+        }
+        .padding()
+        .background(.ultraThinMaterial)
+        .cornerRadius(12)
+    }
+
+    // MARK: - Recent Activity Section
+
+    private var recentActivitySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Recent Activity")
+                .font(.headline)
+                .fontWeight(.semibold)
+
+            VStack(spacing: 8) {
+                ForEach(getRecentActivities(), id: \.id) { activity in
+                    RecentActivityRow(activity: activity)
+                }
+            }
+        }
+        .padding()
+        .background(.ultraThinMaterial)
+        .cornerRadius(12)
+    }
+
+    // MARK: - Data Generation Methods
+
+    private func calculateAverageXP() -> Int {
+        guard !viewModel.students.isEmpty else { return 0 }
+        let totalXP = viewModel.students.map(\.totalXP).reduce(0, +)
+        return totalXP / viewModel.students.count
+    }
+
+    private func getCourseProgressData() -> [CourseProgressData] {
+        let courses = [
+            ("High Voltage Safety Foundation", 12, 15, 80),
+            ("Electrical Fundamentals", 10, 15, 67),
+            ("EV System Components", 8, 15, 53),
+            ("EV Charging Systems", 6, 15, 40),
+            ("Advanced EV Systems", 4, 15, 27)
+        ]
+
+        return courses.enumerated().map { index, course in
+            CourseProgressData(
+                id: "course_\(index)",
+                courseName: course.0,
+                completedStudents: course.1,
+                totalStudents: course.2,
+                progressPercentage: course.3
+            )
+        }
+    }
+
+    private func getPodcastEngagementData() -> [PodcastEngagementData] {
+        let podcasts = [
+            ("EV Safety Fundamentals", 8, 15, 45, 53),
+            ("Electrical Systems Deep Dive", 6, 15, 38, 40),
+            ("Battery Technology Explained", 5, 15, 42, 33),
+            ("Charging Infrastructure", 4, 15, 35, 27),
+            ("Future of EVs", 3, 15, 28, 20)
+        ]
+
+        return podcasts.enumerated().map { index, podcast in
+            PodcastEngagementData(
+                id: "podcast_\(index)",
+                title: podcast.0,
+                listenersCount: podcast.1,
+                totalStudents: podcast.2,
+                avgListenMinutes: podcast.3,
+                engagementPercentage: podcast.4
+            )
+        }
+    }
+
+    private func getTopPerformers() -> [TopPerformerData] {
+        return viewModel.students
+            .sorted { $0.totalXP > $1.totalXP }
+            .prefix(5)
+            .enumerated()
+            .map { index, student in
+                TopPerformerData(
+                    id: student.id,
+                    rank: index + 1,
+                    name: student.fullName,
+                    level: student.currentLevel,
+                    xp: student.totalXP,
+                    certificates: student.coursesCompleted.count,
+                    progress: (student.coursesCompleted.count * 100) / 5
+                )
+            }
+    }
+
+    private func getRecentActivities() -> [RecentActivityData] {
+        return [
+            RecentActivityData(id: "1", icon: "📚", description: "Video completed", details: "Murgesh Navar • High Voltage Safety Foundation", timeAgo: "30m ago"),
+            RecentActivityData(id: "2", icon: "⚡", description: "Earned 25 XP", details: "Abigail Clark • Electrical Fundamentals Quiz", timeAgo: "45m ago"),
+            RecentActivityData(id: "3", icon: "🎯", description: "Started course", details: "John Smith • EV System Components", timeAgo: "1h ago"),
+            RecentActivityData(id: "4", icon: "📖", description: "Module progress", details: "Sarah Johnson • 75% complete in EV Charging", timeAgo: "2h ago"),
+            RecentActivityData(id: "5", icon: "🔋", description: "Watch streak", details: "Mike Brown • 5 day learning streak", timeAgo: "3h ago"),
+            RecentActivityData(id: "6", icon: "⭐", description: "XP milestone", details: "Emma Davis • Reached 500 XP total", timeAgo: "4h ago"),
+            RecentActivityData(id: "7", icon: "📺", description: "Video watched", details: "Chris Wilson • Advanced EV Systems Intro", timeAgo: "5h ago")
+        ]
     }
 }
 
-struct CourseLevelRow: View {
-    let level: CTECourseLevel
-    let studentCount: Int
-    let averageXP: Int
-    let completionRate: Double
+// MARK: - Supporting Views
+
+struct ProgressCourseRow: View {
+    let course: CourseProgressData
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(level.displayName)
-                    .font(.headline)
+                Text(course.courseName)
+                    .font(.subheadline)
                     .fontWeight(.medium)
 
-                Text("\(studentCount) students")
+                Text("\(course.completedStudents)/\(course.totalStudents) students actively engaged")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -284,41 +290,61 @@ struct CourseLevelRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                HStack(spacing: 16) {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("\(averageXP)")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        Text("Avg XP")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
+                Text("\(course.progressPercentage)%")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
 
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("\(Int(completionRate))%")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        Text("Completion")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                }
+                ProgressView(value: Double(course.progressPercentage), total: 100)
+                    .progressViewStyle(LinearProgressViewStyle(tint: .blue))
+                    .frame(width: 50)
             }
         }
-        .padding()
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
         .background(.gray.opacity(0.05))
         .cornerRadius(8)
     }
 }
 
-struct StudentPerformanceRow: View {
-    let student: ClassStudent
-    let rank: Int
+struct PodcastEngagementRow: View {
+    let podcast: PodcastEngagementData
+
+    var body: some View {
+        HStack {
+            Text("🎧")
+                .font(.title2)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(podcast.title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Text("\(podcast.listenersCount)/\(podcast.totalStudents) students listened • \(podcast.avgListenMinutes) min avg")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Text("\(podcast.engagementPercentage)%")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.green)
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(.gray.opacity(0.05))
+        .cornerRadius(8)
+    }
+}
+
+struct TopPerformerRow: View {
+    let performer: TopPerformerData
 
     var body: some View {
         HStack {
             // Rank Badge
-            Text("\(rank)")
+            Text("\(performer.rank)")
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
@@ -326,32 +352,31 @@ struct StudentPerformanceRow: View {
                 .background(rankColor)
                 .clipShape(Circle())
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(student.fullName)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(performer.name)
                     .font(.subheadline)
                     .fontWeight(.medium)
 
-                Text("\(student.totalXP) XP • Level \(student.currentLevel)")
+                Text("Level \(performer.level) • \(performer.xp) XP • \(performer.certificates) Certificates")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(student.coursesCompleted.count)/5")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                Text("Courses")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
+            Text("\(performer.progress)%")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.orange)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(.gray.opacity(0.05))
+        .cornerRadius(8)
     }
 
     private var rankColor: Color {
-        switch rank {
+        switch performer.rank {
         case 1: return .yellow
         case 2: return .gray
         case 3: return .orange
@@ -360,168 +385,72 @@ struct StudentPerformanceRow: View {
     }
 }
 
-struct StudentAttentionRow: View {
-    let student: ClassStudent
+struct RecentActivityRow: View {
+    let activity: RecentActivityData
 
     var body: some View {
         HStack {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.caption)
-                .foregroundColor(.orange)
+            Text(activity.icon)
+                .font(.title2)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(student.fullName)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(activity.description)
                     .font(.subheadline)
                     .fontWeight(.medium)
 
-                Text(attentionReason)
+                Text(activity.details)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
 
             Spacer()
 
-            Button("Contact") {
-                // Implementation for contacting student
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
+            Text(activity.timeAgo)
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
-        .padding(.vertical, 4)
-    }
-
-    private var attentionReason: String {
-        if let lastActivity = student.lastActivityDate {
-            let days = Calendar.current.dateComponents([.day], from: lastActivity, to: Date()).day ?? 0
-            if days > 7 {
-                return "Inactive for \(days) days"
-            }
-        }
-
-        if student.totalXP < 100 {
-            return "Low engagement (\(student.totalXP) XP)"
-        }
-
-        return "Needs support"
-    }
-}
-
-// MARK: - Analytics Manager
-
-@MainActor
-class CourseAnalyticsManager: ObservableObject {
-    @Published var courseCompletionData: [CourseCompletionData] = []
-    @Published var engagementData: [EngagementData] = []
-    @Published var classAverage: Double = 0
-    @Published var engagementRate: Double = 0
-    @Published var averageWatchTime: Double = 0
-
-    // Trends (percentage change)
-    @Published var completionTrend: Double = 0
-    @Published var engagementTrend: Double = 0
-    @Published var watchTimeTrend: Double = 0
-
-    let availableCourses = [
-        "High Voltage Safety",
-        "Electrical Fundamentals",
-        "Advanced Diagnostics",
-        "EV Charging Systems",
-        "Advanced EV Systems"
-    ]
-
-    func loadAnalytics(for students: [ClassStudent]) {
-        generateCourseCompletionData(for: students)
-        generateEngagementData()
-        calculateOverallMetrics(for: students)
-        calculateTrends()
-    }
-
-    func exportAnalyticsReport() {
-        print("Exporting analytics report...")
-    }
-
-    private func generateCourseCompletionData(for students: [ClassStudent]) {
-        let courses = [
-            ("Course 1: Safety", "course_1", Color.red),
-            ("Course 2: Electrical", "course_2", Color.orange),
-            ("Course 3: Diagnostics", "course_3", Color.yellow),
-            ("Course 4: Charging", "course_4", Color.green),
-            ("Course 5: Advanced", "course_5", Color.blue)
-        ]
-
-        courseCompletionData = courses.map { (name, id, color) in
-            let completedCount = students.filter { $0.coursesCompleted.contains(id) }.count
-            let completionPercentage = Double(completedCount) / Double(students.count) * 100
-
-            return CourseCompletionData(
-                courseName: name,
-                completionPercentage: completionPercentage,
-                color: color
-            )
-        }
-    }
-
-    private func generateEngagementData() {
-        let calendar = Calendar.current
-        let today = Date()
-
-        engagementData = (0..<7).compactMap { daysAgo in
-            guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) else { return nil }
-            let activeStudents = Int.random(in: 25...45) // Simulated data
-
-            return EngagementData(date: date, activeStudents: activeStudents)
-        }.reversed()
-    }
-
-    private func calculateOverallMetrics(for students: [ClassStudent]) {
-        // Class average completion
-        let totalCompletions = students.map { $0.coursesCompleted.count }.reduce(0, +)
-        classAverage = Double(totalCompletions) / Double(students.count * 5) * 100
-
-        // Engagement rate (students active in last 7 days)
-        let activeStudents = students.filter { student in
-            guard let lastActivity = student.lastActivityDate else { return false }
-            let daysSinceActivity = Calendar.current.dateComponents([.day], from: lastActivity, to: Date()).day ?? 999
-            return daysSinceActivity <= 7
-        }.count
-        engagementRate = Double(activeStudents) / Double(students.count) * 100
-
-        // Average watch time
-        averageWatchTime = students.map(\.totalWatchTime).reduce(0, +) / Double(students.count)
-    }
-
-    private func calculateTrends() {
-        // Simulated trend data (in real app, compare with previous period)
-        completionTrend = Double.random(in: -5...15)
-        engagementTrend = Double.random(in: -10...20)
-        watchTimeTrend = Double.random(in: -8...12)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(.gray.opacity(0.05))
+        .cornerRadius(8)
     }
 }
 
 // MARK: - Data Models
 
-struct CourseCompletionData {
+struct CourseProgressData {
+    let id: String
     let courseName: String
-    let completionPercentage: Double
-    let color: Color
+    let completedStudents: Int
+    let totalStudents: Int
+    let progressPercentage: Int
 }
 
-struct EngagementData {
-    let date: Date
-    let activeStudents: Int
+struct PodcastEngagementData {
+    let id: String
+    let title: String
+    let listenersCount: Int
+    let totalStudents: Int
+    let avgListenMinutes: Int
+    let engagementPercentage: Int
 }
 
-enum TimeFrame: CaseIterable {
-    case week, month, semester, year
+struct TopPerformerData {
+    let id: String
+    let rank: Int
+    let name: String
+    let level: Int
+    let xp: Int
+    let certificates: Int
+    let progress: Int
+}
 
-    var displayName: String {
-        switch self {
-        case .week: return "Week"
-        case .month: return "Month"
-        case .semester: return "Semester"
-        case .year: return "Year"
-        }
-    }
+struct RecentActivityData {
+    let id: String
+    let icon: String
+    let description: String
+    let details: String
+    let timeAgo: String
 }
 
 // MARK: - Preview

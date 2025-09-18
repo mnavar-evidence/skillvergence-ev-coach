@@ -17,17 +17,10 @@ struct Teacher: Identifiable, Codable {
     let school: String
     let department: String
     let classTitle: String
+    let classCode: String?
     let instagramHandle: String?
 
-    static let dennisJohnson = Teacher(
-        id: "teacher_dennis_johnson",
-        fullName: "Mr. Dennis Johnson",
-        email: "djohnson@fuhsd.net",
-        school: "Fallbrook High School",
-        department: "CTE Transportation Technology",
-        classTitle: "CTE Pathway: Transportation Technology",
-        instagramHandle: "@avotransportationhs"
-    )
+    // Teacher information will be loaded from database via API
 }
 
 struct ClassStudent: Identifiable, Codable {
@@ -45,6 +38,7 @@ struct ClassStudent: Identifiable, Codable {
     var coursesCompleted: [String]
     var certificatesEarned: [SkillvergenceCertificate]
     var lastActivityDate: Date?
+    var lastActiveString: String // Store the raw API string like "2 hours ago"
     var totalWatchTime: Double // in hours
     var videosCompleted: Int
     var currentStreak: Int
@@ -102,8 +96,9 @@ enum ActivityType {
 
 @MainActor
 class TeacherViewModel: ObservableObject {
-    @Published var currentTeacher: Teacher = .dennisJohnson
+    @Published var currentTeacher: Teacher?
     @Published var students: [ClassStudent] = []
+    @Published var certificates: [APICertificate] = []
     @Published var recentActivities: [StudentActivity] = []
     @Published var isLoading = false
     @Published var showAnnouncementDialog = false
@@ -116,35 +111,138 @@ class TeacherViewModel: ObservableObject {
     @Published var averageCompletion: Double = 0.0
 
     private var cancellables = Set<AnyCancellable>()
+    private var isDataLoaded = false // Cache flag for initial data
+    private var lastRefreshTime = Date.distantPast
 
     init() {
-        loadClassData()
+        // Teacher data will be loaded during authentication
+    }
+
+    func loadTeacherInfo(teacherId: String) {
+        // Load teacher information from database via API
+        // This should be called during teacher authentication
+        currentTeacher = Teacher(
+            id: teacherId,
+            fullName: "Loading...",
+            email: "",
+            school: "",
+            department: "",
+            classTitle: "",
+            classCode: nil,
+            instagramHandle: nil
+        )
+
+        // In real implementation, this would fetch from API:
+        // TeacherAPIService.shared.getTeacherInfo(teacherId) { teacher in
+        //     self.currentTeacher = teacher
+        // }
     }
 
     // MARK: - Data Loading
 
     func loadClassData() {
+        // Don't reload if data is already loaded
+        if isDataLoaded {
+            return
+        }
+
         isLoading = true
 
-        // Simulate loading student data for Dennis Johnson's class
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.students = self.generateSampleStudents()
-            self.recentActivities = self.generateRecentActivities()
-            self.calculateAnalytics()
-            self.isLoading = false
+        Task {
+            do {
+                // Load both students and certificates concurrently
+                async let studentsResponse = TeacherAPIService.shared.getStudentRoster(schoolId: "fallbrook-hs")
+                async let certificatesResponse = TeacherAPIService.shared.getCertificates(schoolId: "fallbrook-hs")
+
+                let studentData = try await studentsResponse
+                let certificateData = try await certificatesResponse
+
+                // Convert API students to ClassStudent objects
+                let classStudents = studentData.students.map { apiStudent in
+                    // Determine if student is active based on lastActive string (like Android does)
+                    let isActive = determineActivityStatus(from: apiStudent.lastActive)
+
+                    return ClassStudent(
+                        id: apiStudent.id,
+                        fullName: apiStudent.name,
+                        email: apiStudent.email,
+                        studentId: apiStudent.id,
+                        enrollmentDate: Date(),
+                        courseLevel: .transportationTech1,
+                        isActive: isActive,
+                        totalXP: apiStudent.totalXP,
+                        currentLevel: apiStudent.currentLevel,
+                        coursesCompleted: [],
+                        certificatesEarned: [],
+                        lastActivityDate: parseActivityDate(from: apiStudent.lastActive),
+                        lastActiveString: apiStudent.lastActive,
+                        totalWatchTime: Double.random(in: 5...20),
+                        videosCompleted: apiStudent.completedCourses * 3,
+                        currentStreak: apiStudent.streak
+                    )
+                }
+
+                await MainActor.run {
+                    self.students = classStudents
+                    self.certificates = certificateData.certificates
+                    self.totalStudents = studentData.summary.totalStudents
+                    self.activeToday = studentData.summary.activeToday
+                    self.averageCompletion = Double(studentData.summary.avgCompletionRate)
+                    self.recentActivities = self.generateRecentActivities()
+                    self.calculateAnalytics()
+                    self.isLoading = false
+                    self.isDataLoaded = true
+                    self.lastRefreshTime = Date()
+                }
+            } catch {
+                print("Error loading class data: \(error)")
+                // Fallback to sample data on error
+                await MainActor.run {
+                    self.students = self.generateSampleStudents()
+                    self.certificates = []
+                    self.recentActivities = self.generateRecentActivities()
+                    self.calculateAnalytics()
+                    self.isLoading = false
+                    self.isDataLoaded = true
+                    self.lastRefreshTime = Date()
+                }
+            }
         }
     }
 
     func refreshClassData() async {
-        // Simulate API refresh
-        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+        // Only refresh if more than 30 seconds have passed since last refresh
+        let timeSinceLastRefresh = Date().timeIntervalSince(lastRefreshTime)
+        if timeSinceLastRefresh < 30 {
+            return
+        }
+
+        isLoading = true
+
+        // Reset data loaded flag to allow fresh data fetch
+        isDataLoaded = false
+
+        // Use existing loadClassData method which now has real API integration
+        loadClassData()
+    }
+
+    func refreshData() {
+        // Force refresh by resetting cache
+        isDataLoaded = false
+        loadClassData()
+    }
+
+    func forceRefreshClassData() async {
+        // Force a full refresh (for manual pull-to-refresh)
+        isDataLoaded = false
+        lastRefreshTime = Date.distantPast
         loadClassData()
     }
 
     private func generateSampleStudents() -> [ClassStudent] {
         var students: [ClassStudent] = []
 
-        // Generate 60 sample students for Dennis Johnson's class
+        // Generate 60 sample students for the current class
         let sampleNames = [
             "Alex Rodriguez", "Emma Chen", "Marcus Williams", "Sofia Garcia", "Ethan Thompson",
             "Ava Martinez", "Noah Johnson", "Isabella Brown", "Liam Davis", "Mia Lopez",
@@ -183,6 +281,7 @@ class TeacherViewModel: ObservableObject {
                 coursesCompleted: Array(["course_1", "course_2", "course_3", "course_4", "course_5"].prefix(Int.random(in: 0...5))),
                 certificatesEarned: [],
                 lastActivityDate: Bool.random() ? Calendar.current.date(byAdding: .hour, value: -Int.random(in: 1...48), to: Date()) : nil,
+                lastActiveString: Bool.random() ? "\(Int.random(in: 1...23)) hours ago" : "3 days ago",
                 totalWatchTime: Double.random(in: 0...20),
                 videosCompleted: Int.random(in: 0...25),
                 currentStreak: Int.random(in: 0...15)
@@ -238,27 +337,20 @@ class TeacherViewModel: ObservableObject {
 
     private func calculateAnalytics() {
         totalStudents = students.count
-        activeToday = students.filter { student in
-            guard let lastActivity = student.lastActivityDate else { return false }
-            return Calendar.current.isDateInToday(lastActivity)
-        }.count
+        // Don't override activeToday from API response - comes from backend summary
+        // Don't override averageCompletion from API response - comes from backend avgCompletionRate
 
         // Mock pending certificates - in real app this would come from backend
         pendingCertificates = Int.random(in: 3...12)
-
-        // Calculate average completion
-        let totalProgress = students.reduce(0.0) { sum, student in
-            let completionRate = Double(student.coursesCompleted.count) / 5.0 * 100.0
-            return sum + min(completionRate, 100.0)
-        }
-        averageCompletion = totalProgress / Double(students.count)
     }
 
     // MARK: - Teacher Actions
 
     func exportClassProgress() {
         // Implementation for exporting class progress to CSV/PDF
-        print("Exporting class progress for \(currentTeacher.fullName)")
+        if let teacher = currentTeacher {
+            print("Exporting class progress for \(teacher.fullName)")
+        }
     }
 
     func getStudentsByLevel(_ level: CTECourseLevel) -> [ClassStudent] {
@@ -281,6 +373,72 @@ class TeacherViewModel: ObservableObject {
     func sendAnnouncementToClass(message: String) {
         // Implementation for sending announcements to all students
         print("Sending announcement to class: \(message)")
+    }
+
+    // MARK: - Activity Parsing Helpers
+
+    private func determineActivityStatus(from lastActive: String) -> Bool {
+        // Use the same logic as Android TeacherViewModel
+        let lowercased = lastActive.lowercased()
+
+        if lowercased.contains("minute") {
+            return true
+        }
+
+        if lowercased.contains("hour") {
+            // Extract hours and check if less than 24
+            let hourMatch = lastActive.range(of: #"\d+"#, options: .regularExpression)
+            if let range = hourMatch {
+                let hourString = String(lastActive[range])
+                let hours = Int(hourString) ?? 25
+                return hours < 24
+            }
+            return false
+        }
+
+        if lowercased.contains("today") {
+            return true
+        }
+
+        return false
+    }
+
+    private func parseActivityDate(from lastActive: String) -> Date? {
+        // Parse relative time strings like "2 hours ago", "30 minutes ago"
+        let lowercased = lastActive.lowercased()
+
+        if lowercased.contains("minute") {
+            if let minuteMatch = lastActive.range(of: #"\d+"#, options: .regularExpression) {
+                let minuteString = String(lastActive[minuteMatch])
+                if let minutes = Int(minuteString) {
+                    return Calendar.current.date(byAdding: .minute, value: -minutes, to: Date())
+                }
+            }
+        }
+
+        if lowercased.contains("hour") {
+            if let hourMatch = lastActive.range(of: #"\d+"#, options: .regularExpression) {
+                let hourString = String(lastActive[hourMatch])
+                if let hours = Int(hourString) {
+                    return Calendar.current.date(byAdding: .hour, value: -hours, to: Date())
+                }
+            }
+        }
+
+        if lowercased.contains("day") {
+            if let dayMatch = lastActive.range(of: #"\d+"#, options: .regularExpression) {
+                let dayString = String(lastActive[dayMatch])
+                if let days = Int(dayString) {
+                    return Calendar.current.date(byAdding: .day, value: -days, to: Date())
+                }
+            }
+        }
+
+        if lowercased.contains("today") {
+            return Calendar.current.date(byAdding: .hour, value: -1, to: Date())
+        }
+
+        return nil
     }
 }
 

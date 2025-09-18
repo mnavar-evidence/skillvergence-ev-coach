@@ -102,7 +102,7 @@ struct StudentRosterView: View {
 
                 StatsSummary(
                     title: "Active Today",
-                    value: "\(filteredStudents.filter { Calendar.current.isDateInToday($0.lastActivityDate ?? Date.distantPast) }.count)",
+                    value: "\(viewModel.activeToday)",
                     color: .orange
                 )
             }
@@ -237,52 +237,28 @@ struct StudentRowView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(student.fullName)
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                    Text(student.fullName)
+                        .font(.headline)
+                        .foregroundColor(.primary)
 
-                        Spacer()
-
-                        Text(student.courseLevel.displayName)
-                            .font(.caption)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(.blue.opacity(0.1))
-                            .foregroundColor(.blue)
-                            .cornerRadius(8)
-                    }
-
-                    Text(student.studentId)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    HStack(spacing: 16) {
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Label("\(student.totalXP) XP", systemImage: "star.fill")
                             .font(.caption)
                             .foregroundColor(.orange)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .layoutPriority(1)
 
                         Label("Level \(student.currentLevel)", systemImage: "crown.fill")
                             .font(.caption)
                             .foregroundColor(.purple)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .layoutPriority(1)
 
-                        if student.currentStreak > 0 {
-                            Label("\(student.currentStreak) day streak", systemImage: "flame.fill")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
+                        Spacer(minLength: 12)
 
-                        Spacer()
-
-                        if let lastActivity = student.lastActivityDate {
-                            Text(RelativeDateTimeFormatter().localizedString(for: lastActivity, relativeTo: Date()))
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("No activity")
-                                .font(.caption2)
-                                .foregroundColor(.red)
-                        }
+                        lastActivityText
                     }
                 }
 
@@ -293,6 +269,22 @@ struct StudentRowView: View {
             .padding()
         }
         .buttonStyle(.plain)
+    }
+}
+
+extension StudentRowView {
+    private var lastActivityText: some View {
+        Group {
+            if !student.lastActiveString.isEmpty {
+                Text(student.lastActiveString)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("No activity")
+                    .font(.caption2)
+                    .foregroundColor(.red)
+            }
+        }
     }
 }
 

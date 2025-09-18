@@ -22,7 +22,7 @@ class TeacherAPIService: ObservableObject {
 
     // MARK: - Teacher Authentication
 
-    func validateTeacherCode(_ code: String, schoolId: String = "fallbrook_high") async throws -> TeacherValidationResponse {
+    func validateTeacherCode(_ code: String, schoolId: String = "") async throws -> TeacherValidationResponse {
         let url = URL(string: "\(baseURL)/teacher/validate-code")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -48,7 +48,7 @@ class TeacherAPIService: ObservableObject {
 
     // MARK: - School Configuration
 
-    func getSchoolConfig(schoolId: String = "fallbrook_high") async throws -> SchoolConfigResponse {
+    func getSchoolConfig(schoolId: String) async throws -> SchoolConfigResponse {
         let url = URL(string: "\(baseURL)/teacher/school/\(schoolId)/config")!
         let (data, _) = try await URLSession.shared.data(from: url)
         return try JSONDecoder().decode(SchoolConfigResponse.self, from: data)
@@ -56,7 +56,7 @@ class TeacherAPIService: ObservableObject {
 
     // MARK: - Student Management
 
-    func getStudentRoster(schoolId: String = "fallbrook_high", level: String? = nil, sortBy: String = "name", order: String = "asc") async throws -> StudentRosterResponse {
+    func getStudentRoster(schoolId: String, level: String? = nil, sortBy: String = "name", order: String = "asc") async throws -> StudentRosterResponse {
         var components = URLComponents(string: "\(baseURL)/teacher/school/\(schoolId)/students")!
         var queryItems: [URLQueryItem] = [
             URLQueryItem(name: "sortBy", value: sortBy),
@@ -81,7 +81,7 @@ class TeacherAPIService: ObservableObject {
 
     // MARK: - Certificate Management
 
-    func getCertificates(schoolId: String = "fallbrook_high", status: String = "all") async throws -> CertificatesResponse {
+    func getCertificates(schoolId: String, status: String = "all") async throws -> CertificatesResponse {
         let url = URL(string: "\(baseURL)/teacher/school/\(schoolId)/certificates?status=\(status)")!
         let (data, _) = try await URLSession.shared.data(from: url)
         return try JSONDecoder().decode(CertificatesResponse.self, from: data)
@@ -102,13 +102,13 @@ class TeacherAPIService: ObservableObject {
 
     // MARK: - Code Management
 
-    func getCodeUsage(schoolId: String = "fallbrook_high") async throws -> CodeUsageResponse {
+    func getCodeUsage(schoolId: String) async throws -> CodeUsageResponse {
         let url = URL(string: "\(baseURL)/teacher/school/\(schoolId)/code-usage")!
         let (data, _) = try await URLSession.shared.data(from: url)
         return try JSONDecoder().decode(CodeUsageResponse.self, from: data)
     }
 
-    func generateCodes(schoolId: String = "fallbrook_high", type: String, count: Int) async throws -> CodeGenerationResponse {
+    func generateCodes(schoolId: String, type: String, count: Int) async throws -> CodeGenerationResponse {
         let url = URL(string: "\(baseURL)/teacher/school/\(schoolId)/generate-codes")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -143,6 +143,7 @@ struct TeacherInfo: Codable {
     let name: String
     let email: String
     let school: String
+    let schoolId: String
     let department: String?
     let program: String?
     let classCode: String?

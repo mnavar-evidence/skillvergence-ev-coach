@@ -15,6 +15,7 @@ struct Teacher: Identifiable, Codable {
     let fullName: String
     let email: String
     let school: String
+    let schoolId: String
     let department: String
     let classTitle: String
     let classCode: String?
@@ -105,7 +106,7 @@ class TeacherViewModel: ObservableObject {
     @Published var selectedStudent: ClassStudent?
 
     // Analytics
-    @Published var totalStudents: Int = 60
+    @Published var totalStudents: Int = 0
     @Published var activeToday: Int = 0
     @Published var pendingCertificates: Int = 0
     @Published var averageCompletion: Double = 0.0
@@ -116,6 +117,37 @@ class TeacherViewModel: ObservableObject {
 
     init() {
         // Teacher data will be loaded during authentication
+        setupTeacherDataObserver()
+    }
+
+    private func setupTeacherDataObserver() {
+        // Observe changes to teacher data from AccessControlManager
+        AccessControlManager.shared.$teacherData
+            .compactMap { $0 } // Only proceed if teacherData is not nil
+            .sink { [weak self] teacherInfo in
+                self?.updateTeacherFromAccessControl(teacherInfo)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func updateTeacherFromAccessControl(_ teacherInfo: TeacherInfo) {
+        // Convert TeacherInfo to Teacher model
+        currentTeacher = Teacher(
+            id: teacherInfo.id,
+            fullName: teacherInfo.name,
+            email: teacherInfo.email,
+            school: teacherInfo.school,
+            schoolId: teacherInfo.schoolId,
+            department: teacherInfo.department ?? "",
+            classTitle: "\(teacherInfo.school) - \(teacherInfo.program ?? "EV Transition Program")",
+            classCode: teacherInfo.classCode,
+            instagramHandle: nil
+        )
+
+        print("📱 iOS TeacherViewModel: Updated teacher from AccessControl - School ID: \(teacherInfo.schoolId)")
+
+        // Automatically load class data once we have the teacher info
+        loadClassData()
     }
 
     func loadTeacherInfo(teacherId: String) {
@@ -126,6 +158,7 @@ class TeacherViewModel: ObservableObject {
             fullName: "Loading...",
             email: "",
             school: "",
+            schoolId: "", // Will be populated by authentication API
             department: "",
             classTitle: "",
             classCode: nil,
@@ -150,9 +183,16 @@ class TeacherViewModel: ObservableObject {
 
         Task {
             do {
+                // Ensure teacher is authenticated with valid school ID
+                guard let schoolId = currentTeacher?.schoolId else {
+                    print("❌ No authenticated teacher or school ID - cannot load class data")
+                    isLoading = false
+                    return
+                }
+
                 // Load both students and certificates concurrently
-                async let studentsResponse = TeacherAPIService.shared.getStudentRoster(schoolId: "fallbrook-hs")
-                async let certificatesResponse = TeacherAPIService.shared.getCertificates(schoolId: "fallbrook-hs")
+                async let studentsResponse = TeacherAPIService.shared.getStudentRoster(schoolId: schoolId)
+                async let certificatesResponse = TeacherAPIService.shared.getCertificates(schoolId: schoolId)
 
                 let studentData = try await studentsResponse
                 let certificateData = try await certificatesResponse
@@ -198,7 +238,9 @@ class TeacherViewModel: ObservableObject {
                 print("Error loading class data: \(error)")
                 // Fallback to sample data on error
                 await MainActor.run {
-                    self.students = self.generateSampleStudents()
+                    let sampleStudents = self.generateSampleStudents()
+                    self.students = sampleStudents
+                    self.totalStudents = sampleStudents.count
                     self.certificates = []
                     self.recentActivities = self.generateRecentActivities()
                     self.calculateAnalytics()
@@ -242,23 +284,13 @@ class TeacherViewModel: ObservableObject {
     private func generateSampleStudents() -> [ClassStudent] {
         var students: [ClassStudent] = []
 
-        // Generate 60 sample students for the current class
+        // Generate realistic sample students matching typical class size
         let sampleNames = [
             "Alex Rodriguez", "Emma Chen", "Marcus Williams", "Sofia Garcia", "Ethan Thompson",
-            "Ava Martinez", "Noah Johnson", "Isabella Brown", "Liam Davis", "Mia Lopez",
-            "Lucas Anderson", "Charlotte Wilson", "Mason Taylor", "Amelia Moore", "Oliver Jackson",
-            "Harper Martin", "Elijah Lee", "Evelyn White", "Logan Harris", "Abigail Clark",
-            "Jacob Lewis", "Emily Robinson", "Michael Walker", "Elizabeth Hall", "Daniel Allen",
-            "Madison Young", "Henry King", "Victoria Wright", "Alexander Scott", "Grace Adams",
-            "Sebastian Nelson", "Chloe Baker", "Samuel Carter", "Zoey Mitchell", "David Perez",
-            "Lily Roberts", "Joseph Turner", "Natalie Phillips", "Carter Campbell", "Hannah Parker",
-            "Wyatt Evans", "Addison Edwards", "Owen Stewart", "Aria Flores", "Luke Morris",
-            "Layla Reed", "Gabriel Cook", "Scarlett Morgan", "Anthony Bell", "Leah Murphy",
-            "Isaac Bailey", "Nora Rivera", "Hunter Cooper", "Stella Richardson", "Adrian Cox",
-            "Maya Howard", "Julian Ward", "Claire Torres", "Maverick Peterson", "Savannah Gray"
+            "Ava Martinez", "Noah Johnson", "Isabella Brown", "Liam Davis", "Mia Lopez"
         ]
 
-        for i in 0..<60 {
+        for i in 0..<sampleNames.count {
             let name = sampleNames[i]
             let courseLevel: CTECourseLevel = {
                 switch i % 3 {

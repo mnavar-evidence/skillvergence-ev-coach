@@ -10,10 +10,12 @@ import android.widget.Button
 import android.widget.LinearLayout
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.skillvergence.mindsherpa.R
+import com.skillvergence.mindsherpa.config.AppConfig
 import com.skillvergence.mindsherpa.data.api.TeacherApiService
 import com.skillvergence.mindsherpa.data.api.ApiCertificate
 import com.skillvergence.mindsherpa.data.api.CertificateActionRequest
@@ -29,6 +31,7 @@ import java.util.*
  */
 class TeacherCertificatesFragment : Fragment() {
 
+    private val teacherViewModel: TeacherViewModel by activityViewModels()
     private lateinit var pendingCount: TextView
     private lateinit var approvedCount: TextView
     private lateinit var tabAllCertificates: CardView
@@ -43,7 +46,7 @@ class TeacherCertificatesFragment : Fragment() {
 
     private val teacherApiService: TeacherApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("http://192.168.86.46:3000/api/")
+            .baseUrl(AppConfig.apiURL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(TeacherApiService::class.java)
@@ -155,8 +158,11 @@ class TeacherCertificatesFragment : Fragment() {
     private fun loadCertificates() {
         lifecycleScope.launch {
             try {
-                // TODO: Get actual school ID from AccessControlManager
-                val schoolId = "fallbrook-hs"
+                // Get school ID from authenticated teacher context or fail
+                val schoolId = teacherViewModel.schoolInfo.value?.id ?: run {
+                    println("❌ No authenticated school context - cannot load certificates")
+                    return@launch
+                }
                 val response = teacherApiService.getCertificates(schoolId)
 
                 if (response.isSuccessful && response.body() != null) {
@@ -192,9 +198,13 @@ class TeacherCertificatesFragment : Fragment() {
     private fun handleCertificateAction(certificate: ApiCertificate, action: String) {
         lifecycleScope.launch {
             try {
+                val teacherId = teacherViewModel.schoolInfo.value?.instructor?.id ?: run {
+                    println("❌ No authenticated teacher ID - cannot process certificate action")
+                    return@launch
+                }
                 val response = teacherApiService.approveCertificate(
                     certificate.id,
-                    CertificateActionRequest(action, "teacher-djohnson")
+                    CertificateActionRequest(action, teacherId)
                 )
 
                 if (response.isSuccessful) {
@@ -306,7 +316,7 @@ class CertificateAdapter(
                     }
                 }
                 else -> {
-                    certificateStatus.text = certificate.status.capitalize()
+                    certificateStatus.text = certificate.status.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
                     certificateStatus.setTextColor(Color.parseColor("#F44336"))
                     actionButtons.visibility = View.GONE
                     approvedInfo.visibility = View.GONE

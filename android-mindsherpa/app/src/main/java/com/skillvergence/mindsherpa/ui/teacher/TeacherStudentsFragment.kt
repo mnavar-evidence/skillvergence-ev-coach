@@ -12,10 +12,12 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.skillvergence.mindsherpa.R
+import com.skillvergence.mindsherpa.config.AppConfig
 import com.skillvergence.mindsherpa.data.api.TeacherApiService
 import com.skillvergence.mindsherpa.data.model.Student
 import kotlinx.coroutines.launch
@@ -28,6 +30,7 @@ import retrofit2.converter.gson.GsonConverterFactory
  */
 class TeacherStudentsFragment : Fragment() {
 
+    private val teacherViewModel: TeacherViewModel by activityViewModels()
     private lateinit var searchEditText: EditText
     private lateinit var tabAll: CardView
     private lateinit var tabActive: CardView
@@ -50,7 +53,7 @@ class TeacherStudentsFragment : Fragment() {
 
     private val teacherApiService: TeacherApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("http://192.168.86.46:3000/api/")
+            .baseUrl(AppConfig.apiURL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(TeacherApiService::class.java)
@@ -226,10 +229,13 @@ class TeacherStudentsFragment : Fragment() {
     private fun loadStudentData() {
         lifecycleScope.launch {
             try {
-                // TODO: Get actual school ID from AccessControlManager
-                val schoolId = "fallbrook-hs"
+                // Get school ID from authenticated teacher context or fail
+                val schoolId = teacherViewModel.schoolInfo.value?.id ?: run {
+                    println("❌ No authenticated school context - cannot load students")
+                    showEmptyState()
+                    return@launch
+                }
                 println("Loading student data for school: $schoolId")
-                println("API Base URL: http://192.168.86.46:3000/api/")
 
                 val response = teacherApiService.getStudentRoster(schoolId)
                 println("Response code: ${response.code()}")

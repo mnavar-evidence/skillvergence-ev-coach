@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.skillvergence.mindsherpa.R
+import com.skillvergence.mindsherpa.config.AppConfig
 import com.skillvergence.mindsherpa.data.api.TeacherApiService
 import com.skillvergence.mindsherpa.data.model.AccessControlManager
 import kotlinx.coroutines.launch
@@ -46,7 +47,7 @@ class TeacherOverviewFragment : Fragment() {
 
     private val teacherApiService: TeacherApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("http://192.168.86.46:3000/api/")
+            .baseUrl(AppConfig.apiURL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(TeacherApiService::class.java)
@@ -127,6 +128,9 @@ class TeacherOverviewFragment : Fragment() {
 
         // Also update class code display immediately
         showClassCode(teacherData.classCode)
+
+        // Load school info in ViewModel using the schoolId from teacher data
+        teacherViewModel.loadSchoolInfo(teacherData.schoolId)
     }
 
     private fun loadDynamicDataIfNeeded() {

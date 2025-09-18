@@ -113,6 +113,7 @@ data class TeacherDetails(
     val name: String,
     val email: String,
     val school: String,
+    val schoolId: String,
     val department: String,
     val program: String,
     val classCode: String

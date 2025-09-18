@@ -77,19 +77,19 @@ interface ApiService {
             return teacherService ?: NetworkModule.createTeacherApiService().also { teacherService = it }
         }
 
-        suspend fun validateTeacherCode(code: String, schoolId: String = "fallbrook_high") =
+        suspend fun validateTeacherCode(code: String, schoolId: String) =
             getTeacherService().validateTeacherCode(TeacherCodeRequest(code, schoolId))
 
-        suspend fun getSchoolConfig(schoolId: String = "fallbrook_high") =
+        suspend fun getSchoolConfig(schoolId: String) =
             getTeacherService().getSchoolConfig(schoolId)
 
-        suspend fun getStudentRoster(schoolId: String = "fallbrook_high", level: String? = null) =
+        suspend fun getStudentRoster(schoolId: String, level: String? = null) =
             getTeacherService().getStudentRoster(schoolId, level)
 
-        suspend fun getCertificates(schoolId: String = "fallbrook_high", status: String = "all") =
+        suspend fun getCertificates(schoolId: String, status: String = "all") =
             getTeacherService().getCertificates(schoolId, status)
 
-        suspend fun getCodeUsage(schoolId: String = "fallbrook_high") =
+        suspend fun getCodeUsage(schoolId: String) =
             getTeacherService().getCodeUsage(schoolId)
     }
 }

@@ -69,7 +69,8 @@ class AccessControlManager private constructor(private val context: Context) {
 
         try {
             // Try backend API first
-            val response = ApiService.validateTeacherCode(normalizedCode, "fallbrook_high")
+            // Backend determines school from teacher code - no schoolId needed
+            val response = ApiService.validateTeacherCode(normalizedCode, "")
             if (response.isSuccessful && response.body()?.success == true) {
                 // Store teacher data from API response
                 response.body()?.teacher?.let { teacher ->
@@ -78,6 +79,7 @@ class AccessControlManager private constructor(private val context: Context) {
                         name = teacher.name,
                         email = teacher.email,
                         school = teacher.school,
+                        schoolId = teacher.schoolId,
                         department = teacher.department,
                         program = teacher.program,
                         classCode = teacher.classCode
@@ -344,6 +346,7 @@ data class TeacherData(
     val name: String,
     val email: String,
     val school: String,
+    val schoolId: String,
     val department: String,
     val program: String,
     val classCode: String

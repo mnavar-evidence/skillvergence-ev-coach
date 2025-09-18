@@ -7,10 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.skillvergence.mindsherpa.R
+import com.skillvergence.mindsherpa.config.AppConfig
 import com.skillvergence.mindsherpa.data.api.TeacherApiService
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
@@ -22,6 +24,7 @@ import retrofit2.converter.gson.GsonConverterFactory
  */
 class TeacherProgressFragment : Fragment() {
 
+    private val teacherViewModel: TeacherViewModel by activityViewModels()
     private lateinit var totalStudentsText: TextView
     private lateinit var activeTodayText: TextView
     private lateinit var avgXpText: TextView
@@ -37,7 +40,7 @@ class TeacherProgressFragment : Fragment() {
 
     private val teacherApiService: TeacherApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("http://192.168.86.46:3000/api/")
+            .baseUrl(AppConfig.apiURL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(TeacherApiService::class.java)
@@ -97,7 +100,11 @@ class TeacherProgressFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 // Load student roster for summary stats
-                val schoolId = "fallbrook-hs"
+                // Get school ID from authenticated teacher or fail
+                val schoolId = teacherViewModel.schoolInfo.value?.id ?: run {
+                    println("❌ No authenticated school context - cannot load progress data")
+                    return@launch
+                }
                 val studentsResponse = teacherApiService.getStudentRoster(schoolId)
 
                 if (studentsResponse.isSuccessful && studentsResponse.body() != null) {

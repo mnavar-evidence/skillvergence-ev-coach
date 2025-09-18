@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.skillvergence.mindsherpa.config.AppConfig
 import com.skillvergence.mindsherpa.data.api.TeacherApiService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -52,7 +53,7 @@ class TeacherViewModel : ViewModel() {
     // Teacher information will be loaded from database via API
     private val teacherApiService: TeacherApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("http://192.168.86.46:3000/api/")
+            .baseUrl(AppConfig.apiURL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(TeacherApiService::class.java)
@@ -137,7 +138,10 @@ class TeacherViewModel : ViewModel() {
 
     private suspend fun loadStudents() {
         try {
-            val schoolId = _schoolInfo.value?.id ?: "fallbrook-hs"
+            val schoolId = _schoolInfo.value?.id ?: run {
+                _errorMessage.value = "❌ No school info loaded - cannot load students"
+                return
+            }
             val response = teacherApiService.getStudentRoster(schoolId)
             if (response.isSuccessful) {
                 val roster = response.body()
@@ -155,7 +159,10 @@ class TeacherViewModel : ViewModel() {
 
     private suspend fun loadCertificates() {
         try {
-            val schoolId = _schoolInfo.value?.id ?: "fallbrook-hs"
+            val schoolId = _schoolInfo.value?.id ?: run {
+                _errorMessage.value = "❌ No school info loaded - cannot load certificates"
+                return
+            }
             val response = teacherApiService.getCertificates(schoolId)
             if (response.isSuccessful) {
                 _certificates.value = response.body()?.certificates ?: emptyList()
@@ -169,7 +176,10 @@ class TeacherViewModel : ViewModel() {
 
     private suspend fun loadCodeUsage() {
         try {
-            val schoolId = _schoolInfo.value?.id ?: "fallbrook-hs"
+            val schoolId = _schoolInfo.value?.id ?: run {
+                _errorMessage.value = "❌ No school info loaded - cannot load code usage"
+                return
+            }
             val response = teacherApiService.getCodeUsage(schoolId)
             if (response.isSuccessful) {
                 _codeUsage.value = response.body()?.usage

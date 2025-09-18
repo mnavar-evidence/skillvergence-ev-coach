@@ -31,6 +31,8 @@ router.post('/validate-code', async (req, res) => {
       });
     }
 
+    console.log('Teacher validation - Teacher object:', JSON.stringify(teacher, null, 2));
+
     // Generate class code if teacher doesn't have one
     let classCode = teacher.class_code;
     if (!classCode) {
@@ -48,6 +50,7 @@ router.post('/validate-code', async (req, res) => {
         name: teacher.name,
         email: teacher.email,
         school: teacher.school_name,
+        schoolId: teacher.school_id,
         department: teacher.department,
         program: teacher.program,
         classCode: classCode
@@ -105,10 +108,16 @@ router.get('/school/:schoolId/students', async (req, res) => {
 
     await database.initialize();
 
-    // For demo purposes, use the sample teacher ID
-    // In production, you'd get this from the authenticated teacher session
-    const teacherId = schoolId === 'fallbrook-hs' ? 'teacher-djohnson' : `teacher-${schoolId}`;
-    const result = await database.getStudentRoster(teacherId);
+    // Look up teacher ID from database by school ID (proper multi-tenant approach)
+    const teacher = await database.get('SELECT id FROM teachers WHERE school_id = ?', [schoolId]);
+    if (!teacher) {
+      return res.status(404).json({
+        error: 'No teacher found for this school',
+        schoolId: schoolId
+      });
+    }
+
+    const result = await database.getStudentRoster(teacher.id);
 
     res.json(result);
   } catch (error) {
@@ -128,9 +137,16 @@ router.get('/school/:schoolId/certificates', async (req, res) => {
 
     await database.initialize();
 
-    // For demo purposes, use the sample teacher ID
-    const teacherId = schoolId === 'fallbrook-hs' ? 'teacher-djohnson' : `teacher-${schoolId}`;
-    const result = await database.getCertificates(teacherId, status);
+    // Look up teacher ID from database by school ID (proper multi-tenant approach)
+    const teacher = await database.get('SELECT id FROM teachers WHERE school_id = ?', [schoolId]);
+    if (!teacher) {
+      return res.status(404).json({
+        error: 'No teacher found for this school',
+        schoolId: schoolId
+      });
+    }
+
+    const result = await database.getCertificates(teacher.id, status);
 
     res.json(result);
   } catch (error) {

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?attr/colorSurface">
+    android:background="@color/surface_color">
 
     <!-- Header with back button -->
     <LinearLayout
@@ -13,7 +13,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:background="?attr/colorSurface"
+        android:background="@color/surface_color"
         android:elevation="2dp">
 
         <ImageButton
@@ -23,15 +23,15 @@
             android:src="@drawable/ic_arrow_back_24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
-            app:tint="?attr/colorOnSurface" />
+            app:tint="@color/text_primary" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Course Modules"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            android:textColor="?attr/colorOnSurface"
+            style="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="@color/text_primary"
             android:gravity="center" />
 
         <!-- Placeholder for symmetry -->
@@ -53,8 +53,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="1.0 High Voltage Vehicle Safety"
-            android:textAppearance="?attr/textAppearanceHeadline5"
-            android:textColor="?attr/colorOnSurface"
+            style="@style/TextAppearance.MaterialComponents.Headline5"
+            android:textColor="@color/text_primary"
             android:textStyle="bold"
             android:layout_marginBottom="8dp"
             app:layout_constraintTop_toTopOf="parent"
@@ -67,8 +67,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Master-level 7-module certification covering advanced EV safety protocols, risk assessment, and professional safety management."
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            style="@style/TextAppearance.MaterialComponents.Body2"
+            android:textColor="#666666"
             android:layout_marginTop="8dp"
             app:layout_constraintTop_toBottomOf="@id/course_title"
             app:layout_constraintStart_toStartOf="parent"
@@ -80,11 +80,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="7 modules"
-            android:textAppearance="?attr/textAppearanceCaption"
-            android:textColor="?attr/colorPrimary"
+            style="@style/TextAppearance.MaterialComponents.Caption"
+            android:textColor="@color/md_theme_light_primary"
             android:textStyle="bold"
             android:background="@drawable/rounded_transport_button"
-            android:backgroundTint="?attr/colorPrimaryContainer"
+            android:backgroundTint="@color/md_theme_light_primaryContainer"
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp"
             android:layout_marginTop="16dp"

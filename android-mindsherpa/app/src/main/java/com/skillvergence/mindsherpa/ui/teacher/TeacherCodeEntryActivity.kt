@@ -59,8 +59,7 @@ class TeacherCodeEntryActivity : AppCompatActivity() {
         helpText.text = """
             Teacher Access Information:
             • Teacher codes start with 'T' followed by 5 digits
-            • Contact your school administrator for access
-            • Fallbrook High School: Contact IT department
+            • Contact your administrator for access
         """.trimIndent()
     }
 

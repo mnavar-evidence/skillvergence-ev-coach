@@ -34,23 +34,24 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
-        // Set up Material Toolbar
-        val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
+        // Temporarily disable toolbar setup to resolve action bar conflict
+        // val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
+        // setSupportActionBar(toolbar)
 
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
 
         // Set up navigation with bottom navigation view
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.navigation_video,
-                R.id.navigation_podcast,
-                R.id.navigation_premium,
-                R.id.navigation_profile
-            )
-        )
-        setupActionBarWithNavController(navController, appBarConfiguration)
+        // Temporarily disable action bar configuration
+        // val appBarConfiguration = AppBarConfiguration(
+        //     setOf(
+        //         R.id.navigation_video,
+        //         R.id.navigation_podcast,
+        //         R.id.navigation_premium,
+        //         R.id.navigation_profile
+        //     )
+        // )
+        // setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
     }
 

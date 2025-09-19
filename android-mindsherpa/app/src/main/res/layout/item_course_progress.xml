@@ -19,7 +19,7 @@
             android:text="Course Name"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="@color/text_primary" />
 
         <TextView
             android:id="@+id/course_stats"
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:text="0/0 students completed"
             android:textSize="12sp"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="#666666"
             android:layout_marginTop="4dp" />
 
     </LinearLayout>

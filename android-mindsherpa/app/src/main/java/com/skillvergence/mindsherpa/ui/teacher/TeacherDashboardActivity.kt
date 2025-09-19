@@ -1,7 +1,9 @@
 package com.skillvergence.mindsherpa.ui.teacher
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import androidx.core.content.ContextCompat
 import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
@@ -33,7 +35,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // Handle status bar
-        window.statusBarColor = getColor(R.color.purple_500)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            window.statusBarColor = ContextCompat.getColor(this, R.color.purple_500)
+        }
 
         setContentView(R.layout.activity_teacher_dashboard)
 
@@ -49,10 +53,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
     private fun setupToolbar() {
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        supportActionBar?.apply {
+        // Configure toolbar directly without setting as support action bar
+        toolbar?.apply {
             title = "Teacher Dashboard"
-            setDisplayHomeAsUpEnabled(false)
         }
     }
 

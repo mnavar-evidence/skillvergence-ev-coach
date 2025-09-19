@@ -34,7 +34,7 @@
             android:layout_height="wrap_content"
             android:text="0/7 videos completed"
             android:textSize="12sp"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="#666666" />
 
     </LinearLayout>
 

@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="?attr/colorSurface">
+    android:background="@color/surface_color">
 
     <!-- Header -->
     <TextView
@@ -14,7 +14,7 @@
         android:text="🎉 Personalize Your Experience"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/text_primary"
         android:gravity="center"
         android:layout_marginBottom="16dp" />
 
@@ -32,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="16sp"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="#666666"
             android:gravity="center" />
 
     </LinearLayout>
@@ -44,7 +44,7 @@
         android:text="Tell us about yourself"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/text_primary"
         android:gravity="center"
         android:layout_marginBottom="8dp" />
 
@@ -53,7 +53,7 @@
         android:layout_height="wrap_content"
         android:text="We'll use this information to personalize your experience"
         android:textSize="14sp"
-        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textColor="#666666"
         android:gravity="center"
         android:layout_marginBottom="24dp" />
 
@@ -63,8 +63,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="First Name"
-        app:boxStrokeColor="?attr/colorPrimary"
-        app:hintTextColor="?attr/colorPrimary">
+        app:boxStrokeColor="@color/md_theme_light_primary"
+        app:hintTextColor="@color/md_theme_light_primary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/first_name_edit_text"
@@ -83,8 +83,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="Last Name"
-        app:boxStrokeColor="?attr/colorPrimary"
-        app:hintTextColor="?attr/colorPrimary">
+        app:boxStrokeColor="@color/md_theme_light_primary"
+        app:hintTextColor="@color/md_theme_light_primary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/last_name_edit_text"
@@ -103,8 +103,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="Email Address"
-        app:boxStrokeColor="?attr/colorPrimary"
-        app:hintTextColor="?attr/colorPrimary">
+        app:boxStrokeColor="@color/md_theme_light_primary"
+        app:hintTextColor="@color/md_theme_light_primary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/email_edit_text"
@@ -123,8 +123,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
         android:hint="Class Code (Optional)"
-        app:boxStrokeColor="?attr/colorPrimary"
-        app:hintTextColor="?attr/colorPrimary"
+        app:boxStrokeColor="@color/md_theme_light_primary"
+        app:hintTextColor="@color/md_theme_light_primary"
         app:helperText="Enter your teacher's class code to join their class">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -181,7 +181,7 @@
         android:layout_marginTop="16dp"
         android:text="Your information is private and secure. We'll never share it without your permission."
         android:textSize="12sp"
-        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textColor="#666666"
         android:gravity="center"
         android:alpha="0.7" />
 

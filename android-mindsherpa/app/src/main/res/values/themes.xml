@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Material Design 3 Theme for Skillvergence Learning Platform -->
-    <style name="Theme.MindSherpa" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Material Design 3 Theme for VoltForce Learning Platform -->
+    <style name="Theme.MindSherpa" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary Colors -->
         <item name="colorPrimary">@color/md_theme_light_primary</item>
         <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
@@ -52,6 +52,13 @@
         <item name="textAppearanceHeadline2">@style/TextAppearance.MindSherpa.Headline2</item>
         <item name="textAppearanceBody1">@style/TextAppearance.MindSherpa.Body1</item>
         <item name="textAppearanceBody2">@style/TextAppearance.MindSherpa.Body2</item>
+        <item name="textAppearanceHeadline4">@style/TextAppearance.MaterialComponents.Headline4</item>
+        <item name="textAppearanceHeadline5">@style/TextAppearance.MaterialComponents.Headline5</item>
+        <item name="textAppearanceHeadline6">@style/TextAppearance.MaterialComponents.Headline6</item>
+        <item name="textAppearanceSubtitle1">@style/TextAppearance.MaterialComponents.Subtitle1</item>
+        <item name="textAppearanceSubtitle2">@style/TextAppearance.MaterialComponents.Subtitle2</item>
+        <item name="textAppearanceCaption">@style/TextAppearance.MaterialComponents.Caption</item>
+        <item name="textAppearanceButton">@style/TextAppearance.MaterialComponents.Button</item>
     </style>
 
     <!-- Shape Appearances -->

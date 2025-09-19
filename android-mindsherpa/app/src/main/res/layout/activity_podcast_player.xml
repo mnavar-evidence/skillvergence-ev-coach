@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?attr/colorSurface">
+    android:background="@color/surface_color">
 
     <!-- Header with back button -->
     <LinearLayout
@@ -13,7 +13,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:background="?attr/colorSurface"
+        android:background="@color/surface_color"
         android:elevation="2dp">
 
         <ImageButton
@@ -23,15 +23,15 @@
             android:src="@drawable/ic_arrow_back_24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
-            app:tint="?attr/colorOnSurface" />
+            app:tint="@color/text_primary" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Podcast"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            android:textColor="?attr/colorOnSurface"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="@color/text_primary"
             android:gravity="center" />
 
         <!-- Placeholder for symmetry -->
@@ -62,7 +62,7 @@
                 android:layout_marginBottom="32dp"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="8dp"
-                app:cardBackgroundColor="?attr/colorSurfaceVariant">
+                app:cardBackgroundColor="@color/md_theme_light_surfaceVariant">
 
                 <ImageView
                     android:id="@+id/podcast_thumbnail"
@@ -83,7 +83,7 @@
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:layout_gravity="center"
-                        android:indeterminateTint="?attr/colorPrimary"
+                        android:indeterminateTint="@color/md_theme_light_primary"
                         android:visibility="gone" />
 
                 </FrameLayout>
@@ -96,8 +96,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="High Voltage Safety Foundation • Episode 1"
-                android:textAppearance="?attr/textAppearanceBody2"
-                android:textColor="?attr/colorPrimary"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                android:textColor="@color/md_theme_light_primary"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_marginBottom="8dp" />
@@ -108,8 +108,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="High Voltage Safety Fundamentals"
-                android:textAppearance="?attr/textAppearanceHeadline5"
-                android:textColor="?attr/colorOnSurface"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:maxLines="3"
@@ -122,8 +122,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Essential safety protocols and risk assessment for working with high voltage EV systems"
-                android:textAppearance="?attr/textAppearanceBody1"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textColor="#666666"
                 android:gravity="center"
                 android:maxLines="4"
                 android:ellipsize="end"
@@ -148,8 +148,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0:00"
-                        android:textAppearance="?attr/textAppearanceBody2"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:textColor="@color/text_primary"
                         android:fontFeatureSettings="tnum" />
 
                     <View
@@ -162,8 +162,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0:00"
-                        android:textAppearance="?attr/textAppearanceBody2"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:textColor="@color/text_primary"
                         android:fontFeatureSettings="tnum" />
 
                 </LinearLayout>
@@ -175,9 +175,9 @@
                     android:layout_height="wrap_content"
                     android:max="100"
                     android:progress="0"
-                    android:progressTint="?attr/colorPrimary"
-                    android:progressBackgroundTint="?attr/colorOutline"
-                    android:thumbTint="?attr/colorPrimary" />
+                    android:progressTint="@color/md_theme_light_primary"
+                    android:progressBackgroundTint="@color/md_theme_light_outline"
+                    android:thumbTint="@color/md_theme_light_primary" />
 
             </LinearLayout>
 
@@ -199,7 +199,7 @@
                     android:padding="@dimen/transport_button_padding_main"
                     android:scaleType="centerInside"
                     android:contentDescription="Skip backward 15 seconds"
-                    app:tint="?attr/colorOnPrimary"
+                    app:tint="@color/md_theme_light_onPrimary"
                     android:layout_marginEnd="@dimen/transport_button_spacing" />
 
                 <!-- Play/Pause Button -->
@@ -212,7 +212,7 @@
                     android:padding="@dimen/transport_button_padding_large"
                     android:scaleType="centerInside"
                     android:contentDescription="Play/Pause"
-                    app:tint="?attr/colorOnPrimary" />
+                    app:tint="@color/md_theme_light_onPrimary" />
 
                 <!-- Skip Forward -->
                 <ImageButton
@@ -224,7 +224,7 @@
                     android:padding="@dimen/transport_button_padding_main"
                     android:scaleType="centerInside"
                     android:contentDescription="Skip forward 15 seconds"
-                    app:tint="?attr/colorOnPrimary"
+                    app:tint="@color/md_theme_light_onPrimary"
                     android:layout_marginStart="@dimen/transport_button_spacing" />
 
             </LinearLayout>

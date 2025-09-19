@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="?attr/colorSurface">
+    android:background="@color/surface_color">
 
     <!-- Settings Items -->
     <LinearLayout
@@ -30,7 +30,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_exit_to_app_24dp"
-                android:tint="?attr/colorError"
+                android:tint="@color/md_theme_light_error"
                 android:layout_marginEnd="16dp" />
 
             <TextView
@@ -39,7 +39,7 @@
                 android:layout_weight="1"
                 android:text="Exit Teacher Mode"
                 android:textSize="16sp"
-                android:textColor="?attr/colorError" />
+                android:textColor="@color/md_theme_light_error" />
 
         </LinearLayout>
 
@@ -52,7 +52,7 @@
         android:text="Class Management"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/text_primary"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="16dp" />
 
@@ -77,7 +77,7 @@
                 android:text="Class Join Code"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp" />
 
             <LinearLayout
@@ -95,7 +95,7 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:fontFamily="monospace"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="@color/md_theme_light_primary"
                     android:background="@drawable/rounded_background"
                     android:padding="12dp"
                     android:layout_marginEnd="12dp" />
@@ -105,7 +105,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:src="@drawable/ic_send_24dp"
-                    android:tint="?attr/colorPrimary"
+                    android:tint="@color/md_theme_light_primary"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:padding="8dp"
                     android:clickable="true"
@@ -120,7 +120,7 @@
                 android:layout_height="wrap_content"
                 android:text="Students use this code to join your class and unlock basic access"
                 android:textSize="12sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#666666"
                 android:layout_marginTop="8dp" />
 
         </LinearLayout>
@@ -135,7 +135,7 @@
         android:text="Certificate Settings"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/text_primary"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="16dp" />
 
@@ -161,7 +161,7 @@
                 android:layout_weight="1"
                 android:text="Auto-approve certificates"
                 android:textSize="16sp"
-                android:textColor="?attr/colorOnSurface" />
+                android:textColor="@color/text_primary" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/auto_approve_switch"
@@ -189,7 +189,7 @@
                     android:layout_weight="1"
                     android:text="Minimum completion for certificate"
                     android:textSize="16sp"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/completion_percentage_text"
@@ -197,7 +197,7 @@
                     android:layout_height="wrap_content"
                     android:text="80%"
                     android:textSize="16sp"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:textColor="#666666" />
 
             </LinearLayout>
 
@@ -215,7 +215,7 @@
                 android:layout_height="wrap_content"
                 android:text="Students must complete at least 80% of a course to be eligible for a certificate."
                 android:textSize="12sp"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:textColor="#666666" />
 
         </LinearLayout>
 

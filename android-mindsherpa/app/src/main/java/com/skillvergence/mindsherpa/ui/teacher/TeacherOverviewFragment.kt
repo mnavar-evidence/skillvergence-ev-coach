@@ -28,7 +28,7 @@ class TeacherOverviewFragment : Fragment() {
     private lateinit var accessControlManager: AccessControlManager
 
     private lateinit var teacherNameText: TextView
-    private lateinit var schoolNameText: TextView
+    private lateinit var organizationNameText: TextView
     private lateinit var programNameText: TextView
     private lateinit var teacherEmailText: TextView
     private lateinit var classCodeSection: LinearLayout
@@ -44,6 +44,7 @@ class TeacherOverviewFragment : Fragment() {
     private var lastStatsRefresh: Long = 0
     private val statsRefreshInterval = 30_000L // 30 seconds
     private var isDataLoaded = false
+    private var hasLoadedInitialData = false
 
     private val teacherApiService: TeacherApiService by lazy {
         Retrofit.Builder()
@@ -77,7 +78,7 @@ class TeacherOverviewFragment : Fragment() {
 
     private fun setupViews(view: View) {
         teacherNameText = view.findViewById(R.id.teacher_name)
-        schoolNameText = view.findViewById(R.id.school_name)
+        organizationNameText = view.findViewById(R.id.organization_name)
         programNameText = view.findViewById(R.id.program_name)
         teacherEmailText = view.findViewById(R.id.teacher_email)
         classCodeSection = view.findViewById(R.id.class_code_section)
@@ -101,6 +102,13 @@ class TeacherOverviewFragment : Fragment() {
             updateStudentStats(students)
         }
 
+        teacherViewModel.schoolInfo.observe(viewLifecycleOwner) { info ->
+            if (info != null && !hasLoadedInitialData) {
+                hasLoadedInitialData = true
+                loadDynamicDataIfNeeded()
+            }
+        }
+
         // Observe student summary for accurate stats
         teacherViewModel.studentSummary.observe(viewLifecycleOwner) { summary ->
             summary?.let { updateStatsFromSummary(it) }
@@ -110,6 +118,7 @@ class TeacherOverviewFragment : Fragment() {
         teacherViewModel.certificates.observe(viewLifecycleOwner) { certificates ->
             updateCertificatesStats(certificates)
         }
+
     }
 
     private fun loadTeacherDataFromAccessControl() {
@@ -122,18 +131,22 @@ class TeacherOverviewFragment : Fragment() {
     private fun updateTeacherProfileFromAccessControl(teacherData: com.skillvergence.mindsherpa.data.model.TeacherData) {
         // Update teacher profile from AccessControlManager (this data comes from API validation)
         teacherNameText.text = teacherData.name
-        schoolNameText.text = teacherData.school
+        organizationNameText.text = teacherData.school
         programNameText.text = teacherData.program
         teacherEmailText.text = teacherData.email
 
         // Also update class code display immediately
         showClassCode(teacherData.classCode)
 
-        // Load school info in ViewModel using the schoolId from teacher data
+        // Load organization info in ViewModel using the schoolId from teacher data
         teacherViewModel.loadSchoolInfo(teacherData.schoolId)
     }
 
     private fun loadDynamicDataIfNeeded() {
+        if (teacherViewModel.schoolInfo.value == null) {
+            return
+        }
+
         val currentTime = System.currentTimeMillis()
         val shouldRefresh = !isDataLoaded ||
                            (currentTime - lastStatsRefresh) > statsRefreshInterval

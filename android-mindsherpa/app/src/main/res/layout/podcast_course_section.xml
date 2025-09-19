@@ -13,7 +13,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="16dp"
-        android:background="?attr/colorSurfaceVariant">
+        android:background="@color/md_theme_light_surfaceVariant">
 
         <!-- Course Title -->
         <TextView
@@ -22,8 +22,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="High Voltage Safety Foundation"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            android:textColor="?attr/colorOnSurface"
+            style="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="#333333"
             android:textStyle="bold" />
 
         <!-- Episode Count -->
@@ -32,11 +32,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="4 episodes"
-            android:textAppearance="?attr/textAppearanceBody2"
+            style="@style/TextAppearance.MaterialComponents.Body2"
             android:layout_marginStart="12dp"
             android:background="@drawable/rounded_background"
-            android:backgroundTint="?attr/colorPrimary"
-            android:textColor="?attr/colorOnPrimary"
+            android:backgroundTint="@color/md_theme_light_primary"
+            android:textColor="@color/md_theme_light_onPrimary"
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp" />
 

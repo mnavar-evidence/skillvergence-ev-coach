@@ -137,7 +137,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="8dp"
-        android:text="Skillvergence"
+        android:text="VoltForce"
         android:textSize="10sp"
         android:textColor="#CCFFFFFF"
         android:background="#33000000"

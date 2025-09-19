@@ -35,7 +35,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/surface_color"
+                >
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -69,7 +71,7 @@
                         android:layout_marginBottom="16dp"
                         android:text="250 XP"
                         android:textSize="18sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                        android:textColor="#666666" />
 
                     <!-- Progress Bar -->
                     <LinearLayout
@@ -98,7 +100,7 @@
                                 android:layout_weight="1"
                                 android:text="150/500 XP"
                                 android:textSize="12sp"
-                                android:textColor="?attr/colorOnSurfaceVariant" />
+                                android:textColor="#666666" />
 
                             <TextView
                                 android:id="@+id/next_level"
@@ -106,7 +108,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="→ Silver Learner"
                                 android:textSize="12sp"
-                                android:textColor="?attr/colorOnSurfaceVariant" />
+                                android:textColor="#666666" />
 
                         </LinearLayout>
 
@@ -119,7 +121,7 @@
                         android:text="Need 250 more XP to level up!"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="?attr/colorPrimary"
+                        android:textColor="@color/md_theme_light_primary"
                         android:textAlignment="center" />
 
                 </LinearLayout>
@@ -153,7 +155,7 @@
                         android:layout_height="24dp"
                         android:layout_marginEnd="12dp"
                         android:src="@drawable/ic_play_circle_24dp"
-                        android:tint="?attr/colorPrimary" />
+                        android:tint="@color/md_theme_light_primary" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -168,7 +170,7 @@
                         android:text="+50 XP"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="?attr/colorPrimary" />
+                        android:textColor="@color/md_theme_light_primary" />
 
                 </LinearLayout>
 
@@ -184,7 +186,7 @@
                         android:layout_height="24dp"
                         android:layout_marginEnd="12dp"
                         android:src="@drawable/ic_headphones_24dp"
-                        android:tint="?attr/colorSecondary" />
+                        android:tint="@color/md_theme_light_secondary" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -199,7 +201,7 @@
                         android:text="+10-40 XP"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="?attr/colorPrimary" />
+                        android:textColor="@color/md_theme_light_primary" />
 
                 </LinearLayout>
 
@@ -230,7 +232,7 @@
                         android:text="+10 XP/day"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="?attr/colorPrimary" />
+                        android:textColor="@color/md_theme_light_primary" />
 
                 </LinearLayout>
 
@@ -246,7 +248,7 @@
                         android:layout_height="24dp"
                         android:layout_marginEnd="12dp"
                         android:src="@drawable/ic_brain_24dp"
-                        android:tint="?attr/colorSecondary" />
+                        android:tint="@color/md_theme_light_secondary" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -261,7 +263,7 @@
                         android:text="+10 XP"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="?attr/colorPrimary" />
+                        android:textColor="@color/md_theme_light_primary" />
 
                 </LinearLayout>
 
@@ -298,7 +300,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/surface_color"
+                >
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -337,7 +341,7 @@
                             android:layout_marginBottom="4dp"
                             android:text="0/5 courses completed"
                             android:textSize="14sp"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
+                            android:textColor="#666666" />
 
                         <TextView
                             android:id="@+id/courses_needed"
@@ -345,7 +349,7 @@
                             android:layout_height="wrap_content"
                             android:text="1 more course for Foundation"
                             android:textSize="12sp"
-                            android:textColor="?attr/colorPrimary" />
+                            android:textColor="@color/md_theme_light_primary" />
 
                     </LinearLayout>
 
@@ -361,7 +365,7 @@
                 android:text="Certification Pathway"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:textColor="#666666" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/certification_progression_recycler"
@@ -386,7 +390,7 @@
                 android:text="Advanced Course Catalog"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:textColor="#666666" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/advanced_course_recycler"
@@ -416,7 +420,7 @@
                         android:text="Total: 18 modules"
                         android:textSize="12sp"
                         android:textStyle="bold"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                        android:textColor="#666666" />
 
                     <TextView
                         android:layout_width="wrap_content"

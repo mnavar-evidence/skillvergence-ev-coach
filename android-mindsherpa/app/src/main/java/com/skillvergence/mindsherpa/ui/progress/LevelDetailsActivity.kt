@@ -207,7 +207,7 @@ class LevelDetailsActivity : AppCompatActivity() {
         val xp = progressStore.getTotalXP()
         val levelName = progressStore.getLevelTitle()
 
-        val shareText = "🎓 Just reached Level $level ($levelName) with $xp XP in MindSherpa EV Training! 🚗⚡ #EVTraining #SkillBuilding"
+        val shareText = "🚀 Level Up! Just reached Level $level - $levelName!\n\n⭐ $xp total XP earned\n📈 Advancing my EV expertise on VoltForce\n\n#EVTraining #LevelUp #ElectricVehicles"
 
         val shareIntent = Intent().apply {
             action = Intent.ACTION_SEND

@@ -66,7 +66,7 @@ class StudentClassEntryActivity : AppCompatActivity() {
 Class: ${studentInfo.classCode}
 
 Teacher: ${classDetails.teacherName}
-School: ${classDetails.schoolName}
+Organization: ${classDetails.schoolName}
 Program: ${classDetails.programName}
 Email: ${classDetails.teacherEmail}"""
                 } else {
@@ -165,7 +165,7 @@ Email: ${classDetails.teacherEmail}"""
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
+        onBackPressedDispatcher.onBackPressed()
         return true
     }
 }

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?attr/colorSurface">
+    android:background="@color/surface_color">
 
     <!-- Header -->
     <LinearLayout
@@ -13,7 +13,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:background="?attr/colorSurface"
+        android:background="@color/surface_color"
         android:elevation="2dp">
 
         <TextView
@@ -21,8 +21,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Advanced Courses"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            android:textColor="?attr/colorOnSurface"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="@color/text_primary"
             android:textStyle="bold" />
 
         <TextView
@@ -30,13 +30,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="5 courses"
-            android:textAppearance="?attr/textAppearanceCaption"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:textColor="@color/text_secondary"
             android:textStyle="bold"
             android:paddingHorizontal="8dp"
             android:paddingVertical="4dp"
             android:background="@drawable/rounded_transport_button"
-            android:backgroundTint="?attr/colorSurfaceVariant" />
+            android:backgroundTint="@color/progress_background" />
 
     </LinearLayout>
 

@@ -6,7 +6,8 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="2dp">
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/surface_color">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -35,9 +36,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Coach Nova"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="?attr/colorPrimary" />
+                style="@style/TextAppearance.MaterialComponents.Headline6"
+                android:textColor="@color/md_theme_light_primary" />
 
             <!-- XP Badge for AI interactions -->
             <LinearLayout
@@ -54,14 +54,14 @@
                     android:layout_marginEnd="4dp"
                     android:src="@drawable/ic_star_24dp"
                     android:scaleType="centerInside"
-                    android:tint="?attr/colorSecondary" />
+                    android:tint="@color/md_theme_light_secondary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="+10 XP"
-                    android:textSize="10sp"
-                    android:textColor="?attr/colorSecondary"
+                    style="@style/TextAppearance.MaterialComponents.Caption"
+                    android:textColor="@color/md_theme_light_secondary"
                     android:textStyle="bold" />
 
             </LinearLayout>
@@ -81,11 +81,11 @@
                 android:id="@+id/ai_response_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
+                style="@style/TextAppearance.MaterialComponents.Body2"
                 android:lineSpacingMultiplier="1.2"
                 android:background="@drawable/ai_response_background"
                 android:padding="12dp"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:textColor="#666666" />
 
         </ScrollView>
 
@@ -141,8 +141,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Coach Nova is thinking..."
-                android:textSize="12sp"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                style="@style/TextAppearance.MaterialComponents.Caption"
+                android:textColor="#666666" />
 
         </LinearLayout>
 

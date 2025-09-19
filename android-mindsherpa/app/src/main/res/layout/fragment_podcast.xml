@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface">
+    android:background="@color/surface_color">
 
     <!-- Loading State -->
     <LinearLayout
@@ -28,8 +28,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Loading podcasts..."
-            android:textAppearance="?attr/textAppearanceBody1"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textColor="#666666" />
 
     </LinearLayout>
 
@@ -51,15 +51,15 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:src="@drawable/ic_headphones_24dp"
-            app:tint="?attr/colorOnSurfaceVariant"
+            app:tint="#666666"
             android:layout_marginBottom="16dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="No Podcasts Available"
-            android:textAppearance="?attr/textAppearanceHeadline4"
-            android:textColor="?attr/colorOnSurface"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline4"
+            android:textColor="@color/text_primary"
             android:textStyle="bold"
             android:layout_marginBottom="8dp" />
 
@@ -67,8 +67,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Podcasts will appear here once they're added to your courses."
-            android:textAppearance="?attr/textAppearanceBody1"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textColor="#666666"
             android:gravity="center"
             android:lineSpacingExtra="2dp" />
 

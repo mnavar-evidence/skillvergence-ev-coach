@@ -57,8 +57,8 @@ class PaywallActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(false)
         }
 
-        // Set school-specific information
-        findViewById<TextView>(R.id.school_name).text = "CTE Transportation Technology"
+        // Set access information
+        findViewById<TextView>(R.id.organization_name).text = "Electric Vehicle Training Program"
         findViewById<TextView>(R.id.program_name).text = "Professional Skills Training"
         findViewById<TextView>(R.id.instructor_name).text = ""
         findViewById<TextView>(R.id.instructor_email).text = ""

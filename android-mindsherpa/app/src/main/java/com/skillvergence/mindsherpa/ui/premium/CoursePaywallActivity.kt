@@ -28,6 +28,7 @@ class CoursePaywallActivity : AppCompatActivity() {
     private lateinit var errorMessage: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var backButton: ImageButton
+    private lateinit var scrollView: ScrollView
 
     private var courseId: String = ""
     private var isValidating = false
@@ -60,6 +61,7 @@ class CoursePaywallActivity : AppCompatActivity() {
         errorMessage = findViewById(R.id.error_message)
         progressBar = findViewById(R.id.progress_bar)
         backButton = findViewById(R.id.back_button)
+        scrollView = findViewById(R.id.paywall_scroll)
     }
 
     private fun extractIntentData() {
@@ -74,7 +76,6 @@ class CoursePaywallActivity : AppCompatActivity() {
         courseTitle.text = title
         courseDescription.text = description
 
-        // Build course details
         addCourseDetail("⏱️", "${estimatedHours.format(1)} hours of content")
         addCourseDetail("⭐", "$xpReward XP reward")
         addCourseDetail("🏆", getSkillLevelDisplayName(skillLevelName))
@@ -109,6 +110,16 @@ class CoursePaywallActivity : AppCompatActivity() {
         })
 
         updateUnlockButtonState()
+
+        codeInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                scrollToCodeInput()
+            }
+        }
+
+        codeInput.setOnClickListener {
+            scrollToCodeInput()
+        }
     }
 
     private fun setupClickListeners() {
@@ -163,6 +174,12 @@ class CoursePaywallActivity : AppCompatActivity() {
             hideLoading()
             updateUnlockButtonState()
         }, 1000)
+    }
+
+    private fun scrollToCodeInput() {
+        scrollView.post {
+            scrollView.smoothScrollTo(0, codeInput.bottom)
+        }
     }
 
     private fun onCourseUnlocked() {

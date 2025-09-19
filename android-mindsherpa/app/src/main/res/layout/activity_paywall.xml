@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface">
+    android:background="@color/surface_color">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,7 +18,7 @@
             android:text="🎯 Unlock Full Access"
             android:textSize="28sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="@color/text_primary"
             android:gravity="center"
             android:layout_marginBottom="16dp" />
 
@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorPrimary"
+                android:textColor="@color/md_theme_light_primary"
                 android:gravity="center"
                 android:layout_marginBottom="12dp" />
 
@@ -46,7 +46,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#666666"
                 android:gravity="center"
                 android:layout_marginBottom="16dp" />
 
@@ -56,19 +56,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="8dp"
                 android:layout_marginBottom="8dp"
-                android:progressTint="?attr/colorPrimary" />
+                android:progressTint="@color/md_theme_light_primary" />
 
             <TextView
                 android:id="@+id/xp_counter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#666666"
                 android:gravity="center" />
 
         </LinearLayout>
 
-        <!-- School Information -->
+        <!-- Access Information -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -78,12 +78,12 @@
             android:layout_marginBottom="24dp">
 
             <TextView
-                android:id="@+id/school_name"
+                android:id="@+id/organization_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/text_primary"
                 android:gravity="center"
                 android:layout_marginBottom="8dp" />
 
@@ -92,7 +92,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#666666"
                 android:gravity="center"
                 android:layout_marginBottom="8dp" />
 
@@ -101,7 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#666666"
                 android:gravity="center"
                 android:layout_marginBottom="8dp" />
 
@@ -110,7 +110,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:textColor="?attr/colorPrimary"
+                android:textColor="@color/md_theme_light_primary"
                 android:gravity="center" />
 
         </LinearLayout>
@@ -122,7 +122,7 @@
             android:text="Choose Your Access Option"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface"
+            android:textColor="@color/text_primary"
             android:gravity="center"
             android:layout_marginBottom="20dp" />
 
@@ -141,7 +141,7 @@
                 android:text="👥 Friend Referral Code"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorPrimary"
+                android:textColor="@color/md_theme_light_primary"
                 android:layout_marginBottom="8dp" />
 
             <TextView
@@ -149,7 +149,7 @@
                 android:layout_height="wrap_content"
                 android:text="Got a friend code? Enter it here to unlock basic access and help a friend!"
                 android:textSize="14sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#666666"
                 android:layout_marginBottom="16dp" />
 
             <Button
@@ -178,7 +178,7 @@
                 android:text="🏫 Class Join Code"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorPrimary"
+                android:textColor="@color/md_theme_light_primary"
                 android:layout_marginBottom="8dp" />
 
             <TextView
@@ -186,7 +186,7 @@
                 android:layout_height="wrap_content"
                 android:text="Enter your teacher's class code to join their class and unlock full access."
                 android:textSize="14sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#666666"
                 android:layout_marginBottom="16dp" />
 
             <Button
@@ -215,7 +215,7 @@
                 android:text="💳 Individual Purchase"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp" />
 
             <TextView
@@ -223,7 +223,7 @@
                 android:layout_height="wrap_content"
                 android:text="One-time purchase for basic access to course videos and progress tracking."
                 android:textSize="14sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#666666"
                 android:layout_marginBottom="16dp" />
 
             <Button

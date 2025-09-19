@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="16dp"
-    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardBackgroundColor="@color/surface_color"
     app:cardCornerRadius="16dp"
     app:cardElevation="2dp">
 
@@ -19,8 +19,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Podcast Library"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            android:textColor="?attr/colorOnSurface"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="@color/text_primary"
             android:textStyle="bold"
             android:layout_marginBottom="8dp" />
 
@@ -36,7 +36,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_headphones_24dp"
-                android:tint="?attr/colorPrimary"
+                android:tint="@color/md_theme_light_primary"
                 android:layout_marginEnd="8dp" />
 
             <!-- Total Episodes -->
@@ -46,15 +46,15 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="19 Episodes"
-                android:textAppearance="?attr/textAppearanceBody1"
-                android:textColor="?attr/colorOnSurface" />
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textColor="@color/text_primary" />
 
             <!-- Duration Icon -->
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_play_circle_24dp"
-                android:tint="?attr/colorPrimary"
+                android:tint="@color/md_theme_light_primary"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="16dp" />
 
@@ -64,8 +64,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Total: 8:30"
-                android:textAppearance="?attr/textAppearanceBody1"
-                android:textColor="?attr/colorOnSurface" />
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                android:textColor="@color/text_primary" />
 
         </LinearLayout>
 
@@ -74,8 +74,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Expert insights, technology deep dives, and industry analysis for electric vehicle professionals"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            android:textColor="#666666"
             android:layout_marginTop="12dp"
             android:alpha="0.8" />
 

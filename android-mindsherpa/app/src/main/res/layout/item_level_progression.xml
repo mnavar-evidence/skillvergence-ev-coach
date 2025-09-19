@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:text="0-999 XP"
             android:textSize="12sp"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="#666666" />
 
     </LinearLayout>
 

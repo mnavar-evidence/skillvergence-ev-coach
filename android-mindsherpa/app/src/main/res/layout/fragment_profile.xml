@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
+    android:background="@color/surface_color"
     android:padding="16dp">
 
     <LinearLayout
@@ -24,9 +24,9 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:src="@drawable/ic_person_24dp"
-                android:background="?attr/colorPrimary"
-                android:backgroundTint="?attr/colorPrimary"
-                android:tint="?attr/colorOnPrimary"
+                android:background="@color/md_theme_light_primary"
+                android:backgroundTint="@color/md_theme_light_primary"
+                android:tint="@color/md_theme_light_onPrimary"
                 android:padding="12dp"
                 android:layout_marginEnd="16dp" />
 
@@ -43,7 +43,7 @@
                     android:text="Student Profile"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/class_info_text"
@@ -51,9 +51,135 @@
                     android:layout_height="wrap_content"
                     android:text="Not enrolled in a class"
                     android:textSize="14sp"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:textColor="#666666" />
 
             </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Class Code Section (Only visible when enrolled) -->
+        <LinearLayout
+            android:id="@+id/class_code_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/rounded_background"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Class Information"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp"
+                android:background="@color/md_theme_light_surfaceVariant"
+                android:layout_marginBottom="8dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_people_24dp"
+                    android:tint="@color/md_theme_light_primary"
+                    android:layout_marginEnd="12dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Class Code"
+                        android:textSize="12sp"
+                        android:textColor="#666666"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/class_code_display"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ABC123"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="monospace" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/copy_class_code"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_content_copy_24dp"
+                    android:tint="@color/md_theme_light_primary"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="4dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp"
+                android:background="@color/md_theme_light_surfaceVariant"
+                android:layout_marginBottom="8dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_email_24dp"
+                    android:tint="@color/md_theme_light_primary"
+                    android:layout_marginEnd="12dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Registered Email"
+                        android:textSize="12sp"
+                        android:textColor="#666666"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/student_email_display"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="student@school.edu"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Share this code with classmates to help them join"
+                android:textSize="12sp"
+                android:textColor="#666666" />
 
         </LinearLayout>
 
@@ -72,7 +198,7 @@
                 android:text="My Progress"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
 
             <!-- Progress Items -->
@@ -91,7 +217,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_certificate_24dp"
-                    android:tint="?attr/colorPrimary"
+                    android:tint="@color/md_theme_light_primary"
                     android:layout_marginEnd="16dp"
                     android:layout_gravity="top"
                     android:layout_marginTop="4dp" />
@@ -107,14 +233,14 @@
                         android:layout_height="wrap_content"
                         android:text="My Certificates"
                         android:textSize="16sp"
-                        android:textColor="?attr/colorOnSurface" />
+                        android:textColor="@color/text_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Your certificates will be stored here"
                         android:textSize="12sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                        android:textColor="#666666" />
 
                 </LinearLayout>
 
@@ -123,7 +249,7 @@
                     android:layout_height="16dp"
                     android:src="@drawable/ic_arrow_back_24dp"
                     android:rotation="180"
-                    android:tint="?attr/colorOnSurfaceVariant"
+                    android:tint="#666666"
                     android:layout_gravity="center_vertical" />
 
             </LinearLayout>
@@ -145,7 +271,7 @@
                 android:text="Settings"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
 
             <!-- Settings Items -->
@@ -164,7 +290,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_notifications_black_24dp"
-                    android:tint="?attr/colorPrimary"
+                    android:tint="@color/md_theme_light_primary"
                     android:layout_marginEnd="16dp"
                     android:layout_gravity="top"
                     android:layout_marginTop="4dp" />
@@ -180,14 +306,14 @@
                         android:layout_height="wrap_content"
                         android:text="Notifications"
                         android:textSize="16sp"
-                        android:textColor="?attr/colorOnSurface" />
+                        android:textColor="@color/text_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Notifications coming soon"
                         android:textSize="12sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                        android:textColor="#666666" />
 
                 </LinearLayout>
 
@@ -196,7 +322,7 @@
                     android:layout_height="16dp"
                     android:src="@drawable/ic_arrow_back_24dp"
                     android:rotation="180"
-                    android:tint="?attr/colorOnSurfaceVariant"
+                    android:tint="#666666"
                     android:layout_gravity="center_vertical" />
 
             </LinearLayout>
@@ -217,7 +343,7 @@
                 android:text="Administration"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
 
             <LinearLayout
@@ -235,7 +361,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_people_24dp"
-                    android:tint="?attr/colorPrimary"
+                    android:tint="@color/md_theme_light_primary"
                     android:layout_marginEnd="16dp" />
 
                 <TextView
@@ -244,14 +370,14 @@
                     android:layout_weight="1"
                     android:text="Join Class"
                     android:textSize="16sp"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:textColor="@color/text_primary" />
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_arrow_back_24dp"
                     android:rotation="180"
-                    android:tint="?attr/colorOnSurfaceVariant" />
+                    android:tint="#666666" />
 
             </LinearLayout>
 
@@ -270,7 +396,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_arrow_forward_24dp"
-                    android:tint="?attr/colorPrimary"
+                    android:tint="@color/md_theme_light_primary"
                     android:layout_marginEnd="16dp" />
 
                 <TextView
@@ -279,14 +405,14 @@
                     android:layout_weight="1"
                     android:text="Change Class"
                     android:textSize="16sp"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:textColor="@color/text_primary" />
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_arrow_back_24dp"
                     android:rotation="180"
-                    android:tint="?attr/colorOnSurfaceVariant" />
+                    android:tint="#666666" />
 
             </LinearLayout>
 
@@ -305,7 +431,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_people_24dp"
-                    android:tint="?attr/colorOnSurfaceVariant"
+                    android:tint="#666666"
                     android:layout_marginEnd="16dp" />
 
                 <TextView
@@ -314,14 +440,14 @@
                     android:layout_weight="1"
                     android:text="Teacher Access"
                     android:textSize="16sp"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:textColor="#666666" />
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_arrow_back_24dp"
                     android:rotation="180"
-                    android:tint="?attr/colorOnSurfaceVariant" />
+                    android:tint="#666666" />
 
             </LinearLayout>
 

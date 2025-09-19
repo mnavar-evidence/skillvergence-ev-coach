@@ -25,6 +25,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.appbar.MaterialToolbar
 import androidx.media3.ui.PlayerView
 import androidx.media3.common.Player
 import androidx.media3.common.MediaItem
@@ -57,8 +58,9 @@ open class VideoDetailActivity : AppCompatActivity() {
     private lateinit var videoDuration: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView
-    private lateinit var backButton: ImageButton
-    private lateinit var fullscreenButton: View
+    private var toolbar: MaterialToolbar? = null
+    private var overlayBackButton: ImageButton? = null
+    private var fullscreenButton: View? = null
 
     // Landscape/Fullscreen UI Components
     private var overlayControls: LinearLayout? = null
@@ -152,14 +154,19 @@ open class VideoDetailActivity : AppCompatActivity() {
     }
 
     private fun initializeViews() {
+        toolbar = findViewById(R.id.toolbar)
         playerView = findViewById(R.id.player_view)
         videoTitle = findViewById(R.id.video_title)
         videoDescription = findViewById(R.id.video_description)
         videoDuration = findViewById(R.id.video_duration)
         progressBar = findViewById(R.id.video_progress_bar)
         progressText = findViewById(R.id.progress_text)
-        backButton = findViewById(R.id.back_button)
         fullscreenButton = findViewById(R.id.fullscreen_button)
+        overlayBackButton = findViewById(R.id.back_button)
+
+        toolbar?.setNavigationOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
 
         // Landscape/Fullscreen specific views (may be null in portrait)
         overlayControls = findViewById(R.id.overlay_controls)
@@ -404,11 +411,15 @@ open class VideoDetailActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        backButton.setOnClickListener {
+        toolbar?.setNavigationOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
 
-        fullscreenButton.setOnClickListener { handleFullscreenButtonPressed() }
+        overlayBackButton?.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+
+        fullscreenButton?.setOnClickListener { handleFullscreenButtonPressed() }
 
         // Set up overlay hiding for landscape mode
         if (isLandscape) {
@@ -581,9 +592,8 @@ open class VideoDetailActivity : AppCompatActivity() {
     private fun enablePortraitFullscreen() {
         logToFile(this, "🎬 Enabling portrait fullscreen - centering video")
 
-        // Hide the header LinearLayout using the correct ID
-        val headerLayout = findViewById<LinearLayout>(R.id.header_layout)
-        headerLayout?.visibility = View.GONE
+        // Hide the toolbar using the correct ID
+        toolbar?.visibility = View.GONE
 
         // Hide the info ScrollView using the correct ID
         val infoScrollView = findViewById<ScrollView>(R.id.info_scroll_view)
@@ -602,9 +612,8 @@ open class VideoDetailActivity : AppCompatActivity() {
     private fun disablePortraitFullscreen() {
         logToFile(this, "🎬 Disabling portrait fullscreen - restoring normal view")
 
-        // Show the header LinearLayout using the correct ID
-        val headerLayout = findViewById<LinearLayout>(R.id.header_layout)
-        headerLayout?.visibility = View.VISIBLE
+        // Show the toolbar using the correct ID
+        toolbar?.visibility = View.VISIBLE
 
         // Show the info ScrollView using the correct ID
         val infoScrollView = findViewById<ScrollView>(R.id.info_scroll_view)

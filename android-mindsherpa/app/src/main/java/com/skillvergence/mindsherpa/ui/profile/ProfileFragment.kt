@@ -1,10 +1,16 @@
 package com.skillvergence.mindsherpa.ui.profile
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.skillvergence.mindsherpa.R
@@ -20,6 +26,10 @@ class ProfileFragment : Fragment() {
 
     private lateinit var progressStore: ProgressStore
     private lateinit var studentProgressAPI: StudentProgressAPI
+    private lateinit var classCodeSection: LinearLayout
+    private lateinit var classCodeDisplay: TextView
+    private lateinit var studentEmailDisplay: TextView
+    private lateinit var copyClassCodeButton: ImageView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,6 +44,12 @@ class ProfileFragment : Fragment() {
 
         progressStore = ProgressStore.getInstance(requireContext())
         studentProgressAPI = StudentProgressAPI.getInstance(requireContext())
+
+        // Initialize class code views
+        classCodeSection = view.findViewById(R.id.class_code_section)
+        classCodeDisplay = view.findViewById(R.id.class_code_display)
+        studentEmailDisplay = view.findViewById(R.id.student_email_display)
+        copyClassCodeButton = view.findViewById(R.id.copy_class_code)
 
         // Observe student info changes to update profile automatically
         studentProgressAPI.studentInfo.observe(viewLifecycleOwner) {
@@ -59,10 +75,10 @@ class ProfileFragment : Fragment() {
 
         studentProgressAPI.studentInfo.value?.let { studentInfo ->
             studentInfo.classDetails?.let { classDetails ->
-                // Show detailed class information: Teacher Name, School Name, Program Name, Teacher Email
+                // Show detailed class information: Teacher Name, Organization Name, Program Name, Teacher Email
                 val classInfoBuilder = StringBuilder()
                 classInfoBuilder.append("Class: ${classDetails.teacherName}\n")
-                classInfoBuilder.append("School: ${classDetails.schoolName}\n")
+                classInfoBuilder.append("Organization: ${classDetails.schoolName}\n")
                 classInfoBuilder.append("Program: ${classDetails.programName}\n")
                 classInfoBuilder.append("Teacher: ${classDetails.teacherEmail}")
 
@@ -75,6 +91,9 @@ class ProfileFragment : Fragment() {
             // No student info - not linked to any class
             classInfoText.text = "Not enrolled in a class"
         }
+
+        // Update class code section visibility and content
+        updateClassCodeSection()
     }
 
     private fun setupClickListeners(view: View) {
@@ -98,13 +117,25 @@ class ProfileFragment : Fragment() {
 
         // Change Class
         view.findViewById<View>(R.id.change_class_item).setOnClickListener {
-            showChangeClassConfirmation()
+            val studentInfo = studentProgressAPI.studentInfo.value
+            if (studentInfo != null) {
+                showChangeClassConfirmation()
+            } else {
+                Toast.makeText(requireContext(),
+                    "You are not enrolled in a class yet. Use 'Join Class' to enroll.",
+                    Toast.LENGTH_SHORT).show()
+            }
         }
 
         // Teacher Access (entrance to teacher mode)
         view.findViewById<View>(R.id.teacher_access_item).setOnClickListener {
             val intent = Intent(requireContext(), TeacherCodeEntryActivity::class.java)
             startActivity(intent)
+        }
+
+        // Copy class code
+        copyClassCodeButton.setOnClickListener {
+            copyClassCodeToClipboard()
         }
     }
 
@@ -124,6 +155,33 @@ class ProfileFragment : Fragment() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun updateClassCodeSection() {
+        val studentInfo = studentProgressAPI.studentInfo.value
+        if (studentInfo != null) {
+            // Student is enrolled - show class code section
+            classCodeSection.visibility = View.VISIBLE
+            classCodeDisplay.text = studentInfo.classCode ?: "N/A"
+            studentEmailDisplay.text = studentInfo.email ?: "No email registered"
+        } else {
+            // Student not enrolled - hide class code section
+            classCodeSection.visibility = View.GONE
+        }
+    }
+
+    private fun copyClassCodeToClipboard() {
+        val studentInfo = studentProgressAPI.studentInfo.value
+        val classCode = studentInfo?.classCode
+
+        if (classCode != null) {
+            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("Class Code", classCode)
+            clipboard.setPrimaryClip(clip)
+            Toast.makeText(requireContext(), "Class code copied to clipboard", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(requireContext(), "No class code available", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showComingSoon(feature: String) {

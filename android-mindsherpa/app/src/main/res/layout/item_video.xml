@@ -8,7 +8,7 @@
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
     app:strokeWidth="0dp"
-    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardBackgroundColor="@color/surface_color"
     android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
@@ -51,7 +51,7 @@
                 android:text="1.1 EV Safety Pyramid - Who's Allowed to Touch"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/text_primary"
                 android:maxLines="2"
                 android:ellipsize="end"
                 tools:text="1.1 EV Safety Pyramid - Who's Allowed to Touch" />
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:text="6:10"
                 android:textSize="12sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#666666"
                 android:layout_marginTop="4dp"
                 tools:text="6:10" />
 
@@ -82,7 +82,7 @@
                 android:layout_height="wrap_content"
                 android:text="✅ 100%"
                 android:textSize="12sp"
-                android:textColor="?attr/colorPrimary"
+                android:textColor="@color/md_theme_light_primary"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp"
                 android:visibility="gone"
@@ -96,7 +96,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:scaleType="centerInside"
                 android:contentDescription="Play video"
-                app:tint="?attr/colorPrimary" />
+                app:tint="@color/md_theme_light_primary" />
 
         </LinearLayout>
 

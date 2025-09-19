@@ -89,6 +89,8 @@ class TeacherViewModel : ViewModel() {
                             activeLicenses = config.bulkLicenses
                         )
                         _schoolInfo.value = schoolInfo
+                        // Trigger initial data load now that school info is available
+                        loadClassData()
                     }
                 }
             } catch (e: Exception) {
@@ -98,6 +100,11 @@ class TeacherViewModel : ViewModel() {
     }
 
     fun loadClassData() {
+        if (_schoolInfo.value?.id == null) {
+            println("📊 Waiting for school info before loading class data")
+            return
+        }
+
         val currentTime = System.currentTimeMillis()
         val shouldRefresh = !isDataLoaded ||
                            (currentTime - lastRefreshTime) > refreshInterval
@@ -138,10 +145,7 @@ class TeacherViewModel : ViewModel() {
 
     private suspend fun loadStudents() {
         try {
-            val schoolId = _schoolInfo.value?.id ?: run {
-                _errorMessage.value = "❌ No school info loaded - cannot load students"
-                return
-            }
+            val schoolId = _schoolInfo.value?.id ?: return
             val response = teacherApiService.getStudentRoster(schoolId)
             if (response.isSuccessful) {
                 val roster = response.body()
@@ -159,10 +163,7 @@ class TeacherViewModel : ViewModel() {
 
     private suspend fun loadCertificates() {
         try {
-            val schoolId = _schoolInfo.value?.id ?: run {
-                _errorMessage.value = "❌ No school info loaded - cannot load certificates"
-                return
-            }
+            val schoolId = _schoolInfo.value?.id ?: return
             val response = teacherApiService.getCertificates(schoolId)
             if (response.isSuccessful) {
                 _certificates.value = response.body()?.certificates ?: emptyList()
@@ -176,10 +177,7 @@ class TeacherViewModel : ViewModel() {
 
     private suspend fun loadCodeUsage() {
         try {
-            val schoolId = _schoolInfo.value?.id ?: run {
-                _errorMessage.value = "❌ No school info loaded - cannot load code usage"
-                return
-            }
+            val schoolId = _schoolInfo.value?.id ?: return
             val response = teacherApiService.getCodeUsage(schoolId)
             if (response.isSuccessful) {
                 _codeUsage.value = response.body()?.usage

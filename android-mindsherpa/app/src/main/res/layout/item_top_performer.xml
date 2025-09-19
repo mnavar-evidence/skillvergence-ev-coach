@@ -31,7 +31,7 @@
             android:text="Student Name"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="@color/text_primary" />
 
         <TextView
             android:id="@+id/student_progress"
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:text="Level 5 • 1200 XP • 3 Certificates"
             android:textSize="12sp"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="#666666"
             android:layout_marginTop="4dp" />
 
     </LinearLayout>

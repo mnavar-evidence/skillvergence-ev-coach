@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?attr/colorSurface">
+    android:background="@color/surface_color">
 
     <!-- Header with back button -->
     <LinearLayout
@@ -13,7 +13,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:background="?attr/colorSurface"
+        android:background="@color/surface_color"
         android:elevation="2dp">
 
         <ImageButton
@@ -23,15 +23,15 @@
             android:src="@drawable/ic_arrow_back_24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
-            app:tint="?attr/colorOnSurface" />
+            app:tint="@color/text_primary" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Purchase Course"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            android:textColor="?attr/colorOnSurface"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="@color/text_primary"
             android:gravity="center" />
 
         <!-- Placeholder for symmetry -->
@@ -43,6 +43,7 @@
 
     <!-- Main Content -->
     <ScrollView
+        android:id="@+id/paywall_scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -59,7 +60,7 @@
                 android:layout_width="64dp"
                 android:layout_height="64dp"
                 android:src="@drawable/ic_star_24dp"
-                app:tint="?attr/colorPrimary"
+                app:tint="@color/md_theme_light_primary"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="16dp" />
 
@@ -69,8 +70,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="1.0 High Voltage Vehicle Safety"
-                android:textAppearance="?attr/textAppearanceHeadline5"
-                android:textColor="?attr/colorOnSurface"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:layout_marginBottom="8dp" />
@@ -80,8 +81,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Enter your purchase code to unlock this course"
-                android:textAppearance="?attr/textAppearanceBody2"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                android:textColor="@color/text_secondary"
                 android:gravity="center"
                 android:layout_marginBottom="24dp" />
 
@@ -91,8 +92,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Master-level 7-module certification covering advanced EV safety protocols, risk assessment, and professional safety management."
-                android:textAppearance="?attr/textAppearanceBody2"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                android:textColor="@color/text_secondary"
                 android:gravity="center"
                 android:layout_marginBottom="24dp" />
 
@@ -104,7 +105,7 @@
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp"
-                app:cardBackgroundColor="?attr/colorSurfaceVariant">
+                app:cardBackgroundColor="@color/md_theme_light_surfaceVariant">
 
                 <LinearLayout
                     android:id="@+id/course_details"
@@ -126,8 +127,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Course Purchase Code"
-                    android:textAppearance="?attr/textAppearanceSubtitle2"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
+                    android:textColor="@color/text_primary"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
@@ -137,11 +138,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:background="@drawable/rounded_transport_button"
-                    android:backgroundTint="?attr/colorSurfaceVariant"
+                    android:backgroundTint="@color/md_theme_light_surfaceVariant"
                     android:hint="Enter 6-digit code"
+                    android:textColorHint="#999999"
+                    android:textColor="@color/text_primary"
                     android:inputType="number"
                     android:maxLength="6"
-                    android:textAppearance="?attr/textAppearanceHeadline6"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
                     android:textStyle="bold"
                     android:gravity="center"
                     android:letterSpacing="0.2"
@@ -153,7 +156,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Invalid purchase code"
-                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
                     android:textColor="@color/design_default_color_error"
                     android:visibility="gone"
                     android:layout_marginBottom="16dp" />
@@ -172,7 +175,7 @@
                         android:layout_height="wrap_content"
                         android:visibility="gone"
                         android:layout_marginEnd="8dp"
-                        app:tint="?attr/colorOnPrimary" />
+                        app:tint="@color/md_theme_light_onPrimary" />
 
                     <Button
                         android:id="@+id/unlock_button"
@@ -180,10 +183,10 @@
                         android:layout_height="56dp"
                         android:layout_weight="1"
                         android:text="Unlock Course"
-                        android:textAppearance="?attr/textAppearanceButton"
-                        android:textColor="?attr/colorOnPrimary"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Button"
+                        android:textColor="@color/md_theme_light_onPrimary"
                         android:background="@drawable/rounded_transport_button"
-                        android:backgroundTint="?attr/colorPrimary"
+                        android:backgroundTint="@color/md_theme_light_primary"
                         android:enabled="false" />
 
                 </LinearLayout>

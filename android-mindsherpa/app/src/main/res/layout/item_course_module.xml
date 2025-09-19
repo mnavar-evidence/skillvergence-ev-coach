@@ -7,7 +7,7 @@
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
     app:strokeWidth="0dp"
-    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardBackgroundColor="@color/surface_color"
     android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
@@ -23,11 +23,11 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:text="1.1"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textColor="?attr/colorOnPrimary"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            android:textColor="@color/md_theme_light_onPrimary"
             android:textStyle="bold"
             android:background="@drawable/rounded_transport_button"
-            android:backgroundTint="?attr/colorPrimary"
+            android:backgroundTint="@color/md_theme_light_primary"
             android:gravity="center"
             android:layout_marginEnd="16dp" />
 
@@ -44,8 +44,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="1.1 High Voltage Safety Fundamentals"
-                android:textAppearance="?attr/textAppearanceSubtitle1"
-                android:textColor="?attr/colorOnSurface"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
 
@@ -55,8 +55,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Foundation principles of high voltage electrical safety, risk assessment, and hazard identification."
-                android:textAppearance="?attr/textAppearanceBody2"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                android:textColor="#666666"
                 android:layout_marginBottom="8dp"
                 android:maxLines="2"
                 android:ellipsize="end" />
@@ -73,13 +73,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="12 min"
-                    android:textAppearance="?attr/textAppearanceCaption"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    android:textColor="#666666"
                     android:drawableStart="@drawable/ic_play_circle_24dp"
                     android:drawablePadding="4dp"
                     android:gravity="center_vertical"
                     android:layout_marginEnd="16dp"
-                    app:drawableTint="?attr/colorOnSurfaceVariant" />
+                    app:drawableTint="#666666" />
 
                 <!-- XP Reward -->
                 <TextView
@@ -87,13 +87,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="100 XP"
-                    android:textAppearance="?attr/textAppearanceCaption"
-                    android:textColor="?attr/colorPrimary"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    android:textColor="@color/md_theme_light_primary"
                     android:textStyle="bold"
                     android:drawableStart="@drawable/ic_star_24dp"
                     android:drawablePadding="4dp"
                     android:gravity="center_vertical"
-                    app:drawableTint="?attr/colorPrimary" />
+                    app:drawableTint="@color/md_theme_light_primary" />
 
             </LinearLayout>
 
@@ -108,7 +108,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:scaleType="centerInside"
             android:contentDescription="Play module"
-            app:tint="?attr/colorPrimary"
+            app:tint="@color/md_theme_light_primary"
             android:layout_marginStart="8dp" />
 
     </LinearLayout>

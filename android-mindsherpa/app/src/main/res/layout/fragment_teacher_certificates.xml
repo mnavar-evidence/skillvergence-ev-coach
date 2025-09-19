@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="?attr/colorSurface">
+    android:background="@color/surface_color">
 
     <TextView
         android:layout_width="match_parent"
@@ -13,7 +13,7 @@
         android:text="Certificate Management"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp" />
 
     <!-- Summary Stats -->
@@ -52,7 +52,7 @@
                     android:layout_height="wrap_content"
                     android:text="Pending"
                     android:textSize="12sp"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:textColor="#666666" />
 
             </LinearLayout>
 
@@ -87,7 +87,7 @@
                     android:layout_height="wrap_content"
                     android:text="Approved"
                     android:textSize="12sp"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:textColor="#666666" />
 
             </LinearLayout>
 
@@ -192,14 +192,14 @@
             android:layout_height="wrap_content"
             android:text="No certificates to review"
             android:textSize="18sp"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="#666666" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Student certificates will appear here when earned"
             android:textSize="14sp"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="#666666"
             android:layout_marginTop="8dp" />
 
     </LinearLayout>

@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:text="Student completed video"
             android:textSize="14sp"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="@color/text_primary" />
 
         <TextView
             android:id="@+id/activity_details"
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:text="John Doe • High Voltage Safety Module 3"
             android:textSize="12sp"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="#666666"
             android:layout_marginTop="2dp" />
 
     </LinearLayout>
@@ -47,6 +47,6 @@
         android:layout_height="wrap_content"
         android:text="2h ago"
         android:textSize="12sp"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        android:textColor="#666666" />
 
 </LinearLayout>

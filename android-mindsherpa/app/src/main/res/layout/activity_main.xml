@@ -16,7 +16,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:title="VoltForce"
+        app:title="WattWorks"
         app:titleTextAppearance="@style/TextAppearance.MindSherpa.Headline2"
         app:titleTextColor="@color/text_primary" />
 

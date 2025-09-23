@@ -64,7 +64,7 @@ struct CertificateTemplateView: View {
                 .fill(templateData.accentColor.opacity(0.1))
                 .frame(width: size.logoSize.width, height: size.logoSize.height)
                 .overlay(
-                    Text("SKILLVERGENCE")
+                    Text("WATTWORKS")
                         .font(.system(size: size.logoFontSize, weight: .bold))
                         .foregroundColor(templateData.accentColor)
                 )
@@ -207,7 +207,7 @@ struct CertificateTemplateView: View {
                 VStack(spacing: 8) {
                     Text("_________________________")
                         .foregroundColor(.gray)
-                    Text("Skillvergence Academy")
+                    Text("WattWorks Academy")
                         .font(.system(size: size.signatureFontSize, weight: .medium))
                         .foregroundColor(.primary)
                     Text("Certification Authority")

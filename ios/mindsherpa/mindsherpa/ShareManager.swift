@@ -47,7 +47,7 @@ class ShareManager: NSObject, ObservableObject {
     
     func shareCourseCompletion(courseName: String, totalVideos: Int, totalHours: Double) {
         let text = """
-        🎉 Just completed "\(courseName)" on Skillvergence!
+        🎉 Just completed "\(courseName)" on WattWorks!
         
         📚 \(totalVideos) videos watched
         ⏱️ \(String(format: "%.1f", totalHours)) hours of learning
@@ -63,7 +63,7 @@ class ShareManager: NSObject, ObservableObject {
         let text = """
         ✅ Just finished watching "\(videoTitle)" 
         
-        📖 Part of the \(courseName) course on Skillvergence
+        📖 Part of the \(courseName) course on WattWorks
         🔧 Learning hands-on EV repair skills!
         
         #EVTraining #ElectricVehicles
@@ -79,7 +79,7 @@ class ShareManager: NSObject, ObservableObject {
         🚀 Level Up! Just reached Level \(level) - \(levelName)!
         
         ⭐ \(xp) total XP earned
-        📈 Advancing my EV expertise on Skillvergence
+        📈 Advancing my EV expertise on WattWorks
         
         #EVTraining #LevelUp #ElectricVehicles
         """
@@ -90,7 +90,7 @@ class ShareManager: NSObject, ObservableObject {
     func shareLearningStreak(streakDays: Int) {
         let streakEmoji = streakDays >= 7 ? "🔥" : "⚡"
         let text = """
-        \(streakEmoji) \(streakDays) day learning streak on Skillvergence!
+        \(streakEmoji) \(streakDays) day learning streak on WattWorks!
         
         📚 Consistently building my electric vehicle expertise
         🎯 Committed to professional growth

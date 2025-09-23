@@ -34,7 +34,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="8dp"
-            android:text="VoltForce"
+            android:text="WattWorks"
             style="@style/TextAppearance.MaterialComponents.Caption"
             android:textColor="#CCFFFFFF"
             android:background="#33000000"

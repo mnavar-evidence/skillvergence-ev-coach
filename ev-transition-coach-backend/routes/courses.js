@@ -229,7 +229,7 @@ const sampleCourses = [
         description: "History, evolution, key powertrain components, charging, and environmental benefits",
         duration: 459, // 7:39 in seconds
         videoUrl: "https://youtu.be/R0lxSpGDrRU",
-        muxPlaybackId: "eEz38K4wDIXb1bdISTtNNrYk1ralX5NJYl48ty2wNXg",
+        muxPlaybackId: "kM1To00cnB8up4CYm01IxH02m93Rg6mm5gNJiKqGy5s1a8",
         sequenceOrder: 1,
         courseId: "course-5"
       },
@@ -239,7 +239,7 @@ const sampleCourses = [
         description: "Battery types, chemistry, management, capacity, and thermal considerations",
         duration: 483, // 8:03 in seconds
         videoUrl: "https://youtu.be/pFRJioF3lkk",
-        muxPlaybackId: "PsA7ZUpUbSdG94unGCgQWkwdvT44mF7Z200MFKfG4ofI",
+        muxPlaybackId: "h2doMoMMh5YcMJj79QX1LTzoxxcSEnvBWD7xH00f5JJA",
         sequenceOrder: 2,
         courseId: "course-5"
       },
@@ -249,7 +249,7 @@ const sampleCourses = [
         description: "Powertrain layouts, motor types, controllers, and regenerative braking systems",
         duration: 532, // 8:52 in seconds
         videoUrl: "https://youtu.be/ZI0fzy8tUH8",
-        muxPlaybackId: "lKoO2M8c6H26YQ97GxDWAOp8vE027X2mN019s5kyW5mqA",
+        muxPlaybackId: "fjsvFA01kKjP9100EKhNFfMllpQsaPilkUiopwbSe5QrM",
         sequenceOrder: 3,
         courseId: "course-5"
       }

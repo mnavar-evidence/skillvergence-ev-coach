@@ -426,7 +426,7 @@ struct EmptyStateView: View {
     
     private var emptyStateMessage: String {
         switch filter {
-        case .all: return "Complete advanced courses to earn professional certificates from Skillvergence."
+        case .all: return "Complete advanced courses to earn professional certificates from WattWorks."
         case .issued: return "You haven't earned any certificates yet. Complete advanced courses to get started!"
         case .pending: return "You don't have any certificates pending approval right now."
         case .inProgress: return "You don't have any courses in progress. Start learning to earn certificates!"
@@ -475,7 +475,7 @@ struct UserCertificateDetailView: View {
             }
         }
         .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(items: [certificate.certificateNumber, "I earned a certificate from Skillvergence!"])
+            ShareSheet(items: [certificate.certificateNumber, "I earned a certificate from WattWorks!"])
         }
     }
     

@@ -182,7 +182,7 @@ struct UnifiedVideoPlayer: View {
                     Spacer()
                     HStack {
                         Spacer()
-                        Text("Skillvergence")
+                        Text("WattWorks")
                             .font(.caption2)
                             .foregroundColor(.white.opacity(0.7))
                             .padding(8)

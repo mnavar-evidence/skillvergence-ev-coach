@@ -1,5 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Material Design 3 Theme for VoltForce Learning Platform -->
+    <!-- Material Design 3 Theme for WattWorks Learning Platform -->
     <style name="Theme.MindSherpa" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary Colors -->
         <item name="colorPrimary">@color/md_theme_light_primary</item>

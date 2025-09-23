@@ -35,7 +35,7 @@ const sampleCourses = [
         description: "Roles, responsibilities, and protocols for electrically aware, qualified, and authorized workers",
         duration: 370, // 6:10 in seconds
         videoUrl: "https://youtu.be/4KiaE9KPu1g",
-        muxPlaybackId: "Tkk1BFdFi1hlKZSMqosuhoNExgghDyqv5rBMup02bSes",
+        muxPlaybackId: "Tkk1BFdFi1hlKZSMqosuhoNExgghDyqv5rBMup02bSes", // UPDATED MUX ID
         sequenceOrder: 1,
         courseId: "course-1"
       },

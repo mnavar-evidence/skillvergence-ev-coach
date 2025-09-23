@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Pre-push hook to prevent accidental branch creation
+protected_branch='main'
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+echo "🔍 Pre-push check: Current branch is '$current_branch'"
+
+if [ "$current_branch" != "$protected_branch" ]; then
+    echo "❌ ERROR: Pushing to non-main branch '$current_branch'"
+    echo "🚨 WARNING: Railway might deploy from this branch!"
+    echo "💡 Solution: Merge to main instead"
+    echo ""
+    read -p "Continue anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+echo "✅ Pre-push check passed"

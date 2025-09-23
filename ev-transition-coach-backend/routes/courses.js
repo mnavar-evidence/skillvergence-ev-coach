@@ -267,6 +267,11 @@ router.get('/', async (req, res) => {
   res.set('Expires', '0');
   res.set('Surrogate-Control', 'no-store');
 
+  // Add deployment tracking headers
+  res.set('X-API-Version', '1.0.4');
+  res.set('X-Deployment-Branch', 'main');
+  res.set('X-Last-Updated', '2025-09-23');
+
   try {
     // Process courses to add YouTube video IDs and preserve muxPlaybackId
     const processedCourses = sampleCourses.map(course => ({

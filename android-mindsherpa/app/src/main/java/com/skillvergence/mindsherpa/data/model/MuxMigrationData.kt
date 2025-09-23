@@ -6,35 +6,35 @@ package com.skillvergence.mindsherpa.data.model
  */
 object MuxMigrationData {
 
-    // Basic Course Video Mappings
+    // Basic Course Video Mappings - UPDATED WITH NEW MUX PLAYBACK IDS
     private val basicVideoPlaybackIds = mapOf(
         // Course 1 - High Voltage Safety Foundation
-        "1-1" to "MPYRvK9KnXqBafit01UdxV023S011gYphUUavHkJKu96Z8",
-        "1-2" to "IrMUCbYqtfxeCMbDChNlqZlwxn9Q02d8nYio6a002MBFI",
-        "1-3" to "XfjFq015noepqrJzhqeHTboyxaA5xS70201nWwQddWMsMw",
-        "1-4" to "2q7gaVGp01JP00AjW7ZpRZCtJcyCdPlee00ve9lPiEn7XM",
-        "1-5" to "gaxBAtwysvUYmy517R01GHEAYMOhWFgFBkNz9V6DPnjQ",
-        "1-6" to "2air8l9JELmF5BO7kPkrVTi1ggBwGwpDx01eoVL2ng3k",
-        "1-7" to "VUfF2QHi7IxQxZvfV02PqPLjtee1uAS01UmcCLc9U2Hfg",
+        "1-1" to "Tkk1BFdFi1hlKZSMqosuhoNExgghDyqv5rBMup02bSes",
+        "1-2" to "zTOywHrdACjLFt35Qv802wk8BN8m8gV7C01flvbPQrOCw",
+        "1-3" to "ng2Lphh1xBIphzI2CQ5M7g1Qbg34ZhbP3Cqqn49srug",
+        "1-4" to "hTtD008sNmMbyP00QYvJFEuAXCHZK8yZKru01o02UNQSSSg",
+        "1-5" to "JXcV75OWRVKHtfj021f023vzwQfzlap72PiBBlR3uXj3c",
+        "1-6" to "vF4SD1tvGyldj2OegjU02uUJQrJN61Xom9q5hPdyATtA",
+        "1-7" to "nGTcPZf7kKNws7E5ScALwqsZGeasrtv6mG5rWVmWFFg",
 
         // Course 2 - Electrical Fundamentals
-        "2-1" to "QusmX4rnjbcR7VeSS2ayv68HfKWWRr4pfhPnDZtuFRk",
-        "2-2" to "1dFD00lw01Gq3PRPqwtHSCA01goWEwPQEVDpzFSHbOFGFE",
-        "2-3" to "LS8wrghx0067Y3iq5eEGIQby6F6eAK00sDIaKc01G8y01rU",
-        "2-4" to "h4gzIGHOnWcgYbxds9NWp1i2mO4vF868zEbaOiWNvqY",
+        "2-1" to "pV3dep004GN1zEAIFT4qIooD6mMRjdn66ynvQigDQofM",
+        "2-2" to "Menv901GUUnCrBloH3DDZUYnBaZk02r02Bee3weEpsSN6w",
+        "2-3" to "LS8wrghx0067Y3iq5eEGIQby6F6eAK00sDIaKc01G8y01rU", // KEEP OLD - NOT PROVIDED
+        "2-4" to "h4gzIGHOnWcgYbxds9NWp1i2mO4vF868zEbaOiWNvqY", // KEEP OLD - NOT PROVIDED
 
         // Course 3 - EV System Components
-        "3-1" to "gaTm8cYuz022rhJIcA7Yslt702ymomEMGI1lbtgqFdE7M",
-        "3-2" to "82yTeh3aNElJUpkUx02qkrofHkca2jDTFNiubKwsxSdQ",
+        "3-1" to "bgZgCTexV2XPDVDx4QkVZ4J01J7Wmd201TiWk02ARcrARA",
+        "3-2" to "brv6fRh2X1oGHhKrOGZ2fHSxNAGMkb9gblLm5D0292004",
 
         // Course 4 - EV Charging Systems
-        "4-1" to "eyxc02bMePOacn01xCfvITF700nhQnryDFPwcOKP9v8dTo",
-        "4-2" to "14xiAykKQqGSiLOsjrFotxVe3miIbLk8sAOb02fcbjlo",
+        "4-1" to "fitlrB5AwgmQTZisHZ9XXwBkK00Uz1QAJCdSF4LNpcko",
+        "4-2" to "Ep1iWbH5PcGwrX9a6WSyMuOofSnmeZcjCjYP5vbWhnA",
 
         // Course 5 - Advanced EV Systems
-        "5-1" to "eEz38K4wDIXb1bdISTtNNrYk1ralX5NJYl48ty2wNXg",
-        "5-2" to "PsA7ZUpUbSdG94unGCgQWkwdvT44mF7Z200MFKfG4ofI",
-        "5-3" to "lKoO2M8c6H26YQ97GxDWAOp8vE027X2mN019s5kyW5mqA"
+        "5-1" to "kM1To00cnB8up4CYm01IxH02m93Rg6mm5gNJiKqGy5s1a8",
+        "5-2" to "h2doMoMMh5YcMJj79QX1LTzoxxcSEnvBWD7xH00f5JJA",
+        "5-3" to "fjsvFA01kKjP9100EKhNFfMllpQsaPilkUiopwbSe5QrM"
     )
 
     // Advanced Course Video Mappings

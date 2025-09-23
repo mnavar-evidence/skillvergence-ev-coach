@@ -259,7 +259,14 @@ const sampleCourses = [
 
 // GET /api/courses - Get all courses (with mux support v1.0.2)
 router.get('/', async (req, res) => {
-  console.log('🚀🚀🚀 [COURSES API v1.0.2] iOS app fetching courses from Railway backend - CACHE BUSTER!');
+  console.log('🚀🚀🚀 [COURSES API v1.0.3] iOS app fetching courses from Railway backend - NO CACHE!');
+
+  // Disable all caching
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+
   try {
     // Process courses to add YouTube video IDs and preserve muxPlaybackId
     const processedCourses = sampleCourses.map(course => ({

@@ -35,7 +35,7 @@ const sampleCourses = [
         description: "Roles, responsibilities, and protocols for electrically aware, qualified, and authorized workers",
         duration: 370, // 6:10 in seconds
         videoUrl: "https://youtu.be/4KiaE9KPu1g",
-        muxPlaybackId: "MPYRvK9KnXqBafit01UdxV023S011gYphUUavHkJKu96Z8",
+        muxPlaybackId: "Tkk1BFdFi1hlKZSMqosuhoNExgghDyqv5rBMup02bSes",
         sequenceOrder: 1,
         courseId: "course-1"
       },
@@ -45,7 +45,7 @@ const sampleCourses = [
         description: "Understanding risks like electric shock, arc flash, and arc blast, and their effects on the body",
         duration: 417, // 6:57 in seconds
         videoUrl: "https://youtu.be/YL8zgLZ096U",
-        muxPlaybackId: "IrMUCbYqtfxeCMbDChNlqZlwxn9Q02d8nYio6a002MBFI",
+        muxPlaybackId: "zTOywHrdACjLFt35Qv802wk8BN8m8gV7C01flvbPQrOCw",
         sequenceOrder: 2,
         courseId: "course-1"
       },
@@ -55,7 +55,7 @@ const sampleCourses = [
         description: "Identifying and applying limited, restricted, and arc flash boundaries to prevent accidents",
         duration: 406, // 6:46 in seconds
         videoUrl: "https://youtu.be/N1dLWS57e2s",
-        muxPlaybackId: "XfjFq015noepqrJzhqeHTboyxaA5xS70201nWwQddWMsMw",
+        muxPlaybackId: "ng2Lphh1xBIphzI2CQ5M7g1Qbg34ZhbP3Cqqn49srug",
         sequenceOrder: 3,
         courseId: "course-1"
       },
@@ -65,7 +65,7 @@ const sampleCourses = [
         description: "Selecting and using proper PPE with arc ratings and hazard risk categories",
         duration: 415, // 6:55 in seconds
         videoUrl: "https://youtu.be/kVrO3nvOZXk",
-        muxPlaybackId: "2q7gaVGp01JP00AjW7ZpRZCtJcyCdPlee00ve9lPiEn7XM",
+        muxPlaybackId: "hTtD008sNmMbyP00QYvJFEuAXCHZK8yZKru01o02UNQSSSg",
         sequenceOrder: 4,
         courseId: "course-1"
       },
@@ -75,7 +75,7 @@ const sampleCourses = [
         description: "Functions of batteries, traction motors, inverters, converters, and other HV parts",
         duration: 406, // 6:46 in seconds
         videoUrl: "https://youtu.be/b8W0H5-qRLM",
-        muxPlaybackId: "gaxBAtwysvUYmy517R01GHEAYMOhWFgFBkNz9V6DPnjQ",
+        muxPlaybackId: "JXcV75OWRVKHtfj021f023vzwQfzlap72PiBBlR3uXj3c",
         sequenceOrder: 5,
         courseId: "course-1"
       },
@@ -85,7 +85,7 @@ const sampleCourses = [
         description: "Techniques for disabling batteries, using service disconnects, and handling HV components safely",
         duration: 462, // 7:42 in seconds
         videoUrl: "https://youtu.be/LlmbSDnSDoA",
-        muxPlaybackId: "2air8l9JELmF5BO7kPkrVTi1ggBwGwpDx01eoVL2ng3k",
+        muxPlaybackId: "vF4SD1tvGyldj2OegjU02uUJQrJN61Xom9q5hPdyATtA",
         sequenceOrder: 6,
         courseId: "course-1"
       },
@@ -95,7 +95,7 @@ const sampleCourses = [
         description: "Identifying high voltage components in electric vehicles through various visual cues",
         duration: 307, // 5:07 in seconds
         videoUrl: "https://youtu.be/CbVm-Ey91p4",
-        muxPlaybackId: "VUfF2QHi7IxQxZvfV02PqPLjtee1uAS01UmcCLc9U2Hfg",
+        muxPlaybackId: "nGTcPZf7kKNws7E5ScALwqsZGeasrtv6mG5rWVmWFFg",
         sequenceOrder: 7,
         courseId: "course-1"
       }

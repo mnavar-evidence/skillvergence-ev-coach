@@ -12,6 +12,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -36,7 +37,9 @@ class TeacherDashboardActivity : AppCompatActivity() {
 
         // Handle status bar
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.statusBarColor = ContextCompat.getColor(this, R.color.purple_500)
+            WindowInsetsControllerCompat(window, window.decorView).apply {
+                window.statusBarColor = ContextCompat.getColor(this@TeacherDashboardActivity, R.color.purple_500)
+            }
         }
 
         setContentView(R.layout.activity_teacher_dashboard)

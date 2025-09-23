@@ -82,9 +82,9 @@ class CertificationProgressionAdapter(
             certificationIcon.setColorFilter(iconColor)
 
             val textColor = when {
-                item.isCurrent -> ContextCompat.getColor(context, android.R.color.primary_text_light)
-                item.isCurrentOrPast -> ContextCompat.getColor(context, android.R.color.primary_text_light)
-                else -> ContextCompat.getColor(context, android.R.color.secondary_text_light)
+                item.isCurrent -> ContextCompat.getColor(context, R.color.primary_text)
+                item.isCurrentOrPast -> ContextCompat.getColor(context, R.color.primary_text)
+                else -> ContextCompat.getColor(context, R.color.secondary_text)
             }
             certificationName.setTextColor(textColor)
 

@@ -53,9 +53,9 @@ class CourseCompletionAdapter(
             courseIcon.setColorFilter(iconColor)
 
             val textColor = if (item.completed) {
-                ContextCompat.getColor(context, android.R.color.primary_text_light)
+                ContextCompat.getColor(context, R.color.primary_text)
             } else {
-                ContextCompat.getColor(context, android.R.color.secondary_text_light)
+                ContextCompat.getColor(context, R.color.secondary_text)
             }
             courseName.setTextColor(textColor)
 

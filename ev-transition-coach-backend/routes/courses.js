@@ -263,11 +263,14 @@ router.get('/', async (req, res) => {
     // Process courses to add YouTube video IDs and preserve muxPlaybackId
     const processedCourses = sampleCourses.map(course => ({
       ...course,
-      videos: course.videos.map(video => ({
-        ...video,
-        youtubeVideoId: extractYouTubeVideoId(video.videoUrl),
-        muxPlaybackId: video.muxPlaybackId // Explicitly preserve muxPlaybackId
-      }))
+      videos: course.videos.map(video => {
+        console.log(`🎬 [API] Serving video ${video.id} (${video.title}) with MUX playback ID: ${video.muxPlaybackId}`);
+        return {
+          ...video,
+          youtubeVideoId: extractYouTubeVideoId(video.videoUrl),
+          muxPlaybackId: video.muxPlaybackId // Explicitly preserve muxPlaybackId
+        };
+      })
     }));
     
     res.json({ courses: processedCourses });

@@ -192,7 +192,15 @@ open class VideoDetailActivity : AppCompatActivity() {
         muxPlaybackId = intent.getStringExtra(EXTRA_MUX_PLAYBACK_ID) ?: ""
 
         if (muxPlaybackId.isEmpty()) {
-            logToFile(this, "❌ No MUX playback ID provided for video $videoId - check API response")
+            logToFile(this, "❌ CRITICAL: No MUX playback ID provided for video $videoId!")
+            logToFile(this, "❌ This will cause video player to have no controls!")
+            logToFile(this, "❌ Check API response - muxPlaybackId field must be present")
+
+            // Show error to user
+            runOnUiThread {
+                videoTitle.text = "❌ Video Error"
+                videoDescription.text = "No MUX playback ID provided. Check API response for video $videoId"
+            }
         }
 
         totalDurationSeconds = duration.toLong()
@@ -318,9 +326,13 @@ open class VideoDetailActivity : AppCompatActivity() {
         } else {
             logToFile(this, "❌ No Mux playback ID available for video: $videoId")
             logToFile(this, "❌ Available data - Title: $videoTitle, Description: $videoDescription")
+            logToFile(this, "❌ Cannot setup video player without MUX playback ID")
 
-            // Fallback: Try to use basic ExoPlayer with HLS URL if available
-            setupFallbackPlayer()
+            // Show error message in player view
+            runOnUiThread {
+                videoTitle.text = "❌ No MUX Playback ID"
+                videoDescription.text = "Video $videoId missing muxPlaybackId from API response. Check backend courses.js"
+            }
         }
     }
 

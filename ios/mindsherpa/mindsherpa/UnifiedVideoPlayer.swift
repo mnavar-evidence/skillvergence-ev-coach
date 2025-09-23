@@ -35,12 +35,8 @@ struct UnifiedVideoPlayer: View {
         if let advancedCourse = advancedCourse {
             return advancedCourse.muxPlaybackId
         } else if let video = video {
-            // First try to get from video's muxPlaybackId field
-            if let muxId = video.muxPlaybackId, !muxId.isEmpty {
-                return muxId
-            }
-            // Fall back to migration mapping
-            return MuxMigrationData.getMuxPlaybackId(for: video.id) ?? ""
+            // Use ONLY the muxPlaybackId from API response - NO HARDCODED FALLBACKS
+            return video.muxPlaybackId ?? ""
         }
         return ""
     }

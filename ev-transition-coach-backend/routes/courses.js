@@ -116,7 +116,7 @@ const sampleCourses = [
         description: "Fundamentals of voltage, current, resistance, and power with practical circuit labs",
         duration: 433, // 7:13 in seconds
         videoUrl: "https://youtu.be/nOIeEFK29Dk",
-        muxPlaybackId: "QusmX4rnjbcR7VeSS2ayv68HfKWWRr4pfhPnDZtuFRk",
+        muxPlaybackId: "pV3dep004GN1zEAIFT4qIooD6mMRjdn66ynvQigDQofM",
         sequenceOrder: 1,
         courseId: "course-2"
       },
@@ -126,7 +126,7 @@ const sampleCourses = [
         description: "Safe and accurate use of digital multimeters for voltage, current, resistance, and more",
         duration: 461, // 7:41 in seconds
         videoUrl: "https://youtu.be/AsAm7REAfpE",
-        muxPlaybackId: "1dFD00lw01Gq3PRPqwtHSCA01goWEwPQEVDpzFSHbOFGFE",
+        muxPlaybackId: "Menv901GUUnCrBloH3DDZUYnBaZk02r02Bee3weEpsSN6w",
         sequenceOrder: 2,
         courseId: "course-2"
       },
@@ -167,7 +167,7 @@ const sampleCourses = [
         description: "Oscilloscope and advanced multimeter use, sensors, actuators, and circuit analysis",
         duration: 391, // 6:31 in seconds
         videoUrl: "https://youtu.be/Z46KIZb1HHI",
-        muxPlaybackId: "gaTm8cYuz022rhJIcA7Yslt702ymomEMGI1lbtgqFdE7M",
+        muxPlaybackId: "bgZgCTexV2XPDVDx4QkVZ4J01J7Wmd201TiWk02ARcrARA",
         sequenceOrder: 1,
         courseId: "course-3"
       },
@@ -177,7 +177,7 @@ const sampleCourses = [
         description: "Diagnosis of CAN, LIN, FlexRay, MOST, and Ethernet bus systems with gateways and fiber optics",
         duration: 384, // 6:24 in seconds
         videoUrl: "https://youtu.be/gPw-OlOD4wI",
-        muxPlaybackId: "82yTeh3aNElJUpkUx02qkrofHkca2jDTFNiubKwsxSdQ",
+        muxPlaybackId: "brv6fRh2X1oGHhKrOGZ2fHSxNAGMkb9gblLm5D0292004",
         sequenceOrder: 2,
         courseId: "course-3"
       }
@@ -198,7 +198,7 @@ const sampleCourses = [
         description: "Types, levels, connectors, standards, and safety features of EV charging equipments",
         duration: 502, // 8:22 in seconds
         videoUrl: "https://youtu.be/6Jqi2FKVVf4",
-        muxPlaybackId: "eyxc02bMePOacn01xCfvITF700nhQnryDFPwcOKP9v8dTo",
+        muxPlaybackId: "fitlrB5AwgmQTZisHZ9XXwBkK00Uz1QAJCdSF4LNpcko",
         sequenceOrder: 1,
         courseId: "course-4"
       },
@@ -208,7 +208,7 @@ const sampleCourses = [
         description: "Testing, troubleshooting charging systems, and managing battery performance and safety",
         duration: 414, // 6:54 in seconds
         videoUrl: "https://youtu.be/rm6aSXFCQNg",
-        muxPlaybackId: "14xiAykKQqGSiLOsjrFotxVe3miIbLk8sAOb02fcbjlo",
+        muxPlaybackId: "Ep1iWbH5PcGwrX9a6WSyMuOofSnmeZcjCjYP5vbWhnA",
         sequenceOrder: 2,
         courseId: "course-4"
       }
@@ -268,7 +268,7 @@ router.get('/', async (req, res) => {
   res.set('Surrogate-Control', 'no-store');
 
   // Add deployment tracking headers
-  res.set('X-API-Version', '1.0.4');
+  res.set('X-API-Version', '1.0.5');
   res.set('X-Deployment-Branch', 'main');
   res.set('X-Last-Updated', '2025-09-23');
 

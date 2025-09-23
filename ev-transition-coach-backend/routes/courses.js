@@ -257,7 +257,7 @@ const sampleCourses = [
   }
 ];
 
-// GET /api/courses - Get all courses (with mux support v1.0.1)
+// GET /api/courses - Get all courses (with mux support v1.0.2)
 router.get('/', async (req, res) => {
   console.log('🚀🚀🚀 [COURSES API] iOS app fetching courses from Railway backend!');
   try {

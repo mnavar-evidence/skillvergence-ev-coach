@@ -33,7 +33,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.mux.player.MuxPlayer
 import com.mux.player.media.MediaItems
 import com.skillvergence.mindsherpa.R
-import com.skillvergence.mindsherpa.data.model.MuxMigrationData
 import com.skillvergence.mindsherpa.data.persistence.ProgressStore
 import kotlinx.coroutines.launch
 import java.io.File
@@ -189,10 +188,12 @@ open class VideoDetailActivity : AppCompatActivity() {
         val description = intent.getStringExtra(EXTRA_VIDEO_DESCRIPTION) ?: ""
         val duration = intent.getIntExtra(EXTRA_VIDEO_DURATION, 0)
 
-        // Get muxPlaybackId from intent or fall back to migration data
-        muxPlaybackId = intent.getStringExtra(EXTRA_MUX_PLAYBACK_ID)
-            ?: MuxMigrationData.getMuxPlaybackId(videoId)
-            ?: ""
+        // Get muxPlaybackId from intent (API response) - NO HARDCODED FALLBACKS
+        muxPlaybackId = intent.getStringExtra(EXTRA_MUX_PLAYBACK_ID) ?: ""
+
+        if (muxPlaybackId.isEmpty()) {
+            logToFile(this, "❌ No MUX playback ID provided for video $videoId - check API response")
+        }
 
         totalDurationSeconds = duration.toLong()
 

@@ -88,17 +88,19 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val videoTitles = course.videos?.map { it.title }?.toTypedArray()
                 val videoDurations = course.videos?.map { it.duration }?.toIntArray()
                 val videoUrls = course.videos?.map { it.videoUrl }?.toTypedArray()
+                val muxPlaybackIds = course.videos?.map { it.muxPlaybackId }?.toTypedArray()
 
                 logToFile(context, "🎬 Passing video data for ${course.title}:")
                 logToFile(context, "🎬 Video count: ${course.videos?.size ?: 0}")
                 course.videos?.forEachIndexed { index, video ->
-                    logToFile(context, "🎬 Video $index: ${video.id} - ${video.title} (${video.duration}s)")
+                    logToFile(context, "🎬 Video $index: ${video.id} - ${video.title} (${video.duration}s) - MUX: ${video.muxPlaybackId}")
                 }
 
                 putExtra("VIDEO_IDS", videoIds)
                 putExtra("VIDEO_TITLES", videoTitles)
                 putExtra("VIDEO_DURATIONS", videoDurations)
                 putExtra("VIDEO_URLS", videoUrls)
+                putExtra("MUX_PLAYBACK_IDS", muxPlaybackIds)
             }
         }
     }
@@ -138,13 +140,14 @@ class VideoPlayerActivity : AppCompatActivity() {
         val videoTitles = intent.getStringArrayExtra("VIDEO_TITLES") ?: emptyArray()
         val videoDurations = intent.getIntArrayExtra("VIDEO_DURATIONS") ?: intArrayOf()
         val videoUrls = intent.getStringArrayExtra("VIDEO_URLS") ?: emptyArray()
+        val muxPlaybackIds = intent.getStringArrayExtra("MUX_PLAYBACK_IDS") ?: emptyArray()
 
         logToFile("📱 Course Detail - Course: $courseTitle")
         logToFile("📱 Course Detail - Duration: ${courseDurationSeconds}s, Videos: $videoCount")
-        logToFile("📱 Array Sizes - IDs: ${videoIds.size}, Titles: ${videoTitles.size}, Durations: ${videoDurations.size}, URLs: ${videoUrls.size}")
+        logToFile("📱 Array Sizes - IDs: ${videoIds.size}, Titles: ${videoTitles.size}, Durations: ${videoDurations.size}, URLs: ${videoUrls.size}, MUX: ${muxPlaybackIds.size}")
 
         // Debug: Print all video data received
-        val maxSize = maxOf(videoTitles.size, videoIds.size, videoDurations.size, videoUrls.size)
+        val maxSize = maxOf(videoTitles.size, videoIds.size, videoDurations.size, videoUrls.size, muxPlaybackIds.size)
         logToFile("📱 Max array size: $maxSize")
 
         for (i in 0 until maxSize) {
@@ -152,14 +155,15 @@ class VideoPlayerActivity : AppCompatActivity() {
             val title = if (i < videoTitles.size) videoTitles[i] else "missing"
             val duration = if (i < videoDurations.size) videoDurations[i] else 0
             val url = if (i < videoUrls.size) videoUrls[i] else "missing"
-            logToFile("📱 Video $i: $id - $title (${duration}s) - $url")
+            val muxId = if (i < muxPlaybackIds.size) muxPlaybackIds[i] else "missing"
+            logToFile("📱 Video $i: $id - $title (${duration}s) - $url - MUX: $muxId")
         }
 
         // Set up basic course info from intent data
         setupCourseDataFromIntent(courseTitle, courseDescription, skillLevelName, courseDurationSeconds, videoCount)
 
         // Set up video list with real API data
-        setupVideoListFromIntent(courseId, videoIds, videoTitles, videoDurations, videoUrls)
+        setupVideoListFromIntent(courseId, videoIds, videoTitles, videoDurations, videoUrls, muxPlaybackIds)
 
         // Set up click listeners
         setupClickListeners()
@@ -231,13 +235,14 @@ class VideoPlayerActivity : AppCompatActivity() {
         videoIds: Array<String>,
         videoTitles: Array<String>,
         videoDurations: IntArray,
-        videoUrls: Array<String>
+        videoUrls: Array<String>,
+        muxPlaybackIds: Array<String>
     ) {
         // Create Video objects from the real API data
         val videos = mutableListOf<Video>()
 
         // Use the maximum available data, handle mismatched array sizes gracefully
-        val maxVideos = maxOf(videoTitles.size, videoIds.size, videoDurations.size, videoUrls.size)
+        val maxVideos = maxOf(videoTitles.size, videoIds.size, videoDurations.size, videoUrls.size, muxPlaybackIds.size)
         logToFile("📱 Processing $maxVideos videos (max of all arrays)")
 
         for (i in 0 until maxVideos) {
@@ -245,6 +250,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             val hasTitle = i < videoTitles.size
             val hasDuration = i < videoDurations.size
             val hasUrl = i < videoUrls.size
+            val hasMuxId = i < muxPlaybackIds.size
 
             if (hasTitle && (hasDuration || hasUrl)) {
                 // Use original API ID if available, otherwise fallback to synthetic ID
@@ -252,8 +258,9 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val title = videoTitles[i]
                 val duration = if (hasDuration) videoDurations[i] else 0
                 val url = if (hasUrl) videoUrls[i] else ""
+                val muxId = if (hasMuxId) muxPlaybackIds[i] else null
 
-                logToFile("📱 Creating video $i: $id - $title")
+                logToFile("📱 Creating video $i: $id - $title - MUX: $muxId")
 
                 videos.add(
                     Video(
@@ -263,7 +270,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                         duration = duration,
                         videoUrl = url,
                         sequenceOrder = i + 1,
-                        courseId = courseId
+                        courseId = courseId,
+                        muxPlaybackId = muxId
                     )
                 )
             } else {
@@ -273,7 +281,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         println("📱 Created ${videos.size} video objects from API data")
         videos.forEach { video ->
-            println("📱 Video: ${video.id} - ${video.title} (${video.duration}s)")
+            println("📱 Video: ${video.id} - ${video.title} (${video.duration}s) - MUX: ${video.muxPlaybackId}")
             println("📱 Thumbnail URL: ${video.thumbnailUrl}")
         }
 

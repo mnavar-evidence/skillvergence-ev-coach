@@ -86,9 +86,16 @@ class LevelDetailsActivity : AppCompatActivity() {
     }
 
     private fun setupToolbar() {
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
+        try {
+            setSupportActionBar(toolbar)
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            supportActionBar?.setDisplayShowHomeEnabled(true)
+        } catch (e: IllegalStateException) {
+            // Handle case where ActionBar already exists (landscape testing, etc.)
+            // Use toolbar navigation directly without setting as support action bar
+            toolbar.title = "Your Progress"
+            toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
+        }
 
         toolbar.setNavigationOnClickListener {
             finish()

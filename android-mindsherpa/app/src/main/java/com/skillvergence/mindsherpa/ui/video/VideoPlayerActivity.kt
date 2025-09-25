@@ -51,6 +51,8 @@ class VideoPlayerActivity : AppCompatActivity() {
     private lateinit var courseRepository: CourseRepository
     private lateinit var progressStore: ProgressStore
     private var currentCourse: Course? = null
+    private var currentVideos: List<Video> = emptyList()
+    private var continueWatchingVideo: Video? = null
 
     companion object {
         private const val EXTRA_COURSE_ID = "course_id"
@@ -285,14 +287,17 @@ class VideoPlayerActivity : AppCompatActivity() {
             println("📱 Thumbnail URL: ${video.thumbnailUrl}")
         }
 
+        // Store videos for continue watching functionality
+        currentVideos = videos
+
+        // Find continue watching video (first incomplete video or first video)
+        continueWatchingVideo = findContinueWatchingVideo(videos, courseId)
+
         // Setup video list with real data
         setupVideoList(videos)
 
-        // Update continue watching with first video if available
-        if (videos.isNotEmpty()) {
-            currentVideoTitle.text = videos.first().title
-            currentVideoProgress.text = "Ready to start"
-        }
+        // Update continue watching with appropriate video
+        updateContinueWatchingCard()
     }
 
     private fun setupVideoList(videos: List<Video>) {
@@ -318,9 +323,13 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         continueWatchingCard.setOnClickListener {
-            // Play current video
             println("▶️ Continue watching current video")
-            // TODO: Launch actual video player
+            continueWatchingVideo?.let { video ->
+                logToFile("▶️ Launching continue watching for: ${video.id} - ${video.title}")
+                onVideoSelected(video)
+            } ?: run {
+                logToFile("❌ No continue watching video available")
+            }
         }
     }
 
@@ -363,6 +372,59 @@ class VideoPlayerActivity : AppCompatActivity() {
             title.contains("EV Charging", ignoreCase = true) -> "Battery Technology"
             title.contains("Advanced EV", ignoreCase = true) -> "Advanced EV Systems"
             else -> "General"
+        }
+    }
+
+    private fun findContinueWatchingVideo(videos: List<Video>, courseId: String): Video? {
+        if (videos.isEmpty()) return null
+
+        // Try to find a video with saved progress (incomplete)
+        for (video in videos) {
+            val progress = progressStore.getVideoProgress(video.id)
+            if (progress != null && progress.lastPositionSec > 0 && !progress.completed) {
+                // Found video with partial progress
+                logToFile("📱 Continue watching: Found partial progress for ${video.title}")
+                return video
+            }
+        }
+
+        // If no partial progress, find first incomplete video
+        for (video in videos) {
+            val progress = progressStore.getVideoProgress(video.id)
+            if (progress == null || !progress.completed) {
+                logToFile("📱 Continue watching: Found first incomplete video ${video.title}")
+                return video
+            }
+        }
+
+        // If all videos are complete, return first video
+        logToFile("📱 Continue watching: All videos complete, returning first video")
+        return videos.firstOrNull()
+    }
+
+    private fun updateContinueWatchingCard() {
+        continueWatchingVideo?.let { video ->
+            currentVideoTitle.text = video.title
+
+            val progress = progressStore.getVideoProgress(video.id)
+            when {
+                progress != null && progress.lastPositionSec > 0 && !progress.completed -> {
+                    val progressPercent = ((progress.lastPositionSec / video.duration) * 100).toInt()
+                    currentVideoProgress.text = "Continue from ${progressPercent}%"
+                }
+                progress != null && progress.completed -> {
+                    currentVideoProgress.text = "Watch again"
+                }
+                else -> {
+                    currentVideoProgress.text = "Ready to start"
+                }
+            }
+
+            logToFile("📱 Continue watching card updated for: ${video.title}")
+        } ?: run {
+            currentVideoTitle.text = "Start your learning journey"
+            currentVideoProgress.text = "No videos available"
+            logToFile("📱 Continue watching card: No video available")
         }
     }
 

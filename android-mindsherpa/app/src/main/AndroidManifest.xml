@@ -88,7 +88,7 @@
             android:name=".ui.progress.LevelDetailsActivity"
             android:exported="false"
             android:label="Your Progress"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="unspecified" />
 
         <!-- Student Activities -->
         <activity
